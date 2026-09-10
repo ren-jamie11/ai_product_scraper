@@ -95,9 +95,32 @@ def api_delete_group(slug: str):
 
 @app.post("/api/parse-asins")
 def api_parse_asins():
-    """Preview what a pasted block resolves to. Pure regex — no network calls."""
+    """Preview what a pasted block resolves to.
+
+    No network calls: the ASINs come from a regex and the "already have" answer
+    comes off disk, so the cost of an extraction is visible before committing
+    to it.
+    """
     payload = request.get_json(silent=True) or {}
-    return jsonify(asins.parse_input_block(payload.get("text", "")))
+    parsed = asins.parse_input_block(payload.get("text", ""))
+
+    slug = payload.get("slug")
+    if slug and storage.group_file(slug).exists():
+        parsed.update(_split_work(slug, parsed["items"], payload.get("refetch")))
+    return jsonify(parsed)
+
+
+def _split_work(slug: str, items: list[dict], refetch) -> dict:
+    """Which pasted ASINs need buying, and which the group already holds.
+
+    With `refetch` set, everything is fetched — prices and ratings go stale,
+    and this is the way to refresh them without deleting good data first.
+    """
+    if refetch:
+        return {"held": [], "to_fetch": [i["asin"] for i in items], "refetch": True}
+
+    found = compact.survey(slug, [i["asin"] for i in items])
+    return {"held": found["held"], "to_fetch": found["to_fetch"], "refetch": False}
 
 
 # ---------------------------------------------------------------------------
@@ -116,20 +139,35 @@ def api_extract(slug: str):
             "No Amazon ASINs found in what you pasted. Each line should be a "
             "product URL (one containing /dp/) or a bare 10-character ASIN."
         )
-    if not config.RAINFOREST_API_KEY:
-        raise storage.StorageError("RAINFOREST_API_KEY is empty in config.py.")
 
     storage.get_group(slug)  # raises if the group is gone
+
+    # Decided here, not in the browser: the preview can go stale if another run
+    # finished in between, and credits are only ever spent on this path.
+    work = _split_work(slug, items, payload.get("refetch"))
+    needed = {a for a in work["to_fetch"]}
+    to_fetch = [i for i in items if i["asin"] in needed]
+
+    if to_fetch and not config.RAINFOREST_API_KEY:
+        raise storage.StorageError("RAINFOREST_API_KEY is empty in config.py.")
+
     domain = payload.get("domain") or config.AMAZON_DOMAIN
     run_id = storage.create_run(slug, items)
 
     jobs.prune()
     job = jobs.start(
-        f"Fetching {len(items)} listings…",
-        lambda j: extract.run_extraction(j, slug, run_id, items, domain),
-        total=len(items),
+        f"Fetching {len(to_fetch)} listings…" if to_fetch
+        else "Collecting listings you already have…",
+        lambda j: extract.run_extraction(j, slug, run_id, items, domain, to_fetch),
+        total=len(to_fetch),
     )
-    return jsonify({"job_id": job.id, "run_id": run_id, "asin_count": len(items)}), 202
+    return jsonify({
+        "job_id": job.id,
+        "run_id": run_id,
+        "asin_count": len(items),
+        "fetch_count": len(to_fetch),
+        "held_count": len(items) - len(to_fetch),
+    }), 202
 
 
 @app.get("/api/jobs/<job_id>")

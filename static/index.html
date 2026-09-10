@@ -220,6 +220,11 @@ td.act,th.act{width:34px;padding:4px 6px;text-align:center}
 tbody tr.r .x{opacity:0}
 tbody tr.r:hover .x,tbody tr.r .x:focus-visible{opacity:1}
 
+/* ---------- checkbox ---------- */
+.chk{display:flex;gap:9px;align-items:flex-start;margin-top:14px;cursor:pointer;font-size:12.5px}
+.chk input{margin:2px 0 0;accent-color:var(--cobalt);flex:0 0 auto}
+.chk em{display:block;font-style:normal;font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:3px}
+
 /* ---------- table action bar ---------- */
 .tbar{display:flex;align-items:center;gap:12px;justify-content:flex-end;margin-top:12px}
 .tbar .hint{margin-right:auto}
@@ -308,6 +313,11 @@ tbody tr.r:hover .x,tbody tr.r .x:focus-visible{opacity:1}
           placeholder="https://www.amazon.com/Sunlit-Vintage-Picture-Antique-Tabletop/dp/B08P5LPZFJ/ref=sr_1_10&#10;https://www.amazon.com/Picture-Frame-Vintage-Frames-Tabletop/dp/B0H49KRM51&#10;B0CQ1J8XYZ"></textarea>
         <div class="h" id="urlhint">Nothing pasted yet.</div>
       </div>
+      <label class="chk" for="refetch">
+        <input type="checkbox" id="refetch">
+        <span>Re-fetch ASINs I already have
+          <em id="refetchhint">Skips anything this group already holds with bullets and reviews.</em></span>
+      </label>
       <div class="badlines" id="badlines" hidden>
         <div class="t">Couldn't read these lines</div>
         <ul id="badlist"></ul>
@@ -818,36 +828,61 @@ async function runPreview() {
     $("badlines").hidden = true;
     $("urlhint").textContent = "Nothing pasted yet.";
     $("pastenote").textContent = "";
+    $("refetchhint").textContent =
+      "Skips anything this group already holds with bullets and reviews.";
     $("extract").disabled = true;
     return;
   }
 
   let r;
-  try { r = await api("/api/parse-asins", { method: "POST", body: JSON.stringify({ text }) }); }
-  catch (e) { showError(e.message); return; }
+  try {
+    r = await api("/api/parse-asins", {
+      method: "POST",
+      body: JSON.stringify({ text, slug: currentSlug, refetch: $("refetch").checked }),
+    });
+  } catch (e) { showError(e.message); return; }
 
   const found = r.items.length;
+  const held = (r.held || []).length;
+  const willFetch = r.to_fetch ? r.to_fetch.length : found;
+
   $("g-sum").hidden = false;
   $("g-sum").innerHTML =
     stat("Lines", r.line_count) +
     stat("ASINs found", found, null, found ? "good" : "bad") +
+    stat("Already have", held, held ? "won't be fetched" : null, held ? "good" : "") +
+    stat("Will fetch", willFetch, willFetch ? "costs credits" : "no credits",
+         willFetch ? "warn" : "good") +
     stat("Duplicates", r.duplicates.length, r.duplicates.length ? "folded together" : null,
          r.duplicates.length ? "warn" : "") +
     stat("Unreadable", r.unparsed.length, null, r.unparsed.length ? "bad" : "");
 
-  $("urlhint").textContent = found
-    ? `Ready to extract ${plural(found, "ASIN", "ASINs")}: ${r.items.slice(0, 6).map(i => i.asin).join(", ")}` +
-      (found > 6 ? `, +${found - 6} more` : "")
-    : "No ASINs found in what's pasted.";
+  $("urlhint").textContent = !found
+    ? "No ASINs found in what's pasted."
+    : held
+      ? `Ready to extract ${found} — fetching ${willFetch}, ` +
+        `${held} already complete in this group.`
+      : `Ready to extract ${plural(found, "ASIN", "ASINs")}: ` +
+        r.items.slice(0, 6).map(i => i.asin).join(", ") +
+        (found > 6 ? `, +${found - 6} more` : "");
+
+  $("refetchhint").textContent = r.refetch
+    ? `Fetching all ${plural(found, "ASIN", "ASINs")}, including any already here.`
+    : held
+      ? `${plural(held, "ASIN", "ASINs")} would be skipped: ` + r.held.slice(0, 4).join(", ") +
+        (held > 4 ? `, +${held - 4} more` : "")
+      : "Nothing pasted is already here — everything will be fetched.";
 
   $("badlines").hidden = r.unparsed.length === 0;
   $("badlist").innerHTML = r.unparsed.map(l => `<li>${esc(l)}</li>`).join("");
 
   $("pastenote").textContent = found ? plural(found, "ASIN", "ASINs") : "";
   $("extract").disabled = found === 0 || extracting;
-  $("extract").title = found
-    ? `Fetch ${plural(found, "listing", "listings")} from Rainforest`
-    : "Paste at least one Amazon URL first";
+  $("extract").title = !found
+    ? "Paste at least one Amazon URL first"
+    : willFetch
+      ? `Fetch ${plural(willFetch, "listing", "listings")} from Rainforest`
+      : "Everything pasted is already here — no credits will be spent";
 }
 
 /* ---------- extraction ---------- */
@@ -874,8 +909,10 @@ async function startExtract() {
 
   let job;
   try {
-    job = await api(`/api/groups/${encodeURIComponent(slug)}/extract`,
-                    { method: "POST", body: JSON.stringify({ text }) });
+    job = await api(`/api/groups/${encodeURIComponent(slug)}/extract`, {
+      method: "POST",
+      body: JSON.stringify({ text, refetch: $("refetch").checked }),
+    });
   } catch (e) {
     $("g-err").textContent = e.message;
     $("g-err").hidden = false;
@@ -885,7 +922,10 @@ async function startExtract() {
     return;
   }
 
-  setProgress(0, `Starting — ${plural(job.asin_count, "listing", "listings")} to fetch`);
+  setProgress(0, job.fetch_count
+    ? `Starting — ${plural(job.fetch_count, "listing", "listings")} to fetch` +
+      (job.held_count ? `, ${job.held_count} already here` : "")
+    : `Collecting ${plural(job.asin_count, "listing", "listings")} you already have`);
   pollJob(job.job_id, slug, job.run_id);
 }
 
@@ -1402,6 +1442,7 @@ $("extract").onclick = startExtract;
 $("addlistings").onclick = () => { setPastePanel(true); $("urls").focus(); };
 $("canceladd").onclick = () => setPastePanel(false);
 $("urls").addEventListener("input", refreshPreview);
+$("refetch").addEventListener("change", refreshPreview);
 
 $("gname").addEventListener("input", () => {
   const s = slugify($("gname").value);

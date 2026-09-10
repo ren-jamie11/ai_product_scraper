@@ -1,12 +1,9 @@
 """
-Compaction: fold a group's runs into one clean run.
+Folding a group's runs together — the rule, and its two users.
 
-A group accumulates a folder per extraction attempt — Rainforest returns
-reviews only intermittently, so decent coverage means running the same ASINs
-more than once. Compaction takes the best copy of every ASIN worth keeping and
-writes it as a single new run, moving the sources to _trash/.
-
-Which copy wins:
+A group accumulates a folder per extraction attempt: Rainforest returns reviews
+only intermittently, so decent coverage means running the same ASINs more than
+once. Whenever two runs hold the same ASIN, one rule decides what survives:
 
   1. A copy with both bullets and reviews beats a copy with only one of them.
   2. Otherwise the most recent copy wins.
@@ -15,9 +12,16 @@ Reviews are then unioned across every copy of that ASIN rather than taken from
 the winner alone. Reviews are the scarce resource here — an older run may hold
 ones you pasted by hand — and merging them back costs nothing.
 
-The pristine/overlay split survives: the compacted run's extracted.json holds
-each winner's untouched Rainforest record, and its edits.json holds that ASIN's
-overrides, so you can still see what the API actually returned.
+Two callers share that rule:
+
+  * `compact()` folds every run in a group into one and trashes the sources.
+  * `resolve()` builds a new run out of a fresh fetch plus whatever the group
+    already held, so extraction can skip ASINs it doesn't need to buy again.
+    `survey()` is how extraction decides which those are.
+
+The pristine/overlay split survives either way: extracted.json holds each
+winner's untouched Rainforest record, edits.json holds that ASIN's overrides,
+so you can still see what the API actually returned.
 """
 
 from __future__ import annotations
@@ -131,6 +135,127 @@ def _union_reviews(copies: list[dict]) -> list[dict]:
             reviews.append(review)
 
     return reviews
+
+
+# ---------------------------------------------------------------------------
+# Reusing what a group already holds
+#
+# Rainforest charges per call, so re-pasting a list that overlaps an earlier
+# run should not buy the same listing twice. These two functions answer "do we
+# already have this?" and "what does a new run look like once we fold in what
+# we had?" — using the same winner rule compaction uses.
+# ---------------------------------------------------------------------------
+
+def _complete(product: dict) -> bool:
+    """Both bullets and reviews. Anything less is worth another look."""
+    return _has(product, "feature_bullets") and _has(product, "reviews")
+
+
+def existing_copies(slug: str) -> dict[str, list[dict]]:
+    """Every usable copy of every ASIN across the group's live runs.
+
+    Trashed runs don't count — deleting a run means you wanted it gone — and
+    neither do soft-deleted ASINs, which `load_run` already filters out.
+    """
+    run_ids = [r["run_id"] for r in storage.list_runs(slug)]
+    return _collect(slug, run_ids)[0]
+
+
+def survey(slug: str, asin_list: list[str]) -> dict:
+    """Split pasted ASINs into what we hold complete and what needs fetching.
+
+    Completeness is judged on the merged, post-edit view with reviews unioned
+    across runs, so reviews you pasted by hand count exactly as much as ones
+    Rainforest returned.
+    """
+    copies = existing_copies(slug)
+    held, partial, missing = [], [], []
+
+    for asin in asin_list:
+        mine = copies.get(asin)
+        if not mine:
+            missing.append(asin)
+            continue
+
+        winner = max(mine, key=_rank)
+        merged = dict(winner["merged"])
+        merged["reviews"] = _union_reviews([winner] + [c for c in mine if c is not winner])
+        (held if _complete(merged) else partial).append(asin)
+
+    return {"held": held, "partial": partial, "missing": missing,
+            "to_fetch": partial + missing}
+
+
+def resolve(slug: str, items: list[dict], fresh: dict[str, dict],
+            new_run_id: str) -> dict:
+    """Build a new run's three layers from a fetch plus what the group had.
+
+    `fresh` maps ASIN to a freshly normalized product. Each one joins its
+    ASIN's existing copies as one more candidate, carrying the *new* run id so
+    it wins ties on recency, and then the ordinary winner rule decides. A
+    re-fetch can therefore only ever improve a record, never cost you reviews
+    that were already there.
+
+    Returns products (pristine bases, in the order pasted), edits (overlays),
+    raw_from (ASIN -> the run whose raw payload matches the winning base, absent
+    when that is this run's own fetch), and per-ASIN outcomes for the log.
+    """
+    copies = existing_copies(slug)
+    products, edits, raw_from, outcomes = [], {}, {}, []
+
+    for item in items:
+        asin = item["asin"]
+        candidates = list(copies.get(asin) or [])
+
+        product = fresh.get(asin)
+        if product:
+            candidates.append({
+                "asin": asin, "run_id": new_run_id, "merged": product,
+                "base": product, "override": {},
+            })
+
+        if not candidates:
+            # Fetched and came back empty, with nothing held to fall back on.
+            # normalize already recorded why in the product's warnings.
+            if product:
+                products.append(_strip(product))
+                outcomes.append({"asin": asin, "outcome": "fetched"})
+            continue
+
+        winner = max(candidates, key=_rank)
+        reviews = _union_reviews([winner] + [c for c in candidates if c is not winner])
+
+        base = _strip(winner["base"] or winner["merged"])
+        products.append(base)
+
+        override = dict(winner["override"])
+        if reviews != (base.get("reviews") or []):
+            override["reviews"] = reviews
+        if override:
+            edits[asin] = override
+
+        # raw/ must describe the record in extracted.json. When an older copy
+        # beats this run's fetch, its payload replaces the fresh one.
+        if winner["run_id"] != new_run_id:
+            raw_from[asin] = winner["run_id"]
+
+        outcomes.append({
+            "asin": asin,
+            "outcome": "fetched" if product else "carried",
+            "from_run": winner["run_id"],
+        })
+
+    return {"products": products, "edits": edits,
+            "raw_from": raw_from, "outcomes": outcomes}
+
+
+def copy_raw(slug: str, raw_from: dict[str, str], target_raw) -> None:
+    """Bring each carried ASIN's raw payload into the new run's raw/."""
+    for asin, run_id in raw_from.items():
+        source = storage.run_dir(slug, run_id) / "raw"
+        for name in (f"{asin}.product.json", f"{asin}.reviews.json"):
+            if (source / name).exists():
+                shutil.copy2(source / name, target_raw / name)
 
 
 def plan_compaction(slug: str) -> dict:
