@@ -220,6 +220,10 @@ td.act,th.act{width:34px;padding:4px 6px;text-align:center}
 tbody tr.r .x{opacity:0}
 tbody tr.r:hover .x,tbody tr.r .x:focus-visible{opacity:1}
 
+/* ---------- table action bar ---------- */
+.tbar{display:flex;align-items:center;gap:12px;justify-content:flex-end;margin-top:12px}
+.tbar .hint{margin-right:auto}
+
 /* ---------- compaction preview ---------- */
 .plan{border:1px solid var(--rule);background:var(--porcelain);padding:12px 14px;margin:4px 0 14px}
 .plan .ln{display:flex;gap:10px;align-items:baseline;font-size:12.5px;padding:3px 0}
@@ -283,12 +287,14 @@ tbody tr.r:hover .x,tbody tr.r .x:focus-visible{opacity:1}
     </div>
     <div class="spacer"></div>
     <span class="err" id="g-err" hidden></span>
+    <button class="btn" id="addlistings" hidden>Add</button>
+    <button class="btn ghost" id="canceladd" hidden>Cancel</button>
     <button class="btn" id="extract" disabled>Extract</button>
   </div>
 
   <div class="sumstrip" id="g-sum" hidden></div>
 
-  <section style="margin-top:26px">
+  <section style="margin-top:26px" id="paste-panel">
     <div class="shead">
       <h2>Competitor listings</h2>
       <span class="note" id="pastenote"></span>
@@ -312,8 +318,6 @@ tbody tr.r:hover .x,tbody tr.r .x:focus-visible{opacity:1}
   <section>
     <div class="shead">
       <h2>Runs</h2>
-      <button class="btn ghost" id="compact" hidden
-              title="Merge every run into one, keeping the best copy of each ASIN">Compact</button>
       <span class="note" id="runnote"></span>
     </div>
     <div id="runs-wrap">
@@ -322,6 +326,10 @@ tbody tr.r:hover .x,tbody tr.r .x:focus-visible{opacity:1}
         <p>Each time you press <b>Extract</b>, a timestamped run is saved here with the raw
            Rainforest payloads, so nothing you pull is ever overwritten.</p>
       </div>
+    </div>
+    <div class="tbar" id="compact-bar" hidden>
+      <span class="hint">Merges every run into one, keeping the best copy of each ASIN.</span>
+      <button class="btn ghost" id="compact">Compact</button>
     </div>
   </section>
 </div>
@@ -426,6 +434,24 @@ function fmtDate(iso) {
   return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
 }
 
+function fmtDateTime(value) {
+  if (!value) return "—";
+  const d = new Date(value);
+  if (isNaN(d)) return String(value);
+  return d.toLocaleString(undefined, {
+    month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+  });
+}
+
+/* A run id IS its creation timestamp, in local time — 2026-09-10_182244.
+   run_log's started_at is rewritten when the run *finishes*, so the id is the
+   truer answer and the log is only the fallback. */
+function runCreated(run) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})_(\d{2})(\d{2})(\d{2})/.exec(run.run_id || "");
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+  return run.started_at || null;
+}
+
 function plural(n, one, many) { return `${n} ${n === 1 ? one : many}`; }
 
 function stat(label, value, sub, tone) {
@@ -465,7 +491,11 @@ function closeConfirm(answer) {
 function editable(el, { value, multiline, placeholder, onSave, onCancel }) {
   el.classList.add("ed");
   el.title = "Double-click to edit";
-  el.addEventListener("dblclick", event => {
+  // Assignment, not addEventListener: card elements are rebuilt on every
+  // render, but the run title is the page's one persistent h1, and stacking
+  // handlers there would leave the oldest closure — with the oldest value —
+  // winning the race.
+  el.ondblclick = event => {
     event.stopPropagation();
     if (el.dataset.editing) return;
     el.dataset.editing = "1";
@@ -500,7 +530,7 @@ function editable(el, { value, multiline, placeholder, onSave, onCancel }) {
         input.blur();
       }
     });
-  });
+  };
 }
 
 /* ---------- routing ---------- */
@@ -516,7 +546,16 @@ function route() {
 
 function setHeader({ eyebrow, title, back, backHref }) {
   $("eyebrow").textContent = eyebrow;   // textContent, so pass raw text here
-  $("title").innerHTML = title;         // innerHTML, so pass escaped text here
+
+  // The h1 survives every view change, so shed any editable binding the run
+  // view left on it before the next view claims it.
+  const h1 = $("title");
+  h1.classList.remove("ed", "on");
+  h1.removeAttribute("title");
+  h1.ondblclick = null;
+  delete h1.dataset.editing;
+
+  h1.innerHTML = title;                 // innerHTML, so pass escaped text here
   $("back").hidden = !back;
   $("back").setAttribute("href", backHref || "#/");
 }
@@ -607,21 +646,32 @@ async function renderGroup(slug) {
 
   const runs = group.runs || [];
   $("runnote").textContent = runs.length ? plural(runs.length, "run", "runs") : "none yet";
-  $("compact").hidden = runs.length === 0;
+  $("compact-bar").hidden = runs.length === 0;
   $("compact").onclick = () => startCompact(slug);
+
+  // Restore whatever was typed for this group last time, before the panel
+  // reads it back to work out whether Extract should be enabled.
+  $("urls").value = localStorage.getItem("urls:" + slug) || "";
+
+  // Adding listings is a deliberate act once a group has runs — but a group
+  // with none has nothing else worth showing, so the panel starts open there.
+  groupHasRuns = runs.length > 0;
+  setPastePanel(!groupHasRuns);
 
   if (runs.length) {
     $("runs-wrap").innerHTML =
       `<div class="tscroll"><table>
-        <thead><tr><th class="l">Run</th><th>ASINs</th><th>Reviews</th><th class="l">Parses</th>
-          <th class="act"></th></tr></thead>
+        <thead><tr><th class="l">Run</th><th class="l">Created</th><th>ASINs</th><th>Reviews</th>
+          <th class="l">Parses</th><th class="act"></th></tr></thead>
         <tbody>` + runs.map(r => `
           <tr class="r" data-run="${esc(r.run_id)}"
               data-asins="${r.asins_ok != null ? esc(r.asins_ok) : "?"}"
               data-parses="${(r.parses || []).length}">
-            <td class="l nm"><b>${esc(r.run_id)}</b>${r.compacted_from
+            <td class="l nm"><b>${esc(r.label || r.run_id)}</b>${r.label
+                ? `<span class="sub">${esc(r.run_id)}</span>` : ""}${r.compacted_from
                 ? `<span class="sub">compacted from ${plural(r.compacted_from.length, "run", "runs")}</span>`
                 : ""}</td>
+            <td class="l">${esc(fmtDateTime(runCreated(r)))}</td>
             <td>${r.asins_ok != null ? esc(r.asins_ok + " / " + r.asins_total) : "—"}</td>
             <td>${r.reviews_total != null ? esc(r.reviews_total) : "—"}</td>
             <td class="l">${r.parses && r.parses.length
@@ -645,11 +695,22 @@ async function renderGroup(slug) {
         <p>Each time you press <b>Extract</b>, a timestamped run is saved here with the raw
            Rainforest payloads, so nothing you pull is ever overwritten.</p></div>`;
   }
+}
 
-  // Restore whatever was typed for this group last time.
-  const saved = localStorage.getItem("urls:" + slug) || "";
-  $("urls").value = saved;
-  refreshPreview();
+/* ---------- the paste panel ----------
+   Collapsed, the action bar offers "Add"; open, it offers "Cancel" and
+   "Extract". Cancelling keeps the draft — runPreview already persists it per
+   group in localStorage, so reopening shows what you typed. */
+let groupHasRuns = false;
+
+function setPastePanel(open) {
+  $("paste-panel").hidden = !open;
+  $("addlistings").hidden = open || !groupHasRuns;
+  // Nothing to collapse back to on a group with no runs, so no Cancel there.
+  $("canceladd").hidden = !open || !groupHasRuns;
+  $("extract").hidden = !open;
+  if (!open) $("g-sum").hidden = true;
+  else refreshPreview();
 }
 
 /* ---------- deleting a run ---------- */
@@ -747,6 +808,10 @@ function refreshPreview() {
 async function runPreview() {
   const text = $("urls").value;
   if (currentSlug) localStorage.setItem("urls:" + currentSlug, text);
+
+  // A debounced call can land after the panel was collapsed. Don't let it put
+  // the summary strip back on screen.
+  if ($("paste-panel").hidden) return;
 
   if (!text.trim()) {
     $("g-sum").hidden = true;
@@ -1263,14 +1328,30 @@ async function renderRun(slug, runId) {
     return;
   }
 
-  const { group, run, log, stats } = data;
+  const { group, run, log, stats, meta } = data;
+  const label = (meta || {}).label || "";
   setHeader({
     eyebrow: `${group.name} · extraction run`,
-    title: esc(runId),
+    title: esc(label || runId),
     back: true,
     backHref: `#/g/${encodeURIComponent(slug)}`,
   });
   $("r-id").textContent = `data/${slug}/${runId}`;
+
+  // Name the run by double-clicking its title. The id underneath never
+  // changes — ordering and compaction both read it as a timestamp.
+  editable($("title"), {
+    value: label,
+    placeholder: runId,
+    onSave: async v => {
+      try {
+        await api(`/api/runs/${encodeURIComponent(slug)}/${encodeURIComponent(runId)}/meta`,
+                  { method: "PUT", body: JSON.stringify({ label: v }) });
+      } catch (e) { showError(e.message); }
+      renderRun(slug, runId);
+    },
+    onCancel: () => { $("title").innerHTML = esc(label || runId); },
+  });
 
   runState = { slug, runId, products: run.products || [], log, stats };
   removedOpen = false;
@@ -1318,6 +1399,8 @@ $("newgroup2").onclick = openModal;
 $("cancelgroup").onclick = closeModal;
 $("creategroup").onclick = createGroup;
 $("extract").onclick = startExtract;
+$("addlistings").onclick = () => { setPastePanel(true); $("urls").focus(); };
+$("canceladd").onclick = () => setPastePanel(false);
 $("urls").addEventListener("input", refreshPreview);
 
 $("gname").addEventListener("input", () => {

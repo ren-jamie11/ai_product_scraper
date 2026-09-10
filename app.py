@@ -161,6 +161,7 @@ def api_run(slug: str, run_id: str):
         "run": run,
         "stats": normalize.summarize(live),
         "log": storage.read_json(directory / "run_log.json", {}) or {},
+        "meta": storage.read_run_meta(slug, run_id),
     })
 
 
@@ -168,6 +169,13 @@ def api_run(slug: str, run_id: str):
 def api_delete_run(slug: str, run_id: str):
     """Move one run to data/<slug>/_trash/ — recoverable in the file browser."""
     return jsonify({"trashed": storage.trash_run(slug, run_id).name})
+
+
+@app.put("/api/runs/<slug>/<run_id>/meta")
+def api_set_run_label(slug: str, run_id: str):
+    """Name a run. The run id stays the timestamp it has always been."""
+    payload = request.get_json(silent=True) or {}
+    return jsonify({"meta": storage.set_run_label(slug, run_id, payload.get("label", ""))})
 
 
 # ---------------------------------------------------------------------------

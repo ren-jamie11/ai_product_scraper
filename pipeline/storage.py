@@ -138,7 +138,7 @@ def get_group(slug: str) -> dict:
     group = read_json(group_file(slug))
     if not group:
         raise StorageError("That group no longer exists.")
-    group["runs"] = list_runs(slug)
+    group["runs"] = list_runs(slug, with_stats=True)
     return group
 
 
@@ -162,8 +162,15 @@ def list_groups() -> list[dict]:
 # Runs
 # ---------------------------------------------------------------------------
 
-def list_runs(slug: str) -> list[dict]:
-    """Runs for a group, newest first. Run ids sort correctly as strings."""
+def list_runs(slug: str, with_stats: bool = False) -> list[dict]:
+    """Runs for a group, newest first. Run ids sort correctly as strings.
+
+    `with_stats` recomputes the ASIN and review counts from the current data
+    rather than reading them out of run_log.json, so a run that has been edited
+    reports what it now holds. It costs one extracted.json read per run, which
+    is why the groups list — needing only how many runs there are — leaves it
+    off.
+    """
     directory = group_dir(slug)
     if not directory.is_dir():
         return []
@@ -173,16 +180,37 @@ def list_runs(slug: str) -> list[dict]:
         if not child.is_dir() or is_hidden(child.name):
             continue
         log = read_json(child / "run_log.json", {}) or {}
-        runs.append({
+        run = {
             "run_id": child.name,
+            "label": (read_json(child / "run_meta.json", {}) or {}).get("label"),
             "started_at": log.get("started_at"),
             "asins_ok": log.get("asins_ok"),
             "asins_total": log.get("asins_total"),
             "reviews_total": log.get("reviews_total"),
             "compacted_from": log.get("compacted_from"),
             "parses": [p.name for p in sorted(child.glob("parse-*"), reverse=True) if p.is_dir()],
-        })
+        }
+        if with_stats:
+            run.update(_live_stats(slug, child.name))
+        runs.append(run)
     return runs
+
+
+def _live_stats(slug: str, run_id: str) -> dict:
+    """Current counts for a run, or {} if it never got as far as writing data.
+
+    Imported here rather than at module scope: normalize imports config, and
+    keeping storage free of that cycle matters more than the tidiness.
+    """
+    from pipeline import normalize
+
+    try:
+        products = load_run(slug, run_id).get("products", [])
+    except StorageError:
+        return {}   # an extraction that died before writing — keep the log's view
+
+    summary = normalize.summarize(products)
+    return {key: summary[key] for key in ("asins_ok", "asins_total", "reviews_total")}
 
 
 def claim_run_dir(slug: str) -> tuple[str, Path]:
@@ -302,6 +330,36 @@ def clear_edits(slug: str, run_id: str, asin: str) -> dict:
     edits.pop(asin, None)
     write_json(directory / "edits.json", edits)
     return edits
+
+
+# ---------------------------------------------------------------------------
+# Run metadata
+#
+# run_meta.json is to run_log.json what edits.json is to extracted.json: the
+# things you set by hand, kept apart from the machine's record of the fetch.
+# Today that is only a label, which is why run ids stay timestamps — the
+# ordering and compaction's tie-break both depend on that.
+# ---------------------------------------------------------------------------
+
+def read_run_meta(slug: str, run_id: str) -> dict:
+    return read_json(run_dir(slug, run_id) / "run_meta.json", {}) or {}
+
+
+def set_run_label(slug: str, run_id: str, label: str) -> dict:
+    """Name a run, or clear the name by passing an empty one."""
+    directory = run_dir(slug, run_id)
+    if not directory.is_dir() or is_hidden(run_id):
+        raise StorageError("That run no longer exists.")
+
+    meta = read_run_meta(slug, run_id)
+    label = (label or "").strip()[:120]
+    if label:
+        meta["label"] = label
+    else:
+        meta.pop("label", None)
+
+    write_json(directory / "run_meta.json", meta)
+    return meta
 
 
 # ---------------------------------------------------------------------------
