@@ -1,0 +1,59 @@
+# ---------------------------------------------------------------------------
+# Secrets — never commit anything that carries an API key
+# ---------------------------------------------------------------------------
+config.py
+config.local.py
+rainforest_api.txt
+
+# Env files (all variants: .env, .env.local, .env.production, ...)
+.env
+.env.*
+!.env.example
+
+# Key / credential files by extension or name
+*.pem
+*.key
+*.p12
+*.pfx
+*secret*
+*secrets*
+*credential*
+*credentials*
+*_api_key*
+*apikey*
+service-account*.json
+.netrc
+
+# ...but keep the safe templates visible
+!config.example.py
+!*.example
+!*.example.*
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# ---------------------------------------------------------------------------
+# Data and run output (may contain scraped listings / API responses)
+# ---------------------------------------------------------------------------
+data/
+*.log
+
+# ---------------------------------------------------------------------------
+# OS / editor
+# ---------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp

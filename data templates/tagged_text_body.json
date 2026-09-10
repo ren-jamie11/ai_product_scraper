@@ -1,0 +1,28 @@
+{
+  "asin": "B08N5K1234",
+  "url": "https://www.amazon.com/dp/B08N5K1234",
+  "type": "Review",
+  "body": "This rustic frame looks absolutely gorgeous on our living room wall. It was super easy to hang and feels very sturdy...",
+  "tags": {
+    "search_terms": [
+      "rustic frame",
+      "wall decor"
+    ],
+    "features": [
+      "easy to hang",
+      "sturdy build"
+    ],
+    "settings": {
+      "spaces": [
+        "Living room",
+        "bedroom"
+      ],
+      "placement": [
+        "nightstand"
+      ],
+      "occasion": [
+        "wedding"
+      ]
+    }
+  }
+}

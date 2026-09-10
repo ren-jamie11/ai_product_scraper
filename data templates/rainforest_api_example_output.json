@@ -1,0 +1,1009 @@
+{
+  "request_info": {
+    "success": true,
+    "credits_used": 40,
+    "credits_used_this_request": 1,
+    "credits_remaining": 460,
+    "credits_reset_at": "2026-06-06T09:58:21.000Z"
+  },
+  "request_parameters": {
+    "amazon_domain": "amazon.com",
+    "asin": "B08HVLJBF6",
+    "type": "product",
+    "output": "json"
+  },
+  "request_metadata": {
+    "created_at": "2026-05-25T18:21:37.939Z",
+    "processed_at": "2026-05-25T18:21:42.910Z",
+    "total_time_taken": 4.97,
+    "amazon_url": "https://www.amazon.com/dp/B08HVLJBF6?th=1&psc=1"
+  },
+  "product": {
+    "title": "Bosmarlin Large Ceramic Coffee Mug Set of 2, Stoneware Jumbo Latte Mugs for Office and Home, 16 Oz, Dishwasher and Microwave Safe(Brown Grey, 2) Brown Grey 2",
+    "search_alias": {
+      "title": "Home & Kitchen",
+      "value": "search-alias=garden"
+    },
+    "title_excluding_variant_name": "Bosmarlin Large Ceramic Coffee Mug Set of 2, Stoneware Jumbo Latte Mugs for Office and Home, 16 Oz, Dishwasher and Microwave Safe(Brown Grey, 2)",
+    "keywords": "Bosmarlin Large Ceramic Coffee Mug Set of 2, Stoneware Jumbo Latte Mugs for Office and Home, 16 Oz, Dishwasher and Microwave Safe(Brown Grey, 2) Brown Grey 2",
+    "keywords_list": [
+      "Bosmarlin Large Ceramic Coffee Mug Set of 2",
+      "Stoneware Jumbo Latte Mugs for Office and Home",
+      "16 Oz",
+      "Dishwasher and Microwave Safe(Brown Grey",
+      "2) Brown Grey 2"
+    ],
+    "is_collection": false,
+    "asin": "B08HVLJBF6",
+    "parent_asin": "B08HVB32P3",
+    "gtin": "787803500042",
+    "link": "https://www.amazon.com/Bosmarlin-Stoneware-Coffee-Dishwasher-Microwave/dp/B08HVLJBF6",
+    "brand": "Bosmarlin",
+    "sell_on_amazon": false,
+    "variants": [
+      {
+        "asin": "B08S7428R1",
+        "title": "Prussian Blue 2",
+        "is_current_product": false,
+        "link": "https://www.amazon.com/dp/B08S7428R1?th=1&psc=1",
+        "dimensions": [
+          {
+            "name": "Color",
+            "value": "Prussian Blue"
+          },
+          {
+            "name": "Item Package Quantity",
+            "value": "2"
+          }
+        ],
+        "main_image": "https://m.media-amazon.com/images/I/61Qjn4C2i1L._AC_SL1500_.jpg",
+        "images": [
+          {
+            "variant": "MAIN",
+            "link": "https://m.media-amazon.com/images/I/61Qjn4C2i1L._AC_SL1500_.jpg"
+          }
+        ]
+      },
+      {
+        "asin": "B08HVLJBF6",
+        "title": "Brown Grey 2",
+        "is_current_product": true,
+        "link": "https://www.amazon.com/dp/B08HVLJBF6?th=1&psc=1",
+        "dimensions": [
+          {
+            "name": "Color",
+            "value": "Brown Grey"
+          },
+          {
+            "name": "Item Package Quantity",
+            "value": "2"
+          }
+        ],
+        "main_image": "https://m.media-amazon.com/images/I/61arMkVIFCL._AC_SL1500_.jpg",
+        "images": [
+          {
+            "variant": "MAIN",
+            "link": "https://m.media-amazon.com/images/I/61arMkVIFCL._AC_SL1500_.jpg"
+          }
+        ]
+      },
+      {
+        "asin": "B08HV4YHLR",
+        "title": "Pink 2",
+        "is_current_product": false,
+        "link": "https://www.amazon.com/dp/B08HV4YHLR?th=1&psc=1",
+        "dimensions": [
+          {
+            "name": "Color",
+            "value": "Pink"
+          },
+          {
+            "name": "Item Package Quantity",
+            "value": "2"
+          }
+        ],
+        "main_image": "https://m.media-amazon.com/images/I/61vKzNaLK6L._AC_SL1500_.jpg",
+        "images": [
+          {
+            "variant": "MAIN",
+            "link": "https://m.media-amazon.com/images/I/61vKzNaLK6L._AC_SL1500_.jpg"
+          }
+        ]
+      },
+      {
+        "asin": "B08HVL97JW",
+        "title": "Blue 2",
+        "is_current_product": false,
+        "link": "https://www.amazon.com/dp/B08HVL97JW?th=1&psc=1",
+        "dimensions": [
+          {
+            "name": "Color",
+            "value": "Blue"
+          },
+          {
+            "name": "Item Package Quantity",
+            "value": "2"
+          }
+        ],
+        "main_image": "https://m.media-amazon.com/images/I/71erFCusNzL._AC_SL1500_.jpg",
+        "images": [
+          {
+            "variant": "MAIN",
+            "link": "https://m.media-amazon.com/images/I/71erFCusNzL._AC_SL1500_.jpg"
+          }
+        ]
+      },
+      {
+        "asin": "B08HVLLCHC",
+        "title": "Green 2",
+        "is_current_product": false,
+        "link": "https://www.amazon.com/dp/B08HVLLCHC?th=1&psc=1",
+        "dimensions": [
+          {
+            "name": "Color",
+            "value": "Green"
+          },
+          {
+            "name": "Item Package Quantity",
+            "value": "2"
+          }
+        ],
+        "main_image": "https://m.media-amazon.com/images/I/71GLDTDeBrL._AC_SL1500_.jpg",
+        "images": [
+          {
+            "variant": "MAIN",
+            "link": "https://m.media-amazon.com/images/I/71GLDTDeBrL._AC_SL1500_.jpg"
+          }
+        ]
+      }
+    ],
+    "variant_asins_flat": "B08S7428R1,B08HVLJBF6,B08HV4YHLR,B08HVL97JW,B08HVLLCHC",
+    "proposition_65_warning": false,
+    "has_size_guide": true,
+    "add_on_item": {
+      "is_add_on_item": true
+    },
+    "categories": [
+      {
+        "name": "Home & Kitchen",
+        "link": "https://www.amazon.com/home-garden-kitchen-furniture-bedding/b/ref=dp_bc_1?ie=UTF8&node=1055398",
+        "category_id": "1055398"
+      },
+      {
+        "name": "Kitchen & Dining",
+        "link": "https://www.amazon.com/kitchen-dining/b/ref=dp_bc_2?ie=UTF8&node=284507",
+        "category_id": "284507"
+      },
+      {
+        "name": "Dining & Entertaining",
+        "link": "https://www.amazon.com/dining-entertaining/b/ref=dp_bc_3?ie=UTF8&node=13162311",
+        "category_id": "13162311"
+      },
+      {
+        "name": "Glassware & Drinkware",
+        "link": "https://www.amazon.com/glassware/b/ref=dp_bc_4?ie=UTF8&node=13217501",
+        "category_id": "13217501"
+      },
+      {
+        "name": "Cups, Mugs, & Saucers",
+        "link": "https://www.amazon.com/cups-mugs-saucers/b/ref=dp_bc_5?ie=UTF8&node=367125011",
+        "category_id": "367125011"
+      },
+      {
+        "name": "Mug Sets",
+        "link": "https://www.amazon.com/Mug-Sets/b/ref=dp_bc_6?ie=UTF8&node=9298951011",
+        "category_id": "9298951011"
+      }
+    ],
+    "categories_flat": "Home & Kitchen > Kitchen & Dining > Dining & Entertaining > Glassware & Drinkware > Cups, Mugs, & Saucers > Mug Sets",
+    "sub_title": {
+      "text": "Visit the Bosmarlin Store",
+      "link": "https://www.amazon.com/stores/Bosmarlin/page/5DAEA6DF-CD4E-4FB8-9780-99DD7669CDD9?lp_asin=B08HVLJBF6&ref_=ast_bln&store_ref=bl_ast_dp_brandlogo_sto"
+    },
+    "marketplace_id": "ATVPDKIKX0DER",
+    "rating": 4.7,
+    "rating_breakdown": {
+      "five_star": {
+        "percentage": 85,
+        "count": 1568
+      },
+      "four_star": {
+        "percentage": 8,
+        "count": 148
+      },
+      "three_star": {
+        "percentage": 3,
+        "count": 55
+      },
+      "two_star": {
+        "percentage": 2,
+        "count": 37
+      },
+      "one_star": {
+        "percentage": 2,
+        "count": 37
+      }
+    },
+    "ratings_total": 1845,
+    "main_image": {
+      "link": "https://m.media-amazon.com/images/I/61arMkVIFCL.jpg"
+    },
+    "images": [
+      {
+        "link": "https://m.media-amazon.com/images/I/61NW+IW9NIL._AC_SL1200_.jpg",
+        "variant": "PT01"
+      },
+      {
+        "link": "https://m.media-amazon.com/images/I/71wN45k6B4L._AC_SL1200_.jpg",
+        "variant": "PT02"
+      },
+      {
+        "link": "https://m.media-amazon.com/images/I/71MPUAD8kDL._AC_SL1200_.jpg",
+        "variant": "PT03"
+      },
+      {
+        "link": "https://m.media-amazon.com/images/I/71IVVc3ZIeL._AC_SL1200_.jpg",
+        "variant": "PT04"
+      },
+      {
+        "link": "https://m.media-amazon.com/images/I/710hTDQxJ3L._AC_SL1200_.jpg",
+        "variant": "PT05"
+      },
+      {
+        "link": "https://m.media-amazon.com/images/I/61w5NUJU8dL._AC_SL1200_.jpg",
+        "variant": "PT06"
+      }
+    ],
+    "images_count": 6,
+    "images_flat": "https://m.media-amazon.com/images/I/61NW+IW9NIL._AC_SL1200_.jpg,https://m.media-amazon.com/images/I/71wN45k6B4L._AC_SL1200_.jpg,https://m.media-amazon.com/images/I/71MPUAD8kDL._AC_SL1200_.jpg,https://m.media-amazon.com/images/I/71IVVc3ZIeL._AC_SL1200_.jpg,https://m.media-amazon.com/images/I/710hTDQxJ3L._AC_SL1200_.jpg,https://m.media-amazon.com/images/I/61w5NUJU8dL._AC_SL1200_.jpg",
+    "videos_count": 4,
+    "videos_additional": [
+      {
+        "type": "videos_for_this_product",
+        "id": "amzn1.vse.video.012709c4a15a4c9dbfb33fe104536c2e",
+        "product_asin": "B08HVLJBF6",
+        "parent_asin": "B08HVB32P3",
+        "related_products": "B08HVLJBF6,B08HVB32P3",
+        "title": "AMAZING QUALITY Ceramic Coffee mugs by Bosmarlin",
+        "profile_image_url": "https://m.media-amazon.com/images/I/61w1dEDuIYL._CR0,0,1026,1026_._FMjpg_._SL34_.jpg",
+        "profile_link": "/shop/caryragman",
+        "public_name": "✅  Ragman's Reviews",
+        "vendor_code": "caryragman:shop",
+        "vendor_name": "✅  Ragman's Reviews",
+        "vendor_tracking_id": "onamzcaryragl-20",
+        "video_image_url": "https://m.media-amazon.com/images/I/71AFmRUikXL._CR0,0,640,361_SR342,193_.jpg",
+        "video_image_url_unchanged": "https://m.media-amazon.com/images/I/71AFmRUikXL.jpg",
+        "video_image_width": "640",
+        "video_image_height": "1137",
+        "video_image_extension": "jpg",
+        "video_url": "https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/781274b1-3d53-4cf3-8017-4d6c9792caee/default.vertical.jobtemplate.hls.m3u8",
+        "video_previews": "https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/58d51ff5-8990-430b-a8a7-bd5f563f506e/videopreview.jobtemplate.mp4.default.mp4,342X192P_20HZ_350KBPS_VER_1_0,video/mp4,https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/58d51ff5-8990-430b-a8a7-bd5f563f506e/videopreview.jobtemplate.mp4.default.mp4,default,video/mp4",
+        "video_mime_type": "application/x-mpegURL",
+        "duration": "0:43",
+        "closed_captions": "en,https://m.media-amazon.com/images/S/vse-vms-closed-captions-artifact-us-east-1-prod/closedCaptions/acf97783-1fb8-49bc-a2b0-aaafae457bb9.vtt"
+      },
+      {
+        "type": "videos_for_this_product",
+        "id": "amzn1.vse.video.0b11e0d1ee7447ebafbb2ab67721d338",
+        "product_asin": "B08HVLJBF6",
+        "parent_asin": "B08HVB32P3",
+        "related_products": "B08HVLJBF6,B08HVB32P3",
+        "title": "THINGS to KNOW about Bosmarlin Stoneware Coffee Mug Set",
+        "profile_image_url": "https://m.media-amazon.com/images/I/61w1dEDuIYL._CR0,0,1026,1026_._FMjpg_._SL34_.jpg",
+        "profile_link": "/shop/caryragman",
+        "public_name": "✅  Ragman's Reviews",
+        "vendor_code": "caryragman:shop",
+        "vendor_name": "✅  Ragman's Reviews",
+        "vendor_tracking_id": "onamzcaryragl-20",
+        "video_image_url": "https://m.media-amazon.com/images/I/61z90jf0X8L._CR0,0,1234,696_SR684,386_.jpg",
+        "video_image_url_unchanged": "https://m.media-amazon.com/images/I/61z90jf0X8L.jpg",
+        "video_image_width": "1234",
+        "video_image_height": "823",
+        "video_image_extension": "jpg",
+        "video_url": "https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/3651c90d-2075-4959-b3fd-e0081c0f9e44/default.jobtemplate.hls.m3u8",
+        "video_previews": "https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/6dbdbfcc-dcbd-4363-b688-b05b25fd3f89/videopreview.jobtemplate.mp4.default.mp4,342X192P_20HZ_350KBPS_VER_1_0,video/mp4,https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/6dbdbfcc-dcbd-4363-b688-b05b25fd3f89/videopreview.jobtemplate.mp4.default.mp4,default,video/mp4",
+        "video_mime_type": "application/x-mpegURL",
+        "duration": "0:45",
+        "closed_captions": "en,https://m.media-amazon.com/images/S/vse-vms-closed-captions-artifact-us-east-1-prod/closedCaptions/ea6009ee-31e9-498f-8a61-b991c62f571c.vtt"
+      },
+      {
+        "type": "videos_for_this_product",
+        "id": "amzn1.vse.video.0deddd74f89f4d6388d6890116734fda",
+        "product_asin": "B08HVLJBF6",
+        "parent_asin": "B08HVB32P3",
+        "related_products": "B08HVLLCHC",
+        "title": "Adorable set of mugs ",
+        "profile_image_url": "https://m.media-amazon.com/images/I/81lqNIBxErL._CR0,0,1536,1536_._FMjpg_._SL34_.jpg",
+        "profile_link": "/shop/mountainmama112",
+        "public_name": "Laura ",
+        "vendor_code": "mountainmama112:shop",
+        "vendor_name": "Laura ",
+        "vendor_tracking_id": "onamzlau04b16-20",
+        "video_image_url": "https://m.media-amazon.com/images/I/91e4F+pEhKL._CR0,0,3024,1707_SR684,386_.jpg",
+        "video_image_url_unchanged": "https://m.media-amazon.com/images/I/91e4F+pEhKL.jpg",
+        "video_image_width": "3024",
+        "video_image_height": "4032",
+        "video_image_extension": "jpg",
+        "video_url": "https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/246d96fb-9552-452c-af73-78bafc72a557/default.vertical.jobtemplate.hls.m3u8",
+        "video_previews": "https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/d45fd0ef-8815-4950-a858-eab41eb876d9/videopreview.jobtemplate.mp4.default.mp4,342X192P_20HZ_350KBPS_VER_1_0,video/mp4,https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/d45fd0ef-8815-4950-a858-eab41eb876d9/videopreview.jobtemplate.mp4.default.mp4,default,video/mp4,https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/d45fd0ef-8815-4950-a858-eab41eb876d9/c77f17b7-9c93-47b3-b1a1-9b2ae315a2a0/0deddd74f89f4d6388d6890116734fda_0-100-0-100_gandalf_preview.m3u8,gandalf,application/x-mpegURL",
+        "video_mime_type": "application/x-mpegURL",
+        "duration": "0:28",
+        "closed_captions": "en,https://m.media-amazon.com/images/S/vse-vms-closed-captions-artifact-us-east-1-prod/closedCaptions/54213312-37f0-470e-a23b-6948a3b066e3.vtt"
+      },
+      {
+        "type": "videos_for_this_product",
+        "id": "amzn1.ive.seller.video.0c40bdfe3cb648779dc8e3d08508af75",
+        "product_asin": "B08HVLJBF6",
+        "parent_asin": "B08HVB32P3",
+        "related_products": "B08HVLJBF6",
+        "title": "Bosmarlin Ceramic Latte mug",
+        "public_name": "Smarlin",
+        "vendor_code": "Z7AX4",
+        "vendor_name": "Smarlin",
+        "video_image_url": "https://m.media-amazon.com/images/I/41mcVclhgjL._CR1,0,638,360_SR342,193_.jpg",
+        "video_image_url_unchanged": "https://m.media-amazon.com/images/I/41mcVclhgjL.jpg",
+        "video_image_width": "640",
+        "video_image_height": "360",
+        "video_image_extension": "jpg",
+        "video_url": "https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/344140ad-7a82-4360-81a9-cdab9b9875df/default.jobtemplate.hls.m3u8",
+        "video_previews": "https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/8e3efc1c-86cb-4837-ae2e-221ae17f6b3b/videopreview.jobtemplate.mp4.342X192P_20HZ_350KBPS_VER_1_0.mp4,342X192P_20HZ_350KBPS_VER_1_0,video/mp4,https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/8e3efc1c-86cb-4837-ae2e-221ae17f6b3b/e436fd03-b7a4-4a3e-84dc-f3946356c948/0c40bdfe3cb648779dc8e3d08508af75_0-100-0-100_gandalf_preview.m3u8,gandalf,application/x-mpegURL",
+        "video_mime_type": "application/x-mpegURL",
+        "duration": "1:03",
+        "closed_captions": "en,https://m.media-amazon.com/images/S/vse-vms-closed-captions-artifact-us-east-1-prod/closedCaptions/47cc329a-236f-49c8-9cb2-e4f42f94c9ea.vtt"
+      },
+      {
+        "type": "videos_for_this_product",
+        "id": "amzn1.productreview.R2KUPB6OVU34BV",
+        "product_asin": "B08HVLJBF6",
+        "parent_asin": "B08HVB32P3",
+        "related_products": "B08HVLJBF6",
+        "title": "High Quality, Very Artistic",
+        "profile_image_url": "https://m.media-amazon.com/images/S/amazon-avatars-global/212110ea-2c36-493c-9e54-11568a5b527d._CR62%2C0%2C375%2C375_SX460_._SL34_.jpg",
+        "profile_link": "/gp/profile/amzn1.account.AGYYSVJJ3J6ZVS55E7KKUPO7JRNQ",
+        "public_name": "John Chancellor",
+        "vendor_code": "AOD60",
+        "vendor_name": "John Chancellor",
+        "video_image_url": "https://m.media-amazon.com/images/I/51Ml+m3D4vL._CR2,0,1276,720_SR684,386_.jpg",
+        "video_image_url_unchanged": "https://m.media-amazon.com/images/I/51Ml+m3D4vL.jpg",
+        "video_image_width": "1280",
+        "video_image_height": "720",
+        "video_image_extension": "jpg",
+        "video_url": "https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/44b7a06a-7766-4aa5-86f7-4d199eb19b4f/default.jobtemplate.hls.m3u8",
+        "video_previews": "https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/7a8ca600-248a-4ca9-9385-4321375f9a85/videopreview.jobtemplate.mp4.342X192P_20HZ_350KBPS_VER_1_0.mp4,342X192P_20HZ_350KBPS_VER_1_0,video/mp4",
+        "video_mime_type": "application/x-mpegURL",
+        "duration": "1:35",
+        "closed_captions": "en,https://m.media-amazon.com/images/S/vse-vms-closed-captions-artifact-us-east-1-prod/closedCaptions/e837228a-8bb2-4a2f-94b0-d39058a647c6.vtt"
+      },
+      {
+        "type": "videos_for_this_product",
+        "id": "amzn1.vse.video.0a5c87efa753411880d46522e04d4fbe",
+        "product_asin": "B08HVLJBF6",
+        "parent_asin": "B08HVB32P3",
+        "related_products": "B08HVL97JW,B08HVLLCHC,B08S7428R1,B08HVLJBF6",
+        "title": "Love these ceramic mugs!",
+        "profile_image_url": "https://m.media-amazon.com/images/I/817tGqHVnQL._CR0,0,1603,1603_._FMjpg_._SL34_.jpg",
+        "profile_link": "/shop/goldengatepup",
+        "public_name": "⭐️ Sydney Sky",
+        "vendor_code": "goldengatepup:shop",
+        "vendor_name": "⭐️ Sydney Sky",
+        "vendor_tracking_id": "onamzgolde07b-20",
+        "video_image_url": "https://m.media-amazon.com/images/I/51pEUZjWMOL._CR1,0,638,360_SR342,193_.jpg",
+        "video_image_url_unchanged": "https://m.media-amazon.com/images/I/51pEUZjWMOL.jpg",
+        "video_image_width": "640",
+        "video_image_height": "360",
+        "video_image_extension": "jpg",
+        "video_url": "https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/85384b49-b6fb-46e7-a52f-f1a6805d5181/default.jobtemplate.hls.m3u8",
+        "video_previews": "https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/a41dfc1a-19cd-42ef-9548-2573634ea0bc/videopreview.jobtemplate.mp4.default.mp4,342X192P_20HZ_350KBPS_VER_1_0,video/mp4,https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/a41dfc1a-19cd-42ef-9548-2573634ea0bc/videopreview.jobtemplate.mp4.default.mp4,default,video/mp4",
+        "video_mime_type": "application/x-mpegURL",
+        "duration": "0:38",
+        "closed_captions": "en,https://m.media-amazon.com/images/S/vse-vms-closed-captions-artifact-us-east-1-prod/closedCaptions/779b659f-6571-43be-aab1-e9aa603ff666.vtt"
+      }
+    ],
+    "is_bundle": false,
+    "feature_bullets": [
+      "This mug has a large capacity(16 oz), larger than most of mugs, which will definitely meet your needs for office and home.",
+      "STURDY & DURABLE: Designed with strong ceramic construction, made of lead-free, cadmium-free, high quality ceramic. Suitable for hot and cold drinks. Dishwasher and microwave safe.",
+      "EASY TO HOLD: Question mark-shaped handle can keep it from rotating when you try to hold the mug, which helps you enjoy your tea/coffee comfortably.",
+      "SIMPLE & CLASSIC: So simple but classic design. A choice of four stylish colors makes a great gift for the Holidays, birthdays and special occasions.",
+      "If you have any problem with our mug after received, just contact us! We promise that we will make every effort to solve it. We care deeply for our customers and make you our top priority! Thank you!"
+    ],
+    "feature_bullets_count": 5,
+    "feature_bullets_flat": "If you have any problem with our mug after received, just contact us! We promise that we will make every effort to solve it. We care deeply for our customers and make you our top priority! Thank you!. SIMPLE & CLASSIC: So simple but classic design. A choice of four stylish colors makes a great gift for the Holidays, birthdays and special occasions. EASY TO HOLD: Question mark-shaped handle can keep it from rotating when you try to hold the mug, which helps you enjoy your tea/coffee comfortably. STURDY & DURABLE: Designed with strong ceramic construction, made of lead-free, cadmium-free, high quality ceramic. Suitable for hot and cold drinks. Dishwasher and microwave safe. This mug has a large capacity(16 oz), larger than most of mugs, which will definitely meet your needs for office and home.",
+    "top_reviews": [
+      {
+        "id": "R2FVAC3X5DI0TO",
+        "title": "Cup of joy!",
+        "body": "Perfect size for lattes. So pretty 💕. I've already used mine and run through dishwasher several times. Great quality!",
+        "body_html": "<div data-hook=\"reviewRichContentContainer\" lang=\"en-US\" class=\"_Y3Itd_contain-rich-content_2IORW\"><p><span>Perfect size for lattes. So pretty 💕. I've already used mine and run through dishwasher several times. Great quality!</span></p></div>",
+        "link": "https://www.amazon.com/review/R2FVAC3X5DI0TO/ref=cm_cr_dp_d_rvw_ttl?ie=UTF8",
+        "asin": "B08HVLJBF6",
+        "rating": 5,
+        "date": {
+          "raw": "Reviewed in the United States on April 17, 2026",
+          "utc": "2026-04-17T00:00:00.000Z"
+        },
+        "profile": {
+          "name": "Nina Lay",
+          "link": "https://www.amazon.com/gp/profile/amzn1.account.AFSCJ4NKKN7H3C4SSYQSLYTALL5Q",
+          "id": "AFSCJ4NKKN7H3C4SSYQSLYTALL5Q"
+        },
+        "attributes": [
+          {
+            "name": "Color",
+            "value": "Pink"
+          },
+          {
+            "name": "Item Package Quantity",
+            "value": "2"
+          }
+        ],
+        "attributes_flat": "Color: Pink, Item Package Quantity: 2",
+        "asin_review": "B08HV4YHLR",
+        "vine_program": false,
+        "verified_purchase": true,
+        "review_country": "us"
+      },
+      {
+        "id": "R2JPZATQDVJVDV",
+        "title": "Perfect Go-To Mugs for Morning Coffee",
+        "body": "The Bosmarlin Large Ceramic Coffee Mug Set has become our go-to mugs for morning coffee. The 16 oz size is perfect, and they feel sturdy and comfortable to hold.We’ve put them in the dishwasher with no damage at all, and they hold up beautifully. The brown-grey color is stylish and looks great at home or in the office.Highly recommend these mugs for everyday use!",
+        "body_html": "<div data-hook=\"reviewRichContentContainer\" lang=\"en-US\" class=\"_Y3Itd_contain-rich-content_2IORW\"><p><span>The Bosmarlin Large Ceramic Coffee Mug Set has become our go-to mugs for morning coffee. The 16 oz size is perfect, and they feel sturdy and comfortable to hold.</span></p><p><span></span></p><p><span>We’ve put them in the dishwasher with no damage at all, and they hold up beautifully. The brown-grey color is stylish and looks great at home or in the office.</span></p><p><span></span></p><p><span>Highly recommend these mugs for everyday use!</span></p></div>",
+        "link": "https://www.amazon.com/review/R2JPZATQDVJVDV/ref=cm_cr_dp_d_rvw_ttl?ie=UTF8",
+        "asin": "B08HVLJBF6",
+        "rating": 5,
+        "date": {
+          "raw": "Reviewed in the United States on January 8, 2026",
+          "utc": "2026-01-08T00:00:00.000Z"
+        },
+        "profile": {
+          "name": "wanda l patterson",
+          "link": "https://www.amazon.com/gp/profile/amzn1.account.AHTCJRXCI5GFICQU6AO5AR7EHGVA",
+          "id": "AHTCJRXCI5GFICQU6AO5AR7EHGVA"
+        },
+        "attributes": [
+          {
+            "name": "Color",
+            "value": "Brown Grey"
+          },
+          {
+            "name": "Item Package Quantity",
+            "value": "2"
+          }
+        ],
+        "attributes_flat": "Color: Brown Grey, Item Package Quantity: 2",
+        "asin_review": "B08HVLJBF6",
+        "vine_program": false,
+        "verified_purchase": true,
+        "helpful_votes": 1,
+        "review_country": "us"
+      },
+      {
+        "id": "R3AVLVRLAND2FF",
+        "title": "So pretty!",
+        "body": "I love these! I purchased these to use at a “baby is brewing” baby shower. Perfectly pink! Nice mugs, feels good in your hand",
+        "body_html": "<div data-hook=\"reviewRichContentContainer\" lang=\"en-US\" class=\"_Y3Itd_contain-rich-content_2IORW\"><p><span>I love these! I purchased these to use at a “baby is brewing” baby shower. Perfectly pink! Nice mugs, feels good in your hand</span></p></div>",
+        "link": "https://www.amazon.com/review/R3AVLVRLAND2FF/ref=cm_cr_dp_d_rvw_ttl?ie=UTF8",
+        "asin": "B08HVLJBF6",
+        "rating": 5,
+        "date": {
+          "raw": "Reviewed in the United States on April 25, 2026",
+          "utc": "2026-04-25T00:00:00.000Z"
+        },
+        "profile": {
+          "name": "Al",
+          "link": "https://www.amazon.com/gp/profile/amzn1.account.AHLUTKRGTU3SI44H7GD2ELPDWCTQ",
+          "id": "AHLUTKRGTU3SI44H7GD2ELPDWCTQ"
+        },
+        "attributes": [
+          {
+            "name": "Color",
+            "value": "Pink"
+          },
+          {
+            "name": "Item Package Quantity",
+            "value": "2"
+          }
+        ],
+        "attributes_flat": "Color: Pink, Item Package Quantity: 2",
+        "asin_review": "B08HV4YHLR",
+        "vine_program": false,
+        "verified_purchase": true,
+        "helpful_votes": 1,
+        "review_country": "us"
+      },
+      {
+        "id": "R38277B0YJQHQR",
+        "title": "Great large latte cups that are sturdy & durable!",
+        "body": "My latte cups are sturdy, durable & attractive and go in the dishwasher with no problem.",
+        "body_html": "<div data-hook=\"reviewRichContentContainer\" lang=\"en-US\" class=\"_Y3Itd_contain-rich-content_2IORW\"><p><span>My latte cups are sturdy, durable &amp; attractive and go in the dishwasher with no problem.</span></p></div>",
+        "link": "https://www.amazon.com/review/R38277B0YJQHQR/ref=cm_cr_dp_d_rvw_ttl?ie=UTF8",
+        "asin": "B08HVLJBF6",
+        "rating": 5,
+        "date": {
+          "raw": "Reviewed in the United States on April 21, 2026",
+          "utc": "2026-04-21T00:00:00.000Z"
+        },
+        "profile": {
+          "name": "Andrea T",
+          "link": "https://www.amazon.com/gp/profile/amzn1.account.AGHTUQFFXX4PHZJUAIDFDFN5KRMA",
+          "id": "AGHTUQFFXX4PHZJUAIDFDFN5KRMA",
+          "image": "https://m.media-amazon.com/images/S/amazon-avatars-global/47975ae7-0a97-4131-8595-59ebaa1d520a._CR0%2C0%2C453%2C453_UX460_SX48_.jpg"
+        },
+        "attributes": [
+          {
+            "name": "Color",
+            "value": "Brown Grey"
+          },
+          {
+            "name": "Item Package Quantity",
+            "value": "2"
+          }
+        ],
+        "attributes_flat": "Color: Brown Grey, Item Package Quantity: 2",
+        "asin_review": "B08HVLJBF6",
+        "vine_program": false,
+        "verified_purchase": true,
+        "review_country": "us"
+      },
+      {
+        "id": "RKXKT2DMA01A",
+        "title": "Great coffee mugs",
+        "body": "I got an espresso/latte machine for Christmas and needed some larger mugs for my lattes. We found these and I instantly loved the design and color of the mugs. They are true to the pictures and the color is accurate.The mug is large enough to fit my double shot lattes with some whipped cream on top. The handle is big enough for my hand to fit comfortably which is a huge plus. My husband said he can hold them comfortably as well.We keep ours out on display between uses because they are so pretty.So far they have held up and have no chips and the paint is still intact after numerous uses and washes.The mugs hold temperature just as well as any other mug I've used and we have enjoyed drinking our coffee out of them.",
+        "body_html": "<div data-hook=\"reviewRichContentContainer\" lang=\"en-US\" class=\"_Y3Itd_contain-rich-content_2IORW\"><p><span>I got an espresso/latte machine for Christmas and needed some larger mugs for my lattes. We found these and I instantly loved the design and color of the mugs. They are true to the pictures and the color is accurate.</span></p><p><span>The mug is large enough to fit my double shot lattes with some whipped cream on top. The handle is big enough for my hand to fit comfortably which is a huge plus. My husband said he can hold them comfortably as well.</span></p><p><span>We keep ours out on display between uses because they are so pretty.</span></p><p><span>So far they have held up and have no chips and the paint is still intact after numerous uses and washes.</span></p><p><span>The mugs hold temperature just as well as any other mug I've used and we have enjoyed drinking our coffee out of them.</span></p></div>",
+        "link": "https://www.amazon.com/review/RKXKT2DMA01A/ref=cm_cr_dp_d_rvw_ttl?ie=UTF8",
+        "asin": "B08HVLJBF6",
+        "rating": 5,
+        "date": {
+          "raw": "Reviewed in the United States on February 22, 2025",
+          "utc": "2025-02-22T00:00:00.000Z"
+        },
+        "profile": {
+          "name": "Hayley",
+          "link": "https://www.amazon.com/gp/profile/amzn1.account.AEHPQFUFLOVCORTOZJYB6MFWG6CA",
+          "id": "AEHPQFUFLOVCORTOZJYB6MFWG6CA"
+        },
+        "attributes": [
+          {
+            "name": "Color",
+            "value": "Prussian Blue"
+          },
+          {
+            "name": "Item Package Quantity",
+            "value": "2"
+          }
+        ],
+        "attributes_flat": "Color: Prussian Blue, Item Package Quantity: 2",
+        "asin_review": "B08S7428R1",
+        "vine_program": false,
+        "verified_purchase": true,
+        "helpful_votes": 7,
+        "review_country": "us"
+      },
+      {
+        "id": "R3BEO03BX4M6G",
+        "title": "Beautiful",
+        "body": "I got these in green and pink and they are beautiful. The coffee color can end up staying on the ceramic if you don’t wash it off before putting it in the dishwasher. However,  it did come off easily with Ajax. We just have to remember to rinse properly after use. Overall, I have been enjoying using them and find it a good purchase.",
+        "body_html": "<div data-hook=\"reviewRichContentContainer\" lang=\"en-US\" class=\"_Y3Itd_contain-rich-content_2IORW\"><p><span>I got these in green and pink and they are beautiful. The coffee color can end up staying on the ceramic if you don’t wash it off before putting it in the dishwasher. However,  it did come off easily with Ajax. We just have to remember to rinse properly after use. Overall, I have been enjoying using them and find it a good purchase.</span></p></div>",
+        "link": "https://www.amazon.com/review/R3BEO03BX4M6G/ref=cm_cr_dp_d_rvw_ttl?ie=UTF8",
+        "asin": "B08HVLJBF6",
+        "rating": 4,
+        "date": {
+          "raw": "Reviewed in the United States on May 3, 2026",
+          "utc": "2026-05-03T00:00:00.000Z"
+        },
+        "profile": {
+          "name": "Ann Moore",
+          "link": "https://www.amazon.com/gp/profile/amzn1.account.AGFAJ2Q5GFU5A44T4FRAXUTEDSKQ",
+          "id": "AGFAJ2Q5GFU5A44T4FRAXUTEDSKQ"
+        },
+        "attributes": [
+          {
+            "name": "Color",
+            "value": "Green"
+          },
+          {
+            "name": "Item Package Quantity",
+            "value": "2"
+          }
+        ],
+        "attributes_flat": "Color: Green, Item Package Quantity: 2",
+        "asin_review": "B08HVLLCHC",
+        "vine_program": false,
+        "verified_purchase": true,
+        "helpful_votes": 1,
+        "review_country": "us"
+      },
+      {
+        "id": "RS95SD895IERG",
+        "title": "I’ll give you some tea.. buy these!",
+        "body": "Love these mugs. Hold up well in the microwave. Color is great. Handle is perfect to hold. I haven’t burnt my fingers. Dishwasher cleans them right up. Would buy again if I find more I like.",
+        "body_html": "<div data-hook=\"reviewRichContentContainer\" lang=\"en-US\" class=\"_Y3Itd_contain-rich-content_2IORW\"><p><span>Love these mugs. Hold up well in the microwave. Color is great. Handle is perfect to hold. I haven’t burnt my fingers. Dishwasher cleans them right up. Would buy again if I find more I like.</span></p></div>",
+        "link": "https://www.amazon.com/review/RS95SD895IERG/ref=cm_cr_dp_d_rvw_ttl?ie=UTF8",
+        "asin": "B08HVLJBF6",
+        "rating": 5,
+        "date": {
+          "raw": "Reviewed in the United States on April 28, 2026",
+          "utc": "2026-04-28T00:00:00.000Z"
+        },
+        "profile": {
+          "name": "Abbie",
+          "link": "https://www.amazon.com/gp/profile/amzn1.account.AEHIWS4R7RO5O3DYX7G2J7SQXF4A",
+          "id": "AEHIWS4R7RO5O3DYX7G2J7SQXF4A"
+        },
+        "attributes": [
+          {
+            "name": "Color",
+            "value": "Prussian Blue"
+          },
+          {
+            "name": "Item Package Quantity",
+            "value": "2"
+          }
+        ],
+        "attributes_flat": "Color: Prussian Blue, Item Package Quantity: 2",
+        "asin_review": "B08S7428R1",
+        "vine_program": false,
+        "verified_purchase": true,
+        "review_country": "us"
+      },
+      {
+        "id": "R1U3U324LGH9O8",
+        "title": "Nice mug",
+        "body": "Have had these for a few months and they have held up well. Nice mug, no complaints.",
+        "body_html": "<div data-hook=\"reviewRichContentContainer\" lang=\"en-US\" class=\"_Y3Itd_contain-rich-content_2IORW\"><p><span>Have had these for a few months and they have held up well. Nice mug, no complaints.</span></p></div>",
+        "link": "https://www.amazon.com/review/R1U3U324LGH9O8/ref=cm_cr_dp_d_rvw_ttl?ie=UTF8",
+        "asin": "B08HVLJBF6",
+        "rating": 5,
+        "date": {
+          "raw": "Reviewed in the United States on April 20, 2026",
+          "utc": "2026-04-20T00:00:00.000Z"
+        },
+        "profile": {
+          "name": "Joseph Toth",
+          "link": "https://www.amazon.com/gp/profile/amzn1.account.AHAE6VNPVHC7GPQJYQOFUGFNPF6A",
+          "id": "AHAE6VNPVHC7GPQJYQOFUGFNPF6A"
+        },
+        "attributes": [
+          {
+            "name": "Color",
+            "value": "Blue"
+          },
+          {
+            "name": "Item Package Quantity",
+            "value": "2"
+          }
+        ],
+        "attributes_flat": "Color: Blue, Item Package Quantity: 2",
+        "asin_review": "B08HVL97JW",
+        "vine_program": false,
+        "verified_purchase": true,
+        "review_country": "us"
+      }
+    ],
+    "bestsellers_rank": [
+      {
+        "rank": 21122,
+        "category": "Kitchen & Dining",
+        "link": "https://www.amazon.com/gp/bestsellers/kitchen/ref=pd_zg_ts_kitchen"
+      },
+      {
+        "rank": 57,
+        "category": "Mug Sets",
+        "link": "https://www.amazon.com/gp/bestsellers/kitchen/9298951011/ref=pd_zg_hrsr_kitchen"
+      }
+    ],
+    "a_plus_content": {
+      "has_a_plus_content": true,
+      "has_brand_story": false,
+      "all_images": [
+        {
+          "link": "https://m.media-amazon.com/images/S/aplus-media/sc/a1b9076e-3268-4eb9-a629-b22e7b966815.__CR0,0,1600,480_PT0_SX600_V1___.jpg",
+          "name": "coffee mug"
+        },
+        {
+          "link": "https://m.media-amazon.com/images/S/aplus-media-library-service-media/83fefc6e-4e55-4d58-8364-d9aeaa54c3b9.__CR0,0,970,600_PT0_SX970_V1___.jpg",
+          "name": "large big jumbo latte coffee mug set"
+        },
+        {
+          "link": "https://m.media-amazon.com/images/S/aplus-media/sc/54e1f9b4-456e-46f4-afe3-1dd892c73592.__CR0,0,300,300_PT0_SX300_V1___.jpg",
+          "name": "large big jumbo latte coffee mug"
+        },
+        {
+          "link": "https://m.media-amazon.com/images/S/aplus-media/sc/f9ce81cc-8bac-4d40-a048-19557d812ab7.__CR0,0,300,300_PT0_SX300_V1___.jpg",
+          "name": "large big jumbo latte coffee mug"
+        },
+        {
+          "link": "https://m.media-amazon.com/images/S/aplus-media/sc/e27f9964-67ae-4c84-be58-f5365bcd9787.__CR0,0,300,300_PT0_SX300_V1___.jpg",
+          "name": "large big jumbo coffee mug"
+        },
+        {
+          "link": "https://m.media-amazon.com/images/S/aplus-media/sc/d76e4478-790a-44ba-9135-fa7813f67627.__CR0,0,300,300_PT0_SX300_V1___.jpg",
+          "name": "large big jumbo latte coffee mug"
+        },
+        {
+          "link": "https://m.media-amazon.com/images/S/aplus-media-library-service-media/315c1153-6364-4f44-bd6c-403d253d03c6.__CR0,0,300,600_PT0_SX150_V1___.jpg",
+          "name": ""
+        },
+        {
+          "link": "https://m.media-amazon.com/images/S/aplus-media-library-service-media/f29a2567-d903-4d21-8a30-5092a11cd2a9.__CR0,0,300,600_PT0_SX150_V1___.jpg",
+          "name": ""
+        },
+        {
+          "link": "https://m.media-amazon.com/images/S/aplus-media-library-service-media/6fc86a3e-00dd-4b75-9e42-b9b7f7770142.__CR0,0,300,600_PT0_SX150_V1___.jpg",
+          "name": ""
+        },
+        {
+          "link": "https://m.media-amazon.com/images/S/aplus-media-library-service-media/9b6dbeaa-b670-4fcc-aecb-4d0dabcaf8d6.__CR0,0,300,600_PT0_SX150_V1___.jpg",
+          "name": ""
+        },
+        {
+          "link": "https://m.media-amazon.com/images/S/aplus-media-library-service-media/dd426f92-d690-4c6d-910a-5a7693cb199b.__CR0,0,300,600_PT0_SX150_V1___.jpg",
+          "name": ""
+        },
+        {
+          "link": "https://m.media-amazon.com/images/S/aplus-media-library-service-media/698f9f91-a197-4e92-8db8-5ab432e19ee3.__CR0,0,300,600_PT0_SX150_V1___.jpg",
+          "name": ""
+        },
+        {
+          "link": "https://m.media-amazon.com/images/S/aplus-media-library-service-media/a299f2d8-8727-4ae4-a543-3183f59040c8.__CR0,0,300,600_PT0_SX150_V1___.jpg",
+          "name": ""
+        },
+        {
+          "link": "https://m.media-amazon.com/images/S/aplus-media-library-service-media/7638b5ce-79cf-4118-b46e-eb730ddac6c0.__CR0,0,300,600_PT0_SX150_V1___.jpg",
+          "name": ""
+        },
+        {
+          "link": "https://m.media-amazon.com/images/S/aplus-media-library-service-media/2ee2453b-bf74-4fde-b1d4-d9ef6f4a229a.__CR0,0,300,600_PT0_SX150_V1___.jpg",
+          "name": ""
+        },
+        {
+          "link": "https://m.media-amazon.com/images/S/aplus-media-library-service-media/56f920b6-4c83-4d25-966d-40f145f1c1fe.__CR0,0,300,600_PT0_SX150_V1___.jpg",
+          "name": ""
+        },
+        {
+          "link": "https://m.media-amazon.com/images/S/aplus-media-library-service-media/622f3651-19fc-44c5-8124-15654ec44cbf.__CR0,0,300,600_PT0_SX150_V1___.jpg",
+          "name": ""
+        },
+        {
+          "link": "https://m.media-amazon.com/images/S/aplus-media-library-service-media/a3e0dc16-8096-47a6-96b9-c3503fefc718.__CR0,0,300,600_PT0_SX150_V1___.jpg",
+          "name": ""
+        },
+        {
+          "link": "https://m.media-amazon.com/images/S/aplus-media-library-service-media/6fddb6cb-900d-4187-abee-7f1f0be57fed.__CR0,0,300,600_PT0_SX150_V1___.jpg",
+          "name": ""
+        },
+        {
+          "link": "https://m.media-amazon.com/images/S/aplus-media-library-service-media/41e3bc9c-a3e7-410a-add6-6d74efb36965.__CR0,0,300,600_PT0_SX150_V1___.jpg",
+          "name": ""
+        },
+        {
+          "link": "https://m.media-amazon.com/images/S/aplus-media-library-service-media/90b2215d-61b3-44bd-a604-0165936e9534.__CR0,0,300,600_PT0_SX150_V1___.jpg",
+          "name": ""
+        },
+        {
+          "link": "https://m.media-amazon.com/images/S/aplus-media-library-service-media/dfe1c3c2-5abb-4eed-a01c-96e95f6eaf7e.__CR0,0,300,600_PT0_SX150_V1___.jpg",
+          "name": ""
+        }
+      ],
+      "third_party": true,
+      "company_logo": "https://m.media-amazon.com/images/S/aplus-media/sc/a1b9076e-3268-4eb9-a629-b22e7b966815.__CR0,0,1600,480_PT0_SX600_V1___.jpg"
+    },
+    "buybox_winner": {
+      "maximum_order_quantity": {
+        "value": 50,
+        "hard_maximum": true
+      },
+      "price_only_available_in_cart": false,
+      "trade_in_and_save": true,
+      "return_policy": {
+        "duration_days": 30,
+        "type": "refund/replacement"
+      },
+      "is_prime": true,
+      "is_prime_exclusive_deal": false,
+      "is_amazon_fresh": false,
+      "condition": {
+        "is_new": true
+      },
+      "availability": {
+        "type": "in_stock",
+        "raw": "In Stock",
+        "dispatch_days": 1
+      },
+      "fulfillment": {
+        "type": "p2",
+        "standard_delivery": {
+          "date": "Saturday, May 30",
+          "name": "FREE"
+        },
+        "fastest_delivery": {
+          "date": "Wednesday, May 27",
+          "name": "Or Prime members get FREE delivery Wednesday, May 27. Order within 10 hrs 38 mins. Join Prime"
+        },
+        "is_sold_by_amazon": false,
+        "is_fulfilled_by_amazon": true,
+        "is_fulfilled_by_third_party": false,
+        "is_sold_by_third_party": true,
+        "third_party_seller": {
+          "name": "Smarlin",
+          "link": "https://www.amazon.com/gp/help/seller/at-a-glance.html/ref=dp_merchant_link?ie=UTF8&seller=A1NMJ0NYY0YEAB&asin=B08HVLJBF6&ref_=dp_merchant_link&isAmazonFulfilled=1",
+          "id": "A1NMJ0NYY0YEAB"
+        }
+      },
+      "price": {
+        "symbol": "$",
+        "value": 19.99,
+        "currency": "USD",
+        "raw": "$19.99"
+      },
+      "unit_price": {
+        "symbol": "$",
+        "value": 10,
+        "currency": "USD",
+        "raw": "$10.00 / count"
+      },
+      "shipping": {
+        "raw": "FREE"
+      }
+    },
+    "specifications": [
+      {
+        "name": "Brand",
+        "value": "Bosmarlin"
+      },
+      {
+        "name": "Material",
+        "value": "Ceramic"
+      },
+      {
+        "name": "Color",
+        "value": "Brown Grey"
+      },
+      {
+        "name": "Capacity",
+        "value": "16 ounces"
+      },
+      {
+        "name": "Special Feature",
+        "value": "Rotating"
+      },
+      {
+        "name": "Brand Name",
+        "value": "Bosmarlin"
+      },
+      {
+        "name": "Recommended Uses For Product",
+        "value": "Home"
+      },
+      {
+        "name": "Included Components",
+        "value": "Handle"
+      },
+      {
+        "name": "Specific Uses For Product",
+        "value": "Hot Drinks"
+      },
+      {
+        "name": "Age Range Description",
+        "value": "Adult"
+      },
+      {
+        "name": "Customer Package Type",
+        "value": "Standard Packaging"
+      },
+      {
+        "name": "UPC",
+        "value": "787803500042"
+      },
+      {
+        "name": "Set Name",
+        "value": "Bosmarlin Large Ceramic Coffee Mug Set (2 Piece)"
+      },
+      {
+        "name": "Model Number",
+        "value": "1379"
+      },
+      {
+        "name": "Best Sellers Rank",
+        "value": "#21,122 in Kitchen & Dining (See Top 100 in Kitchen & Dining) #57 in Mug Sets"
+      },
+      {
+        "name": "ASIN",
+        "value": "B08HVLJBF6"
+      },
+      {
+        "name": "Customer Reviews",
+        "value": "4.7    4.7 out of 5 stars         (1,845)           4.7 out of 5 stars"
+      },
+      {
+        "name": "Unit Count",
+        "value": "2 Count"
+      },
+      {
+        "name": "Item Dimensions W x H",
+        "value": "4.33\"W x 2.36\"H"
+      },
+      {
+        "name": "Number of Items",
+        "value": "2"
+      },
+      {
+        "name": "Size",
+        "value": "Large (Pack of 2)"
+      },
+      {
+        "name": "Product Style",
+        "value": "Classic"
+      },
+      {
+        "name": "Theme",
+        "value": "People"
+      },
+      {
+        "name": "Shape",
+        "value": "Round"
+      },
+      {
+        "name": "Pattern",
+        "value": "Solid"
+      },
+      {
+        "name": "Occasion",
+        "value": "Home,Birthdays"
+      },
+      {
+        "name": "Material Type",
+        "value": "Ceramic"
+      },
+      {
+        "name": "Product Care Instructions",
+        "value": "Hand Wash Only, Machine Wash, Microwave Safe"
+      },
+      {
+        "name": "Material Features",
+        "value": "Microwave Safe"
+      },
+      {
+        "name": "Reusability",
+        "value": "Reusable"
+      },
+      {
+        "name": "Material Type Free",
+        "value": "Lead Free, Cadmium Free"
+      },
+      {
+        "name": "Is the item dishwasher safe?",
+        "value": "Yes"
+      },
+      {
+        "name": "Finish Types",
+        "value": "Glossy"
+      },
+      {
+        "name": "Other Special Features of the Product",
+        "value": "Rotating"
+      },
+      {
+        "name": "Is the item microwaveable?",
+        "value": "Yes"
+      },
+      {
+        "name": "GTIN",
+        "value": "787803500042"
+      }
+    ],
+    "specifications_flat": "GTIN: 787803500042. Is the item microwaveable?: Yes. Other Special Features of the Product: Rotating. Finish Types: Glossy. Is the item dishwasher safe?: Yes. Material Type Free: Lead Free, Cadmium Free. Reusability: Reusable. Material Features: Microwave Safe. Product Care Instructions: Hand Wash Only, Machine Wash, Microwave Safe. Material Type: Ceramic. Occasion: Home,Birthdays. Pattern: Solid. Shape: Round. Theme: People. Product Style: Classic. Size: Large (Pack of 2). Number of Items: 2. Item Dimensions W x H: 4.33\"W x 2.36\"H. Unit Count: 2 Count. Customer Reviews: 4.7    4.7 out of 5 stars         (1,845)           4.7 out of 5 stars. ASIN: B08HVLJBF6. Best Sellers Rank: #21,122 in Kitchen & Dining (See Top 100 in Kitchen & Dining) #57 in Mug Sets. Model Number: 1379. Set Name: Bosmarlin Large Ceramic Coffee Mug Set (2 Piece). UPC: 787803500042. Customer Package Type: Standard Packaging. Age Range Description: Adult. Specific Uses For Product: Hot Drinks. Included Components: Handle. Recommended Uses For Product: Home. Brand Name: Bosmarlin. Special Feature: Rotating. Capacity: 16 ounces. Color: Brown Grey. Material: Ceramic. Brand: Bosmarlin.",
+    "recent_sales": "100+ bought in past month",
+    "gift_guide_badge": {
+      "badge_text": "100+ bought in past month"
+    },
+    "color": "Brown Grey",
+    "material": "Lead Free, Cadmium Free",
+    "model_number": "1379",
+    "bestsellers_rank_flat": "Category: Kitchen & Dining | Rank: 21122, Category: Mug Sets | Rank: 57"
+  },
+  "brand_store": {
+    "id": "5DAEA6DF-CD4E-4FB8-9780-99DD7669CDD9",
+    "link": "https://www.amazon.com/stores/Bosmarlin/page/5DAEA6DF-CD4E-4FB8-9780-99DD7669CDD9"
+  }
+}

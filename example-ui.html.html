@@ -1,0 +1,1931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keyword performance &amp; significance — Amazon Sponsored Products</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --porcelain:#F4F5F1; --glaze:#FFFFFF; --ink:#131A2A; --muted:#6E7787;
+  --cobalt:#1B3A8C; --cobalt-lt:#5B7FD4; --cobalt-wash:#E8EDF8;
+  --celadon:#5E8F78; --celadon-wash:#E4EEE8;
+  --iron:#A83226; --iron-wash:#F6E5E2;
+  --amber:#B8862B; --amber-wash:#F7EEDC;
+  --rule:#DCDFE4; --rule-soft:#EAECEF;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  --disp:"Bricolage Grotesque","IBM Plex Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--porcelain);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5}
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px 96px}
+
+/* ---------- header ---------- */
+.masthead{padding:44px 0 20px;border-bottom:2px solid var(--ink);display:flex;align-items:flex-end;gap:20px}
+.masthead .mh{flex:1 1 auto;min-width:0}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--cobalt);margin:0 0 10px}
+h1{font-family:var(--disp);font-weight:800;font-size:clamp(30px,4.4vw,52px);line-height:1.02;letter-spacing:-.025em;margin:0}
+.gear{flex:0 0 auto;width:36px;height:36px;border:1px solid var(--rule);background:var(--glaze);border-radius:3px;
+  cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center;margin-bottom:4px}
+.gear:hover{color:var(--cobalt);border-color:var(--cobalt-lt)}
+.gear svg{width:17px;height:17px}
+
+/* ---------- summary strip ---------- */
+.sumstrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:1px;background:var(--rule);
+  border:1px solid var(--rule);border-top:0;margin-bottom:24px}
+.sumstrip[hidden]{display:none}
+.sm{background:var(--glaze);padding:13px 14px}
+.sm .t{font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.sm .v{font-family:var(--disp);font-weight:700;font-size:19px;letter-spacing:-.015em}
+.sm .s{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px}
+
+/* ---------- data bar ---------- */
+.drop{display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:var(--glaze);border:1px solid var(--rule);
+  padding:12px 16px;margin:22px 0 0}
+.drop.over{border-color:var(--cobalt);background:var(--cobalt-wash)}
+.dt{font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.df{font-family:var(--mono);font-size:12px;color:var(--ink);max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn{font-family:var(--mono);font-size:11px;letter-spacing:.05em;padding:6px 12px;border:1px solid var(--ink);
+  background:var(--ink);color:#fff;cursor:pointer;border-radius:3px}
+.btn.ghost{background:var(--glaze);color:var(--ink);border-color:var(--rule)}
+.btn.ghost:hover{border-color:var(--cobalt);color:var(--cobalt)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.err{font-family:var(--mono);font-size:11px;color:var(--iron);background:var(--iron-wash);padding:5px 9px;border-radius:3px}
+.spacer{flex:1 1 auto}
+
+/* ---------- controls ---------- */
+.controls{position:sticky;top:0;z-index:40;background:rgba(244,245,241,.94);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--rule);padding:12px 0;margin-bottom:26px;display:flex;flex-wrap:wrap;gap:18px;align-items:center}
+.ctl{display:flex;align-items:center;gap:8px}
+.ctl label{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.ctl select,.ctl input{font-family:var(--sans);font-size:12.5px;padding:5px 8px;border:1px solid var(--rule);
+  background:var(--glaze);border-radius:3px;color:var(--ink)}
+.ctl input{width:230px}
+.ctl input::placeholder{color:var(--muted)}
+.hint{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.chips{display:flex;border:1px solid var(--rule);border-radius:3px;overflow:hidden;background:var(--glaze)}
+.chip{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;padding:6px 10px;border:0;background:transparent;
+  color:var(--muted);cursor:pointer;border-right:1px solid var(--rule-soft)}
+.chip:last-child{border-right:0}
+.chip[aria-pressed=true]{background:var(--cobalt);color:#fff}
+.reset{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;background:none;border:0;
+  color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:4px}
+.reset:hover{color:var(--iron)}
+:focus-visible{outline:2px solid var(--cobalt);outline-offset:1px}
+
+/* ---------- sections ---------- */
+section{margin-bottom:52px}
+section[hidden]{display:none}
+.shead{display:flex;align-items:baseline;gap:12px;margin-bottom:18px;padding-bottom:7px;border-bottom:1px solid var(--rule);flex-wrap:wrap}
+.shead h2{font-family:var(--disp);font-weight:700;font-size:19px;letter-spacing:-.012em;margin:0}
+.shead .note{font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-left:auto;white-space:nowrap}
+.shead.clk{cursor:pointer}
+.caret{font-size:15px;color:var(--muted)}
+.lede{color:var(--muted);font-size:13px;margin:-6px 0 16px;max-width:74ch}
+.card{background:var(--glaze);border:1px solid var(--rule);padding:20px}
+
+/* ---------- tables ---------- */
+.tscroll{overflow-x:auto;border:1px solid var(--rule);background:var(--glaze)}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  font-weight:500;text-align:right;padding:10px 11px;border-bottom:1px solid var(--rule);white-space:nowrap;
+  background:var(--glaze);position:sticky;top:0;z-index:2}
+th.l{text-align:left}
+th.srt,th.msrt{cursor:pointer;user-select:none}
+th.srt:hover,th.msrt:hover{color:var(--cobalt)}
+th .ar{color:var(--cobalt);margin-left:3px}
+td{padding:9px 11px;text-align:right;border-bottom:1px solid var(--rule-soft);white-space:nowrap;font-variant-numeric:tabular-nums}
+td.l{text-align:left}
+tbody tr.r{cursor:pointer}
+tbody tr.r:hover{background:#FAFBFC}
+tbody tr.thin td{color:var(--muted)}
+tbody tr.thin td.kw b{color:var(--muted);font-weight:600}
+td.kw b{font-family:var(--sans);font-weight:600;font-size:13px}
+td.kw .frm{font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:6px}
+.sub{display:block;font-family:var(--mono);font-size:9.5px;color:var(--muted);margin-top:1px}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:0}
+.up{color:var(--celadon)} .dn{color:var(--iron)} .flat{color:var(--muted)}
+.tone-good{color:var(--celadon)} .tone-warn{color:var(--amber)} .tone-bad{color:var(--iron)}
+.bg-up{background:var(--celadon)} .bg-dn{background:var(--iron)} .bg-flat{background:#C6CBD2}
+.pill{font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:2px;white-space:nowrap}
+.pill.ok{background:var(--celadon-wash);color:var(--celadon)}
+.pill.bad{background:var(--iron-wash);color:var(--iron)}
+.pill.warn{background:var(--amber-wash);color:var(--amber)}
+.pill.na{background:var(--rule-soft);color:var(--muted)}
+.exp{background:#FBFCFD}
+.exp td{padding:0;border-bottom:1px solid var(--rule)}
+.expin{padding:12px 14px 14px}
+.expin h4{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  font-weight:500;margin:0 0 8px}
+/* Fixed layout keeps the drill-down inside its container: without it a single
+   long search term widens the whole table and pushes the numbers out of view.
+   The floor lets the outer scroller take over on very narrow screens rather
+   than crushing the money columns. */
+.expin table{font-size:11.5px;background:var(--glaze);border:1px solid var(--rule-soft);
+  table-layout:fixed;width:100%;min-width:680px}
+.expin th{font-size:9px;padding:7px 9px;position:static}
+.expin td{padding:6px 9px}
+.expin td.l,.expin th.l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.empty{padding:30px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:12px}
+tr.more td{padding:0;border-bottom:0;background:#FAFBFC}
+.morebtn{width:100%;border:0;border-top:1px solid var(--rule);background:none;cursor:pointer;
+  font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--muted);padding:11px 12px}
+.morebtn:hover{color:var(--cobalt);background:var(--cobalt-wash)}
+.expin tr.tot td{border-top:1px solid var(--rule);border-bottom:0;background:#F7F9FA;font-weight:600}
+.expin tr.tot td.l{color:var(--ink)}
+
+/* ---------- negative-keyword totals, footer row, copy button ---------- */
+.negtot{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);
+  border:1px solid var(--rule);margin-bottom:16px}
+.negtot[hidden]{display:none}
+tbody tr.gtot td{border-top:1px solid var(--rule);border-bottom:0;background:#F7F9FA;font-weight:700}
+tbody tr.gtot td.l{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);font-weight:500}
+.cpbar{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-top:12px}
+.cpnote{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.cpnote.done{color:var(--celadon)}
+
+/* ---------- forest / CI plot ---------- */
+.forest{background:var(--glaze);border:1px solid var(--rule);padding:18px 20px 14px}
+.fhead{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.fhead .lb{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--celadon)}
+.legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.legend i.bar{width:16px;height:6px;border-radius:1px;background:var(--celadon-wash);border:0}
+.fr:hover .fbg{fill:#F7F8F9}
+
+/* ---------- pattern builder ---------- */
+.pwrap{display:flex;flex-direction:column;gap:12px}
+.pat{background:var(--glaze);border:1px solid var(--rule);padding:14px 16px}
+.pat.bad{border-color:var(--iron)}
+.ptop{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.pnum{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.xbtn{border:0;background:none;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:2px 5px}
+.xbtn:hover{color:var(--iron)}
+.grps{display:flex;flex-wrap:wrap;gap:9px;align-items:stretch}
+.grp{border:1px solid var(--rule);border-radius:3px;padding:8px 9px;min-width:172px;background:#FCFDFD;display:flex;flex-direction:column;gap:7px}
+.glab{font-family:var(--mono);font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+  display:flex;align-items:center;gap:6px}
+.glab .xbtn{font-size:13px}
+.ghandle{cursor:grab;color:#B9BFC7;letter-spacing:-1px;font-size:12px}
+.glab[draggable]:active .ghandle{cursor:grabbing}
+.negt{border:1px solid var(--rule);background:var(--glaze);color:var(--muted);font-family:var(--mono);
+  font-size:8.5px;letter-spacing:.07em;text-transform:uppercase;padding:2px 5px;border-radius:2px;cursor:pointer}
+.negt:hover{border-color:var(--iron);color:var(--iron)}
+.negt[aria-pressed=true]{background:var(--iron);border-color:var(--iron);color:#fff}
+.grp.neg{border-color:var(--iron);background:#FEF9F8}
+.grp.neg .bub{background:transparent;color:var(--iron);border:1px solid var(--iron);text-decoration:line-through}
+.grp.neg .bub button{color:var(--iron);opacity:.7}
+.grp.neg .bub button:hover{color:var(--iron);opacity:1}
+.grp.dragging{opacity:.4}
+.pat.dropok{border-color:var(--cobalt);background:var(--cobalt-wash)}
+.pat.dropbad{border-color:var(--iron);background:var(--iron-wash)}
+.bubs{display:flex;flex-wrap:wrap;gap:5px}
+.bub{display:inline-flex;align-items:center;gap:5px;background:var(--iron);color:#fff;border-radius:11px;
+  padding:3px 5px 3px 10px;font-size:11.5px;line-height:1.35}
+.bub button{border:0;background:none;color:rgba(255,255,255,.82);cursor:pointer;font-size:12px;line-height:1;
+  padding:0 3px;border-radius:50%}
+.bub button:hover{color:#fff}
+.gin{border:0;border-bottom:1px dashed var(--rule);background:none;font-family:var(--sans);font-size:12px;
+  padding:3px 1px;width:100%;color:var(--ink)}
+.gin:focus{border-bottom-color:var(--cobalt);outline:none}
+.gin::placeholder{color:#A9B0BA}
+.plus{align-self:center;font-family:var(--mono);font-size:15px;color:var(--muted);padding:0 1px}
+.addg{align-self:center;border:1px dashed var(--rule);background:none;color:var(--muted);cursor:pointer;
+  font-family:var(--mono);font-size:11px;padding:9px 11px;border-radius:3px;white-space:nowrap}
+.addg:hover:not(:disabled){border-color:var(--cobalt);color:var(--cobalt)}
+.addg:disabled{opacity:.35;cursor:not-allowed}
+.pfoot{display:flex;justify-content:flex-end;margin-top:11px}
+.dupb{border:1px solid var(--rule);background:var(--glaze);color:var(--muted);font-family:var(--mono);
+  font-size:10px;letter-spacing:.05em;padding:4px 9px;border-radius:3px;cursor:pointer}
+.dupb:hover:not(:disabled){border-color:var(--cobalt);color:var(--cobalt)}
+.dupb:disabled{opacity:.35;cursor:not-allowed}
+.pbar{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}
+.pwarn{font-family:var(--mono);font-size:10.5px;color:var(--iron)}
+
+/* ---------- scatter ---------- */
+.sc{cursor:crosshair}
+.sc:hover{fill-opacity:.85}
+
+/* ---------- tooltip ---------- */
+#tip{position:fixed;pointer-events:none;z-index:80;background:var(--ink);color:#fff;padding:8px 11px;border-radius:3px;
+  font-family:var(--mono);font-size:11px;line-height:1.55;opacity:0;transition:opacity .1s;white-space:nowrap;
+  box-shadow:0 4px 14px rgba(19,26,42,.22)}
+#tip.on{opacity:1}
+#tip .tt{color:#9FB8E8;letter-spacing:.06em;text-transform:uppercase;font-size:9.5px}
+#tip .tr{font-size:13px;font-weight:600;margin:3px 0 1px}
+
+/* ---------- empty state ---------- */
+.blank{border:1px dashed var(--rule);background:var(--glaze);padding:52px 30px;text-align:center;margin-top:26px}
+.blank h3{font-family:var(--disp);font-weight:700;font-size:22px;margin:0 0 8px;letter-spacing:-.015em}
+.blank p{color:var(--muted);margin:0 auto 18px;max-width:56ch;font-size:13px}
+.blank code{font-family:var(--mono);font-size:11.5px;background:var(--porcelain);padding:2px 5px;border-radius:2px}
+
+/* ---------- settings modal ---------- */
+.veil{position:fixed;inset:0;background:rgba(19,26,42,.34);z-index:90;display:flex;align-items:flex-start;
+  justify-content:center;padding:60px 20px;overflow:auto}
+.veil[hidden]{display:none}
+.modal{background:var(--glaze);border:1px solid var(--rule);width:min(520px,100%);padding:24px 26px 22px}
+.modal h3{font-family:var(--disp);font-weight:700;font-size:20px;margin:0 0 4px;letter-spacing:-.015em}
+.modal .sd{color:var(--muted);font-size:12.5px;margin:0 0 18px}
+.fld{margin-bottom:15px}
+.fld label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:5px}
+.fld input,.fld select,.fld textarea{width:100%;font-family:var(--sans);font-size:13px;padding:7px 9px;
+  border:1px solid var(--rule);border-radius:3px;background:var(--glaze);color:var(--ink)}
+.fld textarea{font-family:var(--mono);font-size:11.5px;resize:vertical;min-height:56px}
+.fld .h{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.45}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.mbar{display:flex;gap:9px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--rule)}
+.mbar .spacer{flex:1 1 auto}
+
+/* ---------- audit ---------- */
+.aud{font-family:var(--mono);font-size:11.5px;line-height:1.85}
+.aud b{color:var(--cobalt);font-weight:600}
+.aud .ln{display:flex;gap:10px;border-bottom:1px solid var(--rule-soft);padding:4px 0}
+.aud .ln span:first-child{color:var(--muted);min-width:290px}
+.ok-tick{color:var(--celadon)} .no-tick{color:var(--iron)}
+
+@media (max-width:640px){
+  .wrap{padding:0 14px 70px}
+  .masthead{padding-top:30px}
+  .ctl input{width:170px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="masthead">
+  <div class="mh">
+    <p class="eyebrow">Amazon Sponsored Products &middot; customer search term report</p>
+    <h1>Which keywords<br>actually convert.</h1>
+  </div>
+  <button class="gear" id="gear" title="Settings" aria-label="Settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"></circle>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.2.61.77 1.03 1.42 1.03H21a2 2 0 1 1 0 4h-.09c-.65 0-1.22.42-1.42 1.03z"></path>
+    </svg>
+  </button>
+</header>
+
+<div class="drop" id="drop">
+  <span class="dt">Data</span>
+  <span class="df" id="fname">No report loaded</span>
+  <span class="dt" id="fmeta"></span>
+  <div class="ctl" id="srcwrap" hidden>
+    <label>Campaign</label>
+    <div class="chips" id="srcchips" role="group" aria-label="Campaign type"></div>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn ghost" id="pick">Load search term report</button>
+  <button class="btn ghost" id="clr" hidden>Clear</button>
+  <input type="file" id="file" accept=".csv,.xlsx,.xls" multiple hidden>
+  <span class="err" id="derr" hidden></span>
+</div>
+
+<div class="sumstrip" id="sumstrip" hidden></div>
+
+<div class="blank" id="blank">
+  <h3>Start by loading a search term report</h3>
+  <p>Drop one or more Sponsored Products search term exports here, or use the button above.
+     Load your automatic and manual reports together and they'll be summed into one account view,
+     with a campaign filter to separate them again.</p>
+  <p>Any file works as long as it has these columns:
+     <code>Customer search term</code> <code>Impressions</code> <code>Clicks</code>
+     <code>Total cost (USD)</code> <code>Purchases</code> <code>Sales (USD)</code>.
+     ASIN targets are dropped automatically and reported in the audit.</p>
+</div>
+
+<div class="controls" id="controls" hidden role="group" aria-label="Filters">
+  <div class="ctl">
+    <label for="q">Search terms containing</label>
+    <input id="q" type="search" placeholder="gold 5x7" autocomplete="off">
+  </div>
+  <span class="hint">every word must appear, in any order</span>
+  <div class="spacer"></div>
+  <button class="reset" id="rst">Reset filter</button>
+</div>
+
+<section id="s-kw" hidden>
+  <div class="shead">
+    <h2>Keyword analysis</h2>
+    <span class="note" id="kwnote"></span>
+  </div>
+  <p class="lede">Every word shoppers typed, with the stats of every search term containing it.
+     Plurals are folded into one row. Rows below the confidence threshold are greyed &mdash; the
+     numbers are real but there aren't enough clicks to act on them.</p>
+  <div class="tscroll"><table id="kwtbl"></table></div>
+</section>
+
+<section id="s-kwci" hidden>
+  <div class="shead">
+    <h2>Conversion rate, with uncertainty</h2>
+    <span class="note" id="cinote"></span>
+  </div>
+  <p class="lede">Top keywords by observed conversion rate. The bar is the range the true rate
+     plausibly sits in; the vertical line inside it is what you actually observed. Where a bar
+     clears the account baseline entirely, the difference is unlikely to be luck.</p>
+  <div class="forest">
+    <div class="fhead">
+      <span class="lb" id="cilab">90% confidence interval</span>
+      <div class="spacer"></div>
+      <div class="ctl">
+        <label for="cimin">Minimum clicks</label>
+        <select id="cimin"></select>
+      </div>
+    </div>
+    <div id="kwforest"></div>
+    <div class="legend">
+      <span><i class="bar"></i>Plausible range</span>
+      <span><i style="background:var(--amber)"></i>Observed rate</span>
+      <span><i style="background:var(--cobalt)"></i>Account baseline</span>
+    </div>
+  </div>
+</section>
+
+<section id="s-pat" hidden>
+  <div class="shead">
+    <h2>Keyword patterns</h2>
+    <span class="note" id="patnote"></span>
+  </div>
+  <p class="lede">Build a shape rather than a single word. A search term matches a pattern when it
+     contains at least one keyword from every group, in any order. Type a keyword and press Enter.
+     End a keyword with <code>*</code> to match by prefix, so <code>gold*</code> also catches
+     <code>golden</code>. Flip a group to <b>exclude</b> to reject terms containing its keywords
+     instead of requiring them. Drag a group by its handle onto another pattern to copy it.</p>
+  <div class="pwrap" id="pwrap"></div>
+  <div class="pbar">
+    <button class="btn ghost" id="addpat">Add pattern</button>
+    <button class="btn" id="analyze">Analyze</button>
+    <span class="pwarn" id="pwarn"></span>
+    <div class="spacer"></div>
+    <button class="reset" id="clrpat">Remove all patterns</button>
+  </div>
+</section>
+
+<section id="s-patres" hidden>
+  <div class="shead">
+    <h2>Pattern results</h2>
+    <span class="note" id="prnote"></span>
+  </div>
+  <div class="tscroll" style="margin-bottom:26px"><table id="pattbl"></table></div>
+  <div class="forest">
+    <div class="fhead">
+      <span class="lb" id="pcilab">90% confidence interval</span>
+      <div class="spacer"></div>
+      <div class="ctl">
+        <label for="pcimin">Minimum clicks</label>
+        <select id="pcimin"></select>
+      </div>
+    </div>
+    <div id="patforest"></div>
+    <div class="legend">
+      <span><i class="bar"></i>Plausible range</span>
+      <span><i style="background:var(--amber)"></i>Observed rate</span>
+      <span><i style="background:var(--cobalt)"></i>Account baseline</span>
+    </div>
+  </div>
+</section>
+
+<section id="s-neg" hidden>
+  <div class="shead">
+    <h2>Spending nothing back</h2>
+    <span class="note" id="negnote"></span>
+  </div>
+  <p class="lede">Keywords with enough clicks to have converted by now, and no purchases at all.
+     The verdict compares the highest conversion rate still consistent with the data against your
+     break-even: <b>Cut</b> means even the optimistic reading loses money, <b>Too early</b> means
+     the keyword may simply be unlucky so far.</p>
+  <div class="negtot" id="negtot" hidden></div>
+  <div class="tscroll"><table id="negtbl"></table></div>
+  <div class="cpbar" id="negcpbar" hidden>
+    <span class="cpnote" id="negcpnote"></span>
+    <button class="btn ghost" id="negcopy" type="button">Copy keywords</button>
+  </div>
+</section>
+
+<section id="s-scat" hidden>
+  <div class="shead">
+    <h2>Volume against conversion</h2>
+    <span class="note">Bubble area is spend &middot; horizontal axis is &radic;-scaled</span>
+  </div>
+  <p class="lede">Separates keywords that are genuinely bad from keywords that are merely unproven.
+     Far right and low is where money leaks; far left is where you don't know yet.</p>
+  <div class="card">
+    <div id="scatter"></div>
+    <div class="legend">
+      <span><i style="background:var(--celadon)"></i>ACOS under break-even</span>
+      <span><i style="background:var(--amber)"></i>ACOS over break-even</span>
+      <span><i style="background:var(--iron)"></i>No sales</span>
+    </div>
+  </div>
+</section>
+
+<section id="s-aud" hidden>
+  <div class="shead clk" id="audhead">
+    <h2>Audit</h2><span class="caret" id="audcaret">&#8964;</span>
+    <span class="note" id="audnote"></span>
+  </div>
+  <div class="card" id="audbody" hidden><div class="aud" id="audin"></div></div>
+</section>
+
+</div>
+
+<div class="veil" id="veil" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Settings">
+    <h3>Settings</h3>
+    <p class="sd">These drive every figure on the page. Changes apply immediately and are remembered
+       on this browser.</p>
+    <div class="fld">
+      <label for="setConf">Confidence level</label>
+      <select id="setConf">
+        <option value="0.8">80%</option><option value="0.9">90%</option>
+        <option value="0.95">95%</option><option value="0.99">99%</option>
+      </select>
+      <div class="h">Width of the Wilson interval shown under every conversion rate.</div>
+    </div>
+    <div class="fld">
+      <label for="setAlpha">Significance threshold</label>
+      <select id="setAlpha">
+        <option value="0.1">p &lt; 0.10</option><option value="0.05">p &lt; 0.05</option>
+        <option value="0.01">p &lt; 0.01</option>
+      </select>
+      <div class="h">When a keyword gets flagged as beating or trailing the account baseline.</div>
+    </div>
+    <div class="fld">
+      <label for="setMin">Minimum clicks to chart</label>
+      <input id="setMin" type="number" min="0" step="1">
+      <div class="h">Keeps one-click keywords at 100% out of the charts. Also sets the floor for
+        negative-keyword candidates.</div>
+    </div>
+    <div class="fld">
+      <label for="setBe">Break-even ACOS</label>
+      <input id="setBe" type="number" min="0" max="500" step="1">
+      <div class="h">Per cent. Your advertising cost of sale at zero profit &mdash; roughly your
+        gross margin. ACOS above this loses money on the sale.</div>
+    </div>
+    <div class="fld">
+      <label for="setHide">Keywords under the click minimum</label>
+      <select id="setHide">
+        <option value="1">Hidden</option>
+        <option value="0">Shown, greyed and sorted last</option>
+      </select>
+      <div class="h">Too few clicks to trust. Hiding them keeps one-click keywords at
+        100% out of the tables entirely.</div>
+    </div>
+    <div class="fld">
+      <label for="setCvrGood">CVR colour bands</label>
+      <div class="pair">
+        <input id="setCvrGood" type="number" min="0" max="100" step="0.5" aria-label="CVR green above">
+        <input id="setCvrWarn" type="number" min="0" max="100" step="0.5" aria-label="CVR yellow above">
+      </div>
+      <div class="h">Per cent. Green above the first figure, yellow down to the second, red below it.</div>
+    </div>
+    <div class="fld">
+      <label for="setAcosGood">ACOS colour bands</label>
+      <div class="pair">
+        <input id="setAcosGood" type="number" min="0" max="500" step="1" aria-label="ACOS green below">
+        <input id="setAcosWarn" type="number" min="0" max="500" step="1" aria-label="ACOS yellow below">
+      </div>
+      <div class="h">Per cent. Green below the first figure, yellow up to the second, red above it.</div>
+    </div>
+    <div class="fld">
+      <label for="setStop">Ignored words</label>
+      <textarea id="setStop"></textarea>
+      <div class="h">Comma separated. Never generated as keyword rows. Typing one into a pattern
+        group still works.</div>
+    </div>
+    <div class="fld">
+      <label for="setAsin">ASIN target pattern</label>
+      <input id="setAsin" type="text">
+      <div class="h">Regular expression. Matching search terms are excluded from analysis and
+        counted in the audit.</div>
+    </div>
+    <div class="mbar">
+      <button class="reset" id="setDef">Restore defaults</button>
+      <div class="spacer"></div>
+      <button class="btn ghost" id="setClose">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="tip" role="status" aria-live="polite"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/* Minimal RFC4180 CSV parser: quoted fields, escaped quotes, CRLF, BOM. */
+const CSVP = (() => {
+function parse(text){
+  let s = String(text).replace(/^\uFEFF/, '');
+  const rows = [];
+  let row = [], field = '', q = false, i = 0;
+  while (i < s.length){
+    const c = s[i];
+    if (q){
+      if (c === '"'){
+        if (s[i+1] === '"'){ field += '"'; i += 2; continue; }
+        q = false; i++; continue;
+      }
+      field += c; i++; continue;
+    }
+    if (c === '"'){ q = true; i++; continue; }
+    if (c === ','){ row.push(field); field = ''; i++; continue; }
+    if (c === '\r'){ i++; continue; }
+    if (c === '\n'){ row.push(field); rows.push(row); row = []; field = ''; i++; continue; }
+    field += c; i++;
+  }
+  if (field.length || row.length){ row.push(field); rows.push(row); }
+  const clean = rows.filter(r => r.some(v => String(v).trim() !== ''));
+  if (!clean.length) return { headers: [], rows: [] };
+  return { headers: clean[0], rows: clean.slice(1) };
+}
+return { parse };
+})();
+
+
+/* ============================================================
+   CORE — parsing, normalization, aggregation, statistics
+   Pure functions. No DOM. Shared by the dashboard and the tests.
+   ============================================================ */
+
+const CORE = (() => {
+
+/* ---------- defaults (all overridable from the settings panel) ---------- */
+const DEFAULTS = {
+  confidence : 0.90,      // Wilson interval level
+  alpha      : 0.10,      // significance threshold for the vs-baseline test
+  minClicks  : 5,         // click floor for the CI charts
+  breakeven  : 0.25,      // ACOS at which a sale stops being profitable
+  hideThin   : true,      // drop keywords under the click floor entirely
+  cvrGood    : 0.10,      // CVR green above this, yellow down to cvrWarn, red below
+  cvrWarn    : 0.05,
+  acosGood   : 0.20,      // ACOS green below this, yellow up to acosWarn, red above
+  acosWarn   : 0.40,
+  stopwords  : 'and, with, for, the, a, an, of, to, in, on, or, my, by, is, it',
+  asinPattern: '^b0[a-z0-9]{8}$'
+};
+
+/* ---------- text normalization ---------- */
+const DIM = '(\\d+(?:\\.\\d+)?)';
+const RE_DIM   = new RegExp(DIM + '\\s*["\']?\\s*(?:x|by|c)\\s*["\']?\\s*' + DIM + '\\s*["\']?', 'g');
+const RE_GLUED = /(\d+(?:\.\d+)?x\d+(?:\.\d+)?)([a-z]{3,})/g;
+
+function normTerm(raw){
+  let s = String(raw == null ? '' : raw).toLowerCase();
+  s = s.replace(/[\u00d7\u2715]/g, 'x');                          // × → x
+  s = s.replace(/[\u2018\u2019\u2032]/g, "'");                    // curly → straight
+  s = s.replace(/[\u201c\u201d\u2033]/g, '"');
+  s = s.replace(/[+_,\/\\|]/g, ' ');                              // 5x7+vintage → 5x7 vintage
+  s = s.replace(RE_DIM, '$1x$2');                                 // 4"x6" · 5 x 7 · 4by6 · 5c7 → 4x6
+  s = s.replace(/[^a-z0-9. ]/g, ' ');
+  s = s.replace(RE_GLUED, '$1 $2');                               // 5x7picture → 5x7 picture
+  s = s.replace(/\s+/g, ' ').trim();
+  return s;
+}
+
+function tokens(normalized){
+  return normalized.split(' ')
+    .map(t => t.replace(/^\.+|\.+$/g, ''))
+    .filter(t => t.length > 0 && t !== '.');
+}
+
+/* Plural collapse only. Deliberately conservative: it must never merge two
+   words that mean different things, so no aggressive suffix stripping. */
+function stem(w){
+  if (w.length <= 3)                     return w;
+  if (/[0-9]/.test(w))                   return w;   // never touch sizes
+  if (/ies$/.test(w))                    return w.slice(0, -3) + 'y';
+  if (/(ches|shes|xes|sses|zes)$/.test(w)) return w.slice(0, -2);
+  if (/(ss|us|is)$/.test(w))             return w;
+  if (/s$/.test(w))                      return w.slice(0, -1);
+  return w;
+}
+
+const stemsOf = normalized => tokens(normalized).map(stem);
+
+/* ---------- statistics ---------- */
+
+/* Inverse normal CDF (Acklam). Used to turn a confidence level into z. */
+function probit(p){
+  const a=[-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00];
+  const b=[-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,6.680131188771972e+01,-1.328068155288572e+01];
+  const c=[-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,-2.549732539343734e+00,4.374664141464968e+00,2.938163982698783e+00];
+  const d=[7.784695709041462e-03,3.224671290700398e-01,2.445134137142996e+00,3.754408661907416e+00];
+  const pl=0.02425, ph=1-pl; let q,r;
+  if (p < pl){ q=Math.sqrt(-2*Math.log(p));
+    return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) / ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1); }
+  if (p > ph){ q=Math.sqrt(-2*Math.log(1-p));
+    return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) / ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1); }
+  q=p-0.5; r=q*q;
+  return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q /
+         (((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);
+}
+const zFor = conf => probit(1 - (1 - conf) / 2);
+
+/* Normal CDF via Abramowitz & Stegun 7.1.26 erf. */
+function erf(x){
+  const s = x < 0 ? -1 : 1; x = Math.abs(x);
+  const t = 1 / (1 + 0.3275911 * x);
+  const y = 1 - ((((1.061405429*t - 1.453152027)*t + 1.421413741)*t - 0.284496736)*t + 0.254829592) * t * Math.exp(-x*x);
+  return s * y;
+}
+const normCdf = x => 0.5 * (1 + erf(x / Math.SQRT2));
+
+/* Wilson score interval. x is clamped to n because Amazon attribution can
+   report more purchases than clicks on a term (delayed / multi-unit orders). */
+function wilson(x, n, conf){
+  if (!n || n <= 0) return null;
+  const k = Math.min(x, n), z = zFor(conf), p = k / n, z2 = z * z;
+  const denom  = 1 + z2 / n;
+  const center = (p + z2 / (2 * n)) / denom;
+  const margin = (z / denom) * Math.sqrt(p * (1 - p) / n + z2 / (4 * n * n));
+  return { lo: Math.max(0, center - margin), hi: Math.min(1, center + margin), clamped: x > n };
+}
+
+/* Two-proportion z-test: this segment against everything else in the account. */
+function zTest(x1, n1, xAll, nAll){
+  const x2 = xAll - x1, n2 = nAll - n1;
+  if (n1 <= 0 || n2 <= 0) return null;
+  const k1 = Math.min(x1, n1), k2 = Math.max(0, Math.min(x2, n2));
+  const p1 = k1 / n1, p2 = k2 / n2, pool = (k1 + k2) / (n1 + n2);
+  const se = Math.sqrt(pool * (1 - pool) * (1 / n1 + 1 / n2));
+  if (!se) return null;
+  const z = (p1 - p2) / se;
+  return { z, p: 2 * (1 - normCdf(Math.abs(z))), dir: Math.sign(p1 - p2) };
+}
+
+/* ---------- row ingestion ----------
+   The same Amazon report ships with English or Chinese column names, and the
+   money columns carry the marketplace currency in brackets — "Total cost
+   (USD)", "总成本 (CAD)", "销售额 (JPY)". Headers are therefore normalized
+   before matching: brackets are stripped, so one alias covers every currency,
+   and both alphabets are listed for each field. */
+function normHeader(h){
+  return String(h == null ? '' : h)
+    .replace(/^\uFEFF/, '')
+    .replace(/\uFF08/g, '(').replace(/\uFF09/g, ')')   // full-width brackets
+    .replace(/\([^)]*\)/g, ' ')                        // (USD) · (#) · (￥)
+    .replace(/[\s\u3000]+/g, ' ')
+    .trim().toLowerCase();
+}
+const COLS = {
+  term  : ['customer search term', 'search term',
+           '顾客搜索词', '客户搜索词', '用户搜索词', '搜索词', '搜索词条'],
+  impr  : ['impressions', '展示量', '曝光量', '曝光', '展现量'],
+  clicks: ['clicks', '点击量', '点击次数', '点击'],
+  cost  : ['total cost', 'spend', '总成本', '花费', '总花费', '广告花费'],
+  purch : ['purchases', '7 day total orders', 'orders',
+           '购买量', '订单量', '订单数量', '7天总订单数'],
+  sales : ['sales', 'total sales', '7 day total sales', '销售额', '7天总销售额'],
+  match : ['keywords', 'targeting', '关键词', '投放', '定向'],
+  added : ['added as', '已添加为', '添加为']
+};
+const REQUIRED = ['term', 'impr', 'clicks', 'cost', 'purch', 'sales'];
+
+/* Returns column indices plus the header text each field matched, so the audit
+   panel can show exactly which column was read as what. */
+function mapColumns(headers){
+  const norm = headers.map(normHeader);
+  const out = {}, matched = {};
+  for (const key in COLS){
+    const i = norm.findIndex(h => COLS[key].includes(h));
+    if (i >= 0){ out[key] = i; matched[key] = String(headers[i]).replace(/^\uFEFF/, '').trim(); }
+  }
+  out._matched = matched;
+  return out;
+}
+const missingColumns = map => REQUIRED.filter(k => map[k] === undefined);
+
+/* Auto campaigns only ever report the four Amazon match types in Keywords. */
+const AUTO_MATCH = new Set(['close-match', 'loose-match', 'substitutes', 'complements',
+                            'close match', 'loose match', 'substitute', 'complement',
+                            '紧密匹配', '宽泛匹配', '同类商品', '关联商品', '同类', '关联']);
+function inferSource(name, rows, map){
+  if (/manual|手动|手工/i.test(name)) return 'Manual';
+  if (/auto|自动/i.test(name))        return 'Auto';
+  if (map.added !== undefined) return 'Manual';
+  if (map.match !== undefined){
+    const vals = rows.map(r => String(r[map.match] || '').trim().toLowerCase()).filter(Boolean);
+    if (vals.length && vals.every(v => AUTO_MATCH.has(v))) return 'Auto';
+  }
+  return 'Manual';
+}
+
+/* Tolerant of any currency symbol, thousands separators and full-width digits,
+   which Chinese exports occasionally carry. */
+const num = v => {
+  if (v == null || v === '') return 0;
+  const s = String(v)
+    .replace(/[\uFF10-\uFF19]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+    .replace(/\uFF0E/g, '.')
+    .replace(/[^\d.\-+eE]/g, '');
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : 0;
+};
+
+/* Turn parsed rows into the analysis table. ASIN targets are removed here and
+   counted separately so the exclusion is always visible, never silent. */
+function buildRows(files, asinPattern){
+  const asin = new RegExp(asinPattern, 'i');
+  const rows = [], excluded = [], skipped = [], problems = [], perFile = [];
+  for (const f of files){
+    const map = mapColumns(f.headers);
+    const miss = missingColumns(map);
+    if (miss.length){ problems.push({ file: f.name, missing: miss }); continue; }
+    const src = inferSource(f.name, f.rows, map);
+    perFile.push({ name: f.name, source: src, rows: 0, cols: map._matched });
+    const meta = perFile[perFile.length - 1];
+    for (const r of f.rows){
+      const raw = String(r[map.term] == null ? '' : r[map.term]).trim();
+      if (!raw) continue;
+      meta.rows++;
+      const rec = {
+        term: raw, source: src, file: f.name,
+        impr : num(r[map.impr]),  clicks: num(r[map.clicks]),
+        cost : num(r[map.cost]),  purch : num(r[map.purch]),
+        sales: num(r[map.sales])
+      };
+      if (asin.test(raw.toLowerCase())){ excluded.push(rec); continue; }
+      rec.norm  = normTerm(raw);
+      rec.toks  = tokens(rec.norm);
+      rec.stems = stemsOf(rec.norm);
+      rec.stemSet = new Set(rec.stems);
+      if (!rec.toks.length){ skipped.push(rec); continue; }
+      rows.push(rec);
+    }
+  }
+  return { rows, excluded, skipped, problems, perFile };
+}
+
+/* ---------- aggregation ---------- */
+function totals(rows){
+  const t = { impr:0, clicks:0, cost:0, purch:0, sales:0, terms:rows.length };
+  for (const r of rows){ t.impr+=r.impr; t.clicks+=r.clicks; t.cost+=r.cost; t.purch+=r.purch; t.sales+=r.sales; }
+  return t;
+}
+function derive(t){
+  return Object.assign({}, t, {
+    ctr : t.impr   ? t.clicks / t.impr  : null,
+    cvr : t.clicks ? t.purch  / t.clicks : null,
+    acos: t.sales  ? t.cost   / t.sales  : null,
+    cpc : t.clicks ? t.cost   / t.clicks : null
+  });
+}
+
+/* Candidate keywords: every stem that survives the stoplist. */
+function candidates(rows, stopwords){
+  const stop = new Set(String(stopwords).split(',').map(s => stem(normTerm(s.trim()))).filter(Boolean));
+  const seen = new Map();
+  for (const r of rows){
+    for (let i = 0; i < r.stems.length; i++){
+      const s = r.stems[i];
+      if (stop.has(s) || s.length < 2) continue;
+      if (!seen.has(s)) seen.set(s, new Map());
+      const forms = seen.get(s);
+      forms.set(r.toks[i], (forms.get(r.toks[i]) || 0) + 1);
+    }
+  }
+  return [...seen.entries()].map(([s, forms]) => {
+    /* label the row with the surface form the shoppers typed most often */
+    const label = [...forms.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0][0];
+    return { key: s, label, forms: [...forms.keys()].sort() };
+  });
+}
+
+function keywordStats(rows, cfg){
+  const cands = candidates(rows, cfg.stopwords);
+  const all = totals(rows);
+  const out = cands.map(c => {
+    const members = rows.filter(r => r.stemSet.has(c.key));
+    const t = derive(totals(members));
+    return Object.assign(c, t, {
+      members,
+      ci  : wilson(t.purch, t.clicks, cfg.confidence),
+      sig : zTest(t.purch, t.clicks, all.purch, all.clicks)
+    });
+  });
+  return out;
+}
+
+/* ---------- patterns ---------- */
+/* A positive group matches a term if ANY of its keywords match; a negative
+   group matches only if NONE of them do. A pattern matches if EVERY group
+   matches. Order is irrelevant. A keyword may be multi-word ("picture frame"
+   = both tokens present, any order) and may end in * for prefix matching
+   ("gold*" catches "golden"). */
+
+/* Groups used to be plain arrays of keywords. Accept both shapes so patterns
+   saved by an earlier version still load. */
+function normGroups(groups){
+  return (groups || []).map(g => Array.isArray(g)
+    ? { neg: false, kws: g.slice() }
+    : { neg: !!g.neg, kws: (g.kws || []).slice() });
+}
+function groupLabel(g){
+  const body = g.kws.join(' / ');
+  return g.neg ? 'not ' + (g.kws.length > 1 ? '(' + body + ')' : body) : body;
+}
+const patternLabel = groups => normGroups(groups).filter(g => g.kws.length).map(groupLabel).join('  +  ');
+function compileKeyword(raw){
+  const s = String(raw).trim();
+  const wild = /\*\s*$/.test(s);
+  const body = normTerm(s.replace(/\*\s*$/, ''));
+  const parts = tokens(body);
+  if (!parts.length) return null;
+  return { raw: s.trim(), wild, parts, stems: parts.map(stem) };
+}
+function keywordMatches(kw, row){
+  if (kw.wild){
+    return kw.parts.every(p => row.toks.some(t => t.startsWith(p)));
+  }
+  return kw.stems.every(s => row.stemSet.has(s));
+}
+function patternMatches(groups, row){
+  for (const g of groups){
+    if (!g.kws.length) continue;                 // an empty group constrains nothing
+    const hit = g.kws.some(kw => keywordMatches(kw, row));
+    if (g.neg ? hit : !hit) return false;
+  }
+  return true;
+}
+function compileGroups(groups){
+  return normGroups(groups)
+    .map(g => ({ neg: g.neg, kws: g.kws.map(compileKeyword).filter(Boolean) }))
+    .filter(g => g.kws.length);
+}
+function patternStats(rows, patterns, cfg){
+  const all = totals(rows);
+  return patterns.map(p => {
+    const groups = compileGroups(p.groups);
+    const members = groups.length ? rows.filter(r => patternMatches(groups, r)) : [];
+    const t = derive(totals(members));
+    return {
+      id: p.id, label: patternLabel(p.groups),
+      groups: p.groups, members,
+      impr:t.impr, clicks:t.clicks, cost:t.cost, purch:t.purch, sales:t.sales,
+      ctr:t.ctr, cvr:t.cvr, acos:t.acos, cpc:t.cpc,
+      ci : wilson(t.purch, t.clicks, cfg.confidence),
+      sig: zTest(t.purch, t.clicks, all.purch, all.clicks)
+    };
+  });
+}
+
+/* ---------- free-text filter: all words present, order irrelevant ---------- */
+function makeFilter(query){
+  const q = stemsOf(normTerm(query));
+  if (!q.length) return () => true;
+  return row => q.every(s => row.stemSet.has(s));
+}
+
+return { DEFAULTS, normTerm, tokens, stem, stemsOf, wilson, zTest, zFor, normCdf,
+         mapColumns, missingColumns, inferSource, buildRows, totals, derive,
+         candidates, keywordStats, compileKeyword, keywordMatches, patternMatches,
+         patternStats, makeFilter, num, normGroups, groupLabel, patternLabel, compileGroups };
+})();
+
+
+
+/* ============================================================
+   APP — rendering and interaction. All maths lives in CORE.
+   ============================================================ */
+(function(){
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const SVGNS = 'http://www.w3.org/2000/svg';
+/* SVG presentation attributes do not resolve CSS custom properties, so the
+   chart typefaces are spelled out rather than referenced through var(). */
+const MONO = "'IBM Plex Mono', ui-monospace, Menlo, monospace";
+const SANS = "'IBM Plex Sans', system-ui, -apple-system, sans-serif";
+
+/* ---------- formatting ---------- */
+const nf   = n => (n == null ? '—' : Math.round(n).toLocaleString('en-US'));
+const usd  = n => (n == null ? '—' : '$' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}));
+const pct  = (n, d = 1) => (n == null || !isFinite(n) ? '—' : (n * 100).toFixed(d) + '%');
+const esc  = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const store = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+};
+
+/* ---------- state ---------- */
+let FILES = [], BUILT = null, KW = [], PATRES = null;
+let CFG = Object.assign({}, CORE.DEFAULTS, store.get('kwperf.cfg', {}));
+let PATTERNS = store.get('kwperf.patterns', []);
+let S = { q:'', src:'All', kwSort:'sig', kwDir:'asc', patSort:'sig', patDir:'asc',
+          ciMin:CFG.minClicks, pciMin:CFG.minClicks, open:new Set(), popen:new Set(), focus:null,
+          kwShowFlat:false, patShowFlat:false, mem:new Map() };
+/* Revealing the no-signal rows is a per-view choice, so it collapses again
+   whenever the underlying set of rows changes. */
+const collapseTables = () => { S.kwShowFlat = false; S.patShowFlat = false; };
+
+const uid = () => 'p' + Math.random().toString(36).slice(2, 8);
+
+/* Colour bands. Boundaries fall in the yellow band on both metrics: a CVR of
+   exactly 10% is yellow, as is an ACOS of exactly 20% or 40%. */
+const cvrTone  = v => v == null || !isFinite(v) ? '' :
+  (v > CFG.cvrGood ? 'tone-good' : v >= CFG.cvrWarn ? 'tone-warn' : 'tone-bad');
+const acosTone = v => v == null || !isFinite(v) ? '' :
+  (v < CFG.acosGood ? 'tone-good' : v <= CFG.acosWarn ? 'tone-warn' : 'tone-bad');
+const newGroup = () => ({ neg: false, kws: [] });
+const cloneGroup = g => ({ neg: !!g.neg, kws: g.kws.slice() });
+let DRAG = null;   /* {pi, gi} while a group is being dragged */
+
+/* Single entry point for adopting patterns from anywhere — saved storage, or a
+   caller — so the legacy array-of-arrays group shape is always migrated. */
+function adoptPatterns(list){
+  PATTERNS = (list || []).slice(0, 20).map(p => {
+    const groups = CORE.normGroups(p.groups).slice(0, 3);
+    return { id: p.id || uid(), groups: groups.length ? groups : [newGroup()] };
+  });
+}
+
+/* Copying a group is a plain data operation so it can be driven by a drop, and
+   tested, without depending on the browser's drag-and-drop plumbing. */
+function copyGroup(fromPi, fromGi, toPi){
+  const src = PATTERNS[fromPi], dst = PATTERNS[toPi];
+  if (!src || !dst || !src.groups[fromGi]) return { ok:false, reason:'That group has gone.' };
+  const copy = cloneGroup(src.groups[fromGi]);
+  /* An empty group is a placeholder, not a constraint, so the copy takes its
+     place rather than sitting beside it. */
+  const blank = dst.groups.findIndex(g => !g.kws.length);
+  if (blank >= 0) dst.groups[blank] = copy;
+  else if (dst.groups.length >= 3) return { ok:false, reason:`Pattern ${toPi + 1} already has three groups.` };
+  else dst.groups.push(copy);
+  dst.bad = false;
+  return { ok:true };
+}
+function duplicatePattern(pi){
+  if (PATTERNS.length >= 20) return { ok:false, reason:'Twenty patterns is the limit.' };
+  const src = PATTERNS[pi];
+  if (!src) return { ok:false, reason:'That pattern has gone.' };
+  PATTERNS.splice(pi + 1, 0, { id: uid(), groups: src.groups.map(cloneGroup) });
+  return { ok:true };
+}
+
+/* ---------- file loading ---------- */
+/* Seller Central hands out Chinese CSVs in GBK as often as UTF-8. Decoded as
+   UTF-8 those arrive as a wall of replacement characters and the report looks
+   corrupt, so fall back through the legacy encodings before giving up. */
+function decodeText(buf){
+  const bytes = new Uint8Array(buf);
+  const utf8 = new TextDecoder('utf-8').decode(bytes);
+  if (utf8.indexOf('\uFFFD') === -1) return utf8;
+  for (const enc of ['gbk', 'big5', 'windows-1252']){
+    try {
+      const alt = new TextDecoder(enc).decode(bytes);
+      if (alt.indexOf('\uFFFD') === -1) return alt;
+    } catch(e){}
+  }
+  return utf8;
+}
+
+function readFile(f){
+  return new Promise((res, rej) => {
+    const rd = new FileReader();
+    rd.onerror = () => rej(new Error('Could not read ' + f.name));
+    if (/\.(xlsx|xls)$/i.test(f.name)){
+      rd.onload = e => {
+        if (typeof XLSX === 'undefined')
+          return rej(new Error('Excel support needs an internet connection. Save the file as CSV and load that instead.'));
+        const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+        const aoa = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, blankrows:false, raw:true});
+        const clean = aoa.filter(r => r && r.some(v => String(v == null ? '' : v).trim() !== ''));
+        res({ name:f.name, headers: clean[0] || [], rows: clean.slice(1) });
+      };
+      rd.readAsArrayBuffer(f);
+    } else {
+      rd.onload = e => { const p = CSVP.parse(decodeText(e.target.result)); res({ name:f.name, headers:p.headers, rows:p.rows }); };
+      rd.readAsArrayBuffer(f);
+    }
+  });
+}
+
+async function load(fileList){
+  const err = $('#derr'); err.hidden = true;
+  try {
+    const parsed = await Promise.all([...fileList].map(readFile));
+    FILES = FILES.concat(parsed);
+    rebuild();
+    if (BUILT.problems.length){
+      err.hidden = false;
+      err.textContent = BUILT.problems.map(p => p.file + ' is missing: ' + p.missing.map(labelFor).join(', ')).join(' · ');
+    }
+    if (!BUILT.rows.length && !BUILT.problems.length){
+      err.hidden = false;
+      err.textContent = 'No usable search terms found in that file.';
+    }
+  } catch(e){
+    err.hidden = false; err.textContent = e.message;
+  }
+  render();
+}
+const REQ_ORDER = ['term', 'impr', 'clicks', 'cost', 'purch', 'sales'];
+/* Field names, not header names: a rejected Chinese file should not be told it
+   is missing "Impressions" when the column it needs is 展示量. */
+const labelFor = k => ({term:'search term / 搜索词', impr:'impressions / 展示量', clicks:'clicks / 点击量',
+                        cost:'cost / 总成本', purch:'purchases / 购买量', sales:'sales / 销售额'}[k] || k);
+
+function rebuild(){ BUILT = CORE.buildRows(FILES, CFG.asinPattern); }
+
+/* rows after the campaign filter and the free-text filter */
+function activeRows(){
+  if (!BUILT) return [];
+  let r = BUILT.rows;
+  if (S.src !== 'All') r = r.filter(x => x.source === S.src);
+  if (S.q.trim()) r = r.filter(CORE.makeFilter(S.q));
+  return r;
+}
+
+/* ---------- sorting ----------
+   Rows are split into two tiers first: everything at or above the click
+   threshold, then everything below it. Sorting happens inside each tier, so a
+   one-click keyword at 100% can never outrank a keyword with real volume. */
+function sortValue(r, key){
+  if (key === 'sig')   return r.sig ? r.sig.p : null;
+  if (key === 'terms') return r.members.length;
+  return r[key];
+}
+/* 0 beats baseline · 1 trails it · 2 tested but inconclusive · 3 never tested */
+function sigRank(r){
+  if (!r.sig || !r.clicks) return 3;
+  if (r.sig.p >= CFG.alpha) return 2;
+  return r.sig.dir > 0 ? 0 : 1;
+}
+const isSignal = r => sigRank(r) < 2;
+
+function comparator(key, dir){
+  const mul = dir === 'desc' ? -1 : 1;
+  const tie = (a, b) => String(a.label).localeCompare(String(b.label));
+  return (a, b) => {
+    if (key === 'label') return mul * tie(a, b);
+    if (key === 'sig'){
+      /* Group before ranking. Direction swaps better and worse; inside each
+         group p always ascends, so the most conclusive result leads either way. */
+      let ra = sigRank(a), rb = sigRank(b);
+      if (dir === 'desc'){ if (ra < 2) ra = 1 - ra; if (rb < 2) rb = 1 - rb; }
+      if (ra !== rb) return ra - rb;
+      const pa = a.sig ? a.sig.p : null, pb = b.sig ? b.sig.p : null;
+      if (pa == null && pb == null) return tie(a, b);
+      if (pa == null) return 1;
+      if (pb == null) return -1;
+      return (pa - pb) || tie(a, b);
+    }
+    const x = sortValue(a, key), y = sortValue(b, key);
+    const xn = x == null || !isFinite(x), yn = y == null || !isFinite(y);
+    if (xn && yn) return tie(a, b);
+    if (xn) return 1;              /* blanks sink, whichever way we're sorting */
+    if (yn) return -1;
+    return mul * (x - y) || tie(a, b);
+  };
+}
+/* A row is muted when it is not worth acting on. Keywords need both enough
+   clicks and a measurable difference from the baseline; patterns are authored
+   deliberately, so only the click floor applies. */
+const mutedKw  = r => r.clicks < CFG.minClicks || !isSignal(r);
+const mutedPat = r => r.clicks < CFG.minClicks;
+/* Sorting partitions on that same test, so muted rows never outrank live ones. */
+function splitRows(rows, key, dir, muted){
+  const cmp = comparator(key, dir);
+  return { above: rows.filter(r => !muted(r)).sort(cmp),
+           below: rows.filter(r =>  muted(r)).sort(cmp) };
+}
+const defaultDir = k => k === 'sig' ? 'asc' : 'desc';
+function headCell(label, key, cur, dir, cls){
+  const on = cur === key;
+  return `<th class="srt ${cls || ''}" data-k="${key}">${label}${on ? `<span class="ar">${dir === 'desc' ? '↓' : '↑'}</span>` : ''}</th>`;
+}
+/* The bar under each table reveals the rows that showed no difference from
+   the baseline. Rows under the click floor are governed by settings instead:
+   they are either dropped outright or shown greyed and sorted last. */
+function flatRow(n, cols, what, expanded){
+  const unit = `${what}${n === 1 ? '' : 's'} with no signal`;
+  return `<tr class="more"><td colspan="${cols}">
+    <button class="morebtn">${expanded ? `Hide ${nf(n)} ${unit}` : `Show ${nf(n)} ${unit}`}</button></td></tr>`;
+}
+/* base       everything the click-floor setting lets through
+   flatCount  how many of those showed no signal
+   visible    what actually renders, thin rows last                        */
+function viewRows(all, showFlat, key, dir){
+  const base = CFG.hideThin ? all.filter(r => r.clicks >= CFG.minClicks) : all;
+  const flatCount = base.filter(r => !isSignal(r)).length;
+  const pool = showFlat ? base : base.filter(isSignal);
+  const { above, below } = splitRows(pool, key, dir, mutedKw);
+  return { visible: above.concat(below), flatCount, total: all.length };
+}
+function tableNote(shown, total, showFlat, suffix){
+  return (shown < total ? `${nf(shown)} of ${nf(total)}` : nf(total)) + suffix +
+         (showFlat ? '' : ' · signal only');
+}
+
+/* ---------- shared cell renderers ---------- */
+function cvrCell(r, muted){
+  if (!r.clicks) return `<td>—</td>`;
+  const ci = r.ci ? `<span class="sub">${pct(r.ci.lo)} – ${pct(r.ci.hi)}</span>` : '';
+  return `<td><b class="${muted ? '' : cvrTone(r.cvr)}">${pct(r.cvr)}</b>${ci}</td>`;
+}
+function acosCell(r, muted){
+  if (!r.sales) return `<td><span class="flat">—</span></td>`;
+  return `<td><span class="${muted ? '' : acosTone(r.acos)}">${pct(r.acos, 0)}</span></td>`;
+}
+function sigCell(r){
+  if (!r.sig || !r.clicks) return `<td><span class="flat">—</span></td>`;
+  const sig = r.sig.p < CFG.alpha;
+  const cls = !sig ? 'flat' : (r.sig.dir > 0 ? 'up' : 'dn');
+  const bg  = !sig ? 'bg-flat' : (r.sig.dir > 0 ? 'bg-up' : 'bg-dn');
+  const txt = !sig ? 'no signal' : (r.sig.dir > 0 ? 'better' : 'worse');
+  return `<td class="l"><span class="dot ${bg}"></span><span class="${cls}">${txt}</span>
+          <span class="sub">p ${r.sig.p < 0.0001 ? '&lt;0.0001' : r.sig.p.toFixed(4)}</span></td>`;
+}
+
+/* ---------- member drill-down ---------- */
+/* Each open drill-down carries its own sort, so ordering one does not disturb
+   another, and the choice survives re-renders for as long as the row stays
+   open. Purchases descending is the default: the drill-down exists to answer
+   which of the underlying search terms actually sold. */
+const MEM_DEFAULT   = { key:'purch', dir:'desc' };
+const memSort       = id => S.mem.get(id) || MEM_DEFAULT;
+const memDefaultDir = k => (k === 'term' || k === 'source') ? 'asc' : 'desc';
+
+/* CTR, CVR and ACOS are not stored on a member row; they are ratios of the
+   five raw columns, so sorting recomputes them here. */
+function memValue(m, key){
+  if (key === 'ctr')  return m.impr   ? m.clicks / m.impr   : null;
+  if (key === 'cvr')  return m.clicks ? m.purch  / m.clicks : null;
+  if (key === 'acos') return m.sales  ? m.cost   / m.sales  : null;
+  return m[key];
+}
+/* Ties fall back to clicks, then impressions, then the term itself, so the
+   order underneath the sorted column stays stable rather than shuffling. */
+function memComparator(key, dir){
+  const mul = dir === 'desc' ? -1 : 1;
+  const tie = (a, b) => (b.clicks - a.clicks) || (b.impr - a.impr) ||
+                        String(a.term).localeCompare(String(b.term));
+  if (key === 'term' || key === 'source'){
+    const f = m => String(key === 'term' ? m.term : m.source);
+    return (a, b) => mul * f(a).localeCompare(f(b)) || tie(a, b);
+  }
+  return (a, b) => {
+    const x = memValue(a, key), y = memValue(b, key);
+    const xn = x == null || !isFinite(x), yn = y == null || !isFinite(y);
+    if (xn && yn) return tie(a, b);
+    if (xn) return 1;                    /* blanks sink whichever way we sort */
+    if (yn) return -1;
+    return mul * (x - y) || tie(a, b);
+  };
+}
+function memHead(label, key, cur, cls){
+  const on = cur.key === key;
+  return `<th class="msrt ${cls || ''}" data-k="${key}">${label}` +
+         (on ? `<span class="ar">${cur.dir === 'desc' ? '↓' : '↑'}</span>` : '') + `</th>`;
+}
+
+/* Search terms run long — shoppers type whole sentences — so the cell shows at
+   most 50 characters and carries the full text as a tooltip. Truncating in the
+   markup rather than by CSS alone keeps the column honest at any width. */
+const TERM_CAP = 50;
+function termCell(raw){
+  const s = String(raw);
+  const cut = s.length > TERM_CAP ? s.slice(0, TERM_CAP - 1).replace(/\s+$/, '') + '…' : s;
+  return `<td class="l" title="${esc(s)}">${esc(cut)}</td>`;
+}
+
+/* id identifies the drill-down instance — the keyword, pattern or negative it
+   hangs under — and is what the sort state is keyed by. */
+function memberTable(members, id){
+  const s = memSort(id);
+  const rows = members.slice().sort(memComparator(s.key, s.dir));
+  const cap = 150, shown = rows.slice(0, cap);
+  const body = shown.map(m => `<tr>
+      ${termCell(m.term)}<td class="l">${m.source}</td>
+      <td>${nf(m.impr)}</td><td>${nf(m.clicks)}</td>
+      <td>${m.impr ? pct(m.clicks / m.impr) : '—'}</td>
+      <td>${nf(m.purch)}</td><td>${m.clicks ? pct(m.purch / m.clicks) : '—'}</td>
+      <td>${usd(m.cost)}</td><td>${usd(m.sales)}</td>
+      <td>${m.sales ? pct(m.cost / m.sales, 0) : '—'}</td></tr>`).join('');
+  /* the total always covers every member, not just the capped page above it */
+  const t = CORE.derive(CORE.totals(rows));
+  const foot = rows.length ? `<tr class="tot">
+      <td class="l"><b>All ${nf(rows.length)} search term${rows.length === 1 ? '' : 's'}</b></td>
+      <td class="l">—</td><td>${nf(t.impr)}</td><td>${nf(t.clicks)}</td><td>${pct(t.ctr)}</td>
+      <td>${nf(t.purch)}</td><td>${t.clicks ? pct(t.cvr) : '—'}</td>
+      <td>${usd(t.cost)}</td><td>${usd(t.sales)}</td>
+      <td>${t.sales ? pct(t.acos, 0) : '—'}</td></tr>` : '';
+  return `<div class="expin" data-tid="${esc(id || '')}">
+    <h4>${nf(rows.length)} search term${rows.length === 1 ? '' : 's'}${rows.length > cap ? ` · listing the first ${cap} in this order · total covers all ${nf(rows.length)}` : ''}</h4>
+    <table><colgroup><col style="width:30%"><col style="width:9%"><col span="8"></colgroup>
+      <thead><tr>${memHead('Search term','term',s,'l')}${memHead('Campaign','source',s,'l')}
+      ${memHead('Impr','impr',s)}${memHead('Clicks','clicks',s)}${memHead('CTR','ctr',s)}
+      ${memHead('Purch','purch',s)}${memHead('CVR','cvr',s)}${memHead('Cost','cost',s)}
+      ${memHead('Sales','sales',s)}${memHead('ACOS','acos',s)}</tr></thead>
+      <tbody>${body || '<tr><td class="l" colspan="10">No search terms match.</td></tr>'}${foot}</tbody></table></div>`;
+}
+
+/* Header clicks inside a drill-down must not reach the row underneath, which
+   would collapse the thing being sorted. */
+function wireMemberSort(root, rerender){
+  root.querySelectorAll('.expin th.msrt').forEach(th => th.onclick = e => {
+    e.stopPropagation();
+    const wrap = th.closest('.expin');
+    if (!wrap) return;
+    const id = wrap.dataset.tid, k = th.dataset.k, cur = memSort(id);
+    S.mem.set(id, { key:k, dir: cur.key === k ? (cur.dir === 'desc' ? 'asc' : 'desc') : memDefaultDir(k) });
+    rerender();
+  });
+}
+
+/* ---------- keyword table ---------- */
+function renderKwTable(){
+  const V = viewRows(KW, S.kwShowFlat, S.kwSort, S.kwDir);
+  const visible = V.visible;
+  const head = `<thead><tr>
+    <th class="l">Keyword</th>
+    ${headCell('Impressions','impr',S.kwSort,S.kwDir)}
+    ${headCell('Clicks','clicks',S.kwSort,S.kwDir)}
+    ${headCell('CTR','ctr',S.kwSort,S.kwDir)}
+    ${headCell('Purchases','purch',S.kwSort,S.kwDir)}
+    ${headCell('CVR','cvr',S.kwSort,S.kwDir)}
+    ${headCell('Total cost','cost',S.kwSort,S.kwDir)}
+    ${headCell('Sales','sales',S.kwSort,S.kwDir)}
+    ${headCell('ACOS','acos',S.kwSort,S.kwDir)}
+    ${headCell('vs baseline','sig',S.kwSort,S.kwDir,'l')}
+  </tr></thead>`;
+  const body = visible.map(r => {
+    /* muted means "don't act on this": too few clicks, or no measurable
+       difference from the baseline */
+    const thin = mutedKw(r);
+    const forms = r.forms.length > 1 ? `<span class="frm">${esc(r.forms.join(' · '))}</span>` : '';
+    const main = `<tr class="r ${thin ? 'thin' : ''}" data-k="${esc(r.key)}">
+      <td class="l kw"><b>${esc(r.label)}</b>${forms}</td>
+      <td>${nf(r.impr)}</td><td>${nf(r.clicks)}</td><td>${pct(r.ctr)}</td>
+      <td>${nf(r.purch)}</td>${cvrCell(r, thin)}<td>${usd(r.cost)}</td><td>${usd(r.sales)}</td>
+      ${acosCell(r, thin)}${sigCell(r)}</tr>`;
+    if (!S.open.has(r.key)) return main;
+    return main + `<tr class="exp"><td colspan="10">${memberTable(r.members, 'kw:' + r.key)}</td></tr>`;
+  }).join('');
+  const foot = V.flatCount ? flatRow(V.flatCount, 10, 'keyword', S.kwShowFlat) : '';
+  $('#kwtbl').innerHTML = head +
+    `<tbody>${body || `<tr><td class="empty" colspan="10">${V.flatCount ? 'No keyword differs from the baseline yet.' : 'No keywords match this filter.'}</td></tr>`}${foot}</tbody>`;
+  $('#kwnote').textContent = tableNote(visible.length, KW.length, S.kwShowFlat,
+    ` keywords · ${nf(activeRows().length)} search terms`);
+
+  $('#kwtbl').querySelectorAll(':scope > thead th.srt').forEach(th => th.onclick = () => {
+    const k = th.dataset.k;
+    if (S.kwSort === k) S.kwDir = S.kwDir === 'desc' ? 'asc' : 'desc';
+    else { S.kwSort = k; S.kwDir = defaultDir(k); }
+    renderKwTable();
+  });
+  $('#kwtbl').querySelectorAll('tr.r').forEach(tr => tr.onclick = () => {
+    const k = tr.dataset.k;
+    S.open.has(k) ? S.open.delete(k) : S.open.add(k);
+    renderKwTable();
+  });
+  wireMemberSort($('#kwtbl'), renderKwTable);
+  const mb = $('#kwtbl').querySelector('.morebtn');
+  if (mb) mb.onclick = e => { e.stopPropagation(); S.kwShowFlat = !S.kwShowFlat; renderKwTable(); };
+}
+
+/* ---------- forest plot ---------- */
+function forest(host, items, base, note){
+  host.innerHTML = '';
+  if (!items.length){
+    host.innerHTML = `<div class="empty">Nothing clears the minimum click threshold yet.</div>`;
+    return;
+  }
+  const W = Math.max(host.clientWidth || 900, 560);
+  const padL = Math.min(210, Math.max(130, Math.round(W * 0.19)));
+  const padR = 104, rowH = 34, headH = 34, botH = 10;
+  const x0 = padL, x1 = W - padR;
+  const H = headH + items.length * rowH + botH;
+
+  let hiMax = Math.max(base, ...items.map(i => i.ci.hi));
+  const steps = [0.02,0.05,0.1,0.15,0.2,0.25,0.5,1];
+  let xmax = steps.find(s => s >= hiMax * 1.04) || 1;
+  const X = v => x0 + (v / xmax) * (x1 - x0);
+
+  const svg = document.createElementNS(SVGNS, 'svg');
+  svg.setAttribute('width', '100%'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('height', H); svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', note || 'Confidence intervals by conversion rate');
+  const add = (tag, attrs, text) => {
+    const e = document.createElementNS(SVGNS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (text != null) e.textContent = text;
+    svg.appendChild(e); return e;
+  };
+
+  /* axis */
+  const tickN = xmax <= 0.05 ? 5 : 5;
+  for (let i = 0; i <= tickN; i++){
+    const v = xmax * i / tickN, x = X(v);
+    add('line', {x1:x, x2:x, y1:headH - 8, y2:H - botH, stroke:'#EAECEF', 'stroke-width':1});
+    add('text', {x, y:headH - 14, 'text-anchor':'middle', fill:'#6E7787',
+                 'font-family':MONO, 'font-size':10}, (v * 100).toFixed(v < 0.1 ? 1 : 0) + '%');
+  }
+  /* baseline */
+  const bx = X(base);
+  add('line', {x1:bx, x2:bx, y1:headH - 8, y2:H - botH, stroke:'#1B3A8C', 'stroke-width':1.4, 'stroke-dasharray':'3 3'});
+  add('text', {x:bx, y:H - 1, 'text-anchor':'middle', fill:'#1B3A8C',
+               'font-family':MONO, 'font-size':9.5}, 'baseline ' + pct(base));
+
+  items.forEach((it, i) => {
+    const cy = headH + i * rowH + rowH / 2;
+    const g = document.createElementNS(SVGNS, 'g'); g.setAttribute('class', 'fr'); svg.appendChild(g);
+    const put = (tag, attrs, text) => {
+      const e = document.createElementNS(SVGNS, tag);
+      for (const k in attrs) e.setAttribute(k, attrs[k]);
+      if (text != null) e.textContent = text;
+      g.appendChild(e); return e;
+    };
+    put('rect', {class:'fbg', x:0, y:cy - rowH/2, width:W, height:rowH, fill:'transparent'});
+    put('text', {x:0, y:cy - 1, fill:'#131A2A', 'font-family':SANS, 'font-size':12.5, 'font-weight':600},
+        it.label.length > 24 ? it.label.slice(0, 23) + '…' : it.label);
+    put('text', {x:0, y:cy + 11, fill:'#6E7787', 'font-family':MONO, 'font-size':9.5},
+        `${nf(it.clicks)} clicks · ${nf(it.purch)} sold`);
+
+    const lo = X(it.ci.lo), hi = X(it.ci.hi), ob = X(Math.min(it.cvr, xmax));
+    put('rect', {x:lo, y:cy - 4, width:Math.max(hi - lo, 1.5), height:8, fill:'#E4EEE8'});
+    put('line', {x1:lo, x2:lo, y1:cy - 8, y2:cy + 8, stroke:'#5E8F78', 'stroke-width':2});
+    put('line', {x1:hi, x2:hi, y1:cy - 8, y2:cy + 8, stroke:'#5E8F78', 'stroke-width':2});
+    put('line', {x1:ob, x2:ob, y1:cy - 9, y2:cy + 9, stroke:'#B8862B', 'stroke-width':2});
+    const clears = it.ci.lo > base;
+    put('text', {x:W, y:cy + 3.5, 'text-anchor':'end', fill: clears ? '#5E8F78' : '#6E7787',
+                 'font-family':MONO, 'font-size':11},
+        `${pct(it.ci.lo)} – ${pct(it.ci.hi)}`);
+
+    g.addEventListener('mousemove', ev => tip(ev,
+      `<div class="tt">${esc(it.label)}</div><div class="tr">${pct(it.cvr)} observed</div>
+       ${pct(it.ci.lo)} – ${pct(it.ci.hi)} plausible<br>${nf(it.purch)} of ${nf(it.clicks)} clicks converted`));
+    g.addEventListener('mouseleave', tipOff);
+  });
+  host.appendChild(svg);
+}
+
+/* ---------- tooltip ---------- */
+const tipEl = () => $('#tip');
+function tip(ev, html){
+  const t = tipEl(); t.innerHTML = html; t.classList.add('on');
+  const r = t.getBoundingClientRect();
+  let x = ev.clientX + 14, y = ev.clientY - r.height - 12;
+  if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - 14;
+  if (y < 8) y = ev.clientY + 18;
+  t.style.left = x + 'px'; t.style.top = y + 'px';
+}
+function tipOff(){ tipEl().classList.remove('on'); }
+
+/* ---------- pattern builder ---------- */
+function renderPatterns(){
+  const wrap = $('#pwrap');
+  if (!PATTERNS.length){
+    wrap.innerHTML = `<div class="empty" style="border:1px dashed var(--rule);background:var(--glaze)">
+      No patterns yet. Add one to combine keywords into a shape.</div>`;
+  } else {
+    wrap.innerHTML = PATTERNS.map((p, pi) => {
+      const groups = p.groups.map((g, gi) => `
+        <div class="grp ${g.neg ? 'neg' : ''}" data-p="${pi}" data-g="${gi}">
+          <div class="glab" draggable="true" data-p="${pi}" data-g="${gi}">
+            <span class="ghandle" title="Drag onto another pattern to copy this group">⠿</span>
+            <span>Group ${gi + 1}</span>
+            <span class="spacer"></span>
+            <button class="negt" data-act="neg" data-p="${pi}" data-g="${gi}"
+              aria-pressed="${g.neg}" title="${g.neg ? 'Currently excluding these keywords' : 'Exclude these keywords instead'}">exclude</button>
+            ${p.groups.length > 1 ? `<button class="xbtn" data-act="delg" data-p="${pi}" data-g="${gi}" aria-label="Remove group">×</button>` : ''}
+          </div>
+          <div class="bubs">${g.kws.map((k, ki) => `<span class="bub">${esc(k)}
+            <button data-act="delk" data-p="${pi}" data-g="${gi}" data-k="${ki}" aria-label="Remove ${esc(k)}">×</button></span>`).join('')}</div>
+          <input class="gin" data-p="${pi}" data-g="${gi}" placeholder="${g.kws.length ? 'add another' : 'keyword + Enter'}"
+                 aria-label="Add keyword to group ${gi + 1}">
+        </div>`).join('<span class="plus">+</span>');
+      const canAdd = p.groups.length < 3;
+      return `<div class="pat ${p.bad ? 'bad' : ''}" data-p="${pi}">
+        <div class="ptop"><span class="pnum">Pattern ${pi + 1}</span>
+          <div class="spacer"></div>
+          <button class="xbtn" data-act="delp" data-p="${pi}" aria-label="Remove pattern">×</button></div>
+        <div class="grps">${groups}
+          <button class="addg" data-act="addg" data-p="${pi}" ${canAdd ? '' : 'disabled'}>+ group</button></div>
+        <div class="pfoot"><button class="dupb" data-act="dup" data-p="${pi}"
+          ${PATTERNS.length >= 20 ? 'disabled' : ''}>duplicate pattern</button></div>
+      </div>`;
+    }).join('');
+  }
+  $('#addpat').disabled = PATTERNS.length >= 20;
+  $('#patnote').textContent = `${PATTERNS.length} of 20 patterns`;
+
+  wrap.querySelectorAll('[data-act]').forEach(b => b.onclick = () => {
+    const pi = +b.dataset.p;
+    const act = b.dataset.act;
+    if (act === 'delp') PATTERNS.splice(pi, 1);
+    if (act === 'delg') PATTERNS[pi].groups.splice(+b.dataset.g, 1);
+    if (act === 'delk') PATTERNS[pi].groups[+b.dataset.g].kws.splice(+b.dataset.k, 1);
+    if (act === 'addg' && PATTERNS[pi].groups.length < 3) PATTERNS[pi].groups.push(newGroup());
+    if (act === 'neg'){ const g = PATTERNS[pi].groups[+b.dataset.g]; g.neg = !g.neg; }
+    if (act === 'dup'){ const r = duplicatePattern(pi); $('#pwarn').textContent = r.ok ? '' : r.reason; }
+    savePatterns(); renderPatterns();
+  });
+  wrap.querySelectorAll('.gin').forEach(inp => {
+    inp.onkeydown = e => {
+      const pi = +inp.dataset.p, gi = +inp.dataset.g;
+      if (e.key === 'Enter' || e.key === ','){
+        e.preventDefault();
+        const v = inp.value.trim();
+        if (!v) return;
+        const g = PATTERNS[pi].groups[gi];
+        if (!g.kws.some(k => k.toLowerCase() === v.toLowerCase())) g.kws.push(v);
+        PATTERNS[pi].bad = false;
+        S.focus = pi + ':' + gi;
+        savePatterns(); renderPatterns();
+      } else if (e.key === 'Backspace' && inp.value === ''){
+        const g = PATTERNS[pi].groups[gi];
+        if (g.kws.length){ g.kws.pop(); S.focus = pi + ':' + gi; savePatterns(); renderPatterns(); }
+      }
+    };
+  });
+  wireDrag(wrap);
+  if (S.focus){
+    const [pi, gi] = S.focus.split(':');
+    const el = wrap.querySelector(`.gin[data-p="${pi}"][data-g="${gi}"]`);
+    if (el) el.focus();
+    S.focus = null;
+  }
+}
+function savePatterns(){
+  store.set('kwperf.patterns', PATTERNS.map(p => ({ id:p.id, groups:p.groups.map(cloneGroup) })));
+}
+
+/* Drag a group's header onto another pattern to copy it there. The drag state
+   lives in DRAG rather than dataTransfer, because dataTransfer is read-only
+   outside a real drop event in several browsers. */
+function wireDrag(wrap){
+  const note = m => { $('#pwarn').textContent = m || ''; };
+  wrap.querySelectorAll('.glab[draggable]').forEach(h => {
+    h.addEventListener('dragstart', e => {
+      DRAG = { pi: +h.dataset.p, gi: +h.dataset.g };
+      h.closest('.grp').classList.add('dragging');
+      if (e.dataTransfer){
+        e.dataTransfer.effectAllowed = 'copy';
+        try { e.dataTransfer.setData('text/plain', CORE.groupLabel(PATTERNS[DRAG.pi].groups[DRAG.gi])); } catch(err){}
+      }
+    });
+    h.addEventListener('dragend', () => {
+      DRAG = null;
+      wrap.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+      wrap.querySelectorAll('.dropok,.dropbad').forEach(el => el.classList.remove('dropok', 'dropbad'));
+    });
+  });
+  wrap.querySelectorAll('.pat').forEach(pat => {
+    const pi = +pat.dataset.p;
+    pat.addEventListener('dragover', e => {
+      if (!DRAG) return;
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+      pat.classList.toggle('dropok', PATTERNS[pi].groups.length < 3);
+      pat.classList.toggle('dropbad', PATTERNS[pi].groups.length >= 3);
+    });
+    pat.addEventListener('dragleave', e => {
+      if (!pat.contains(e.relatedTarget)) pat.classList.remove('dropok', 'dropbad');
+    });
+    pat.addEventListener('drop', e => {
+      e.preventDefault();
+      if (!DRAG) return;
+      const r = copyGroup(DRAG.pi, DRAG.gi, pi);
+      DRAG = null;
+      note(r.ok ? '' : r.reason);
+      savePatterns(); renderPatterns();
+    });
+  });
+}
+
+function analyze(){
+  const rows = activeRows();
+  let bad = false;
+  PATTERNS.forEach(p => {
+    p.bad = !p.groups.some(g => g.kws.length);
+    if (p.bad) bad = true;
+  });
+  renderPatterns();
+  $('#pwarn').textContent = bad ? 'Every pattern needs at least one keyword.' : '';
+  const usable = PATTERNS.filter(p => !p.bad);
+  if (!usable.length){ PATRES = null; renderPatResults(); return; }
+  PATRES = CORE.patternStats(rows, usable, CFG);
+  renderPatResults();
+}
+
+function renderPatResults(){
+  const sec = $('#s-patres');
+  if (!PATRES || !PATRES.length){ sec.hidden = true; return; }
+  sec.hidden = false;
+  /* Patterns are authored deliberately, so every one is always listed. Only
+     the sort tiers apply, keeping thin patterns below solid ones. */
+  const pSplit = splitRows(PATRES, S.patSort, S.patDir, mutedPat);
+  const visible = pSplit.above.concat(pSplit.below);
+  const head = `<thead><tr>
+    <th class="l">Pattern</th>
+    ${headCell('Terms','terms',S.patSort,S.patDir)}
+    ${headCell('Impressions','impr',S.patSort,S.patDir)}
+    ${headCell('Clicks','clicks',S.patSort,S.patDir)}
+    ${headCell('CTR','ctr',S.patSort,S.patDir)}
+    ${headCell('Purchases','purch',S.patSort,S.patDir)}
+    ${headCell('CVR','cvr',S.patSort,S.patDir)}
+    ${headCell('Total cost','cost',S.patSort,S.patDir)}
+    ${headCell('Sales','sales',S.patSort,S.patDir)}
+    ${headCell('ACOS','acos',S.patSort,S.patDir)}
+    ${headCell('vs baseline','sig',S.patSort,S.patDir,'l')}
+  </tr></thead>`;
+  const tot = CORE.totals(activeRows());
+  const body = visible.map(r => {
+    const thin = mutedPat(r);
+    const share = tot.impr ? r.impr / tot.impr : 0;
+    const main = `<tr class="r ${thin ? 'thin' : ''}" data-k="${r.id}">
+      <td class="l kw"><b>${esc(r.label)}</b></td>
+      <td>${nf(r.members.length)}</td>
+      <td>${nf(r.impr)}<span class="sub">${pct(share, 1)} of impr</span></td>
+      <td>${nf(r.clicks)}</td><td>${pct(r.ctr)}</td><td>${nf(r.purch)}</td>
+      ${cvrCell(r, thin)}<td>${usd(r.cost)}</td><td>${usd(r.sales)}</td>${acosCell(r, thin)}${sigCell(r)}</tr>`;
+    if (!S.popen.has(r.id)) return main;
+    return main + `<tr class="exp"><td colspan="11">${memberTable(r.members, 'pat:' + r.id)}</td></tr>`;
+  }).join('');
+  $('#pattbl').innerHTML = head + `<tbody>${body || '<tr><td class="empty" colspan="11">No patterns to show.</td></tr>'}</tbody>`;
+  $('#prnote').textContent = `${PATRES.length} pattern${PATRES.length === 1 ? '' : 's'}`;
+
+  $('#pattbl').querySelectorAll(':scope > thead th.srt').forEach(th => th.onclick = () => {
+    const k = th.dataset.k;
+    if (S.patSort === k) S.patDir = S.patDir === 'desc' ? 'asc' : 'desc';
+    else { S.patSort = k; S.patDir = defaultDir(k); }
+    renderPatResults();
+  });
+  $('#pattbl').querySelectorAll('tr.r').forEach(tr => tr.onclick = () => {
+    const k = tr.dataset.k;
+    S.popen.has(k) ? S.popen.delete(k) : S.popen.add(k);
+    renderPatResults();
+  });
+  wireMemberSort($('#pattbl'), renderPatResults);
+
+  const base = tot.clicks ? tot.purch / tot.clicks : 0;
+  const items = PATRES.filter(r => r.clicks >= S.pciMin && r.ci)
+                      .sort((a, b) => b.cvr - a.cvr).slice(0, 20);
+  $('#pcilab').textContent = Math.round(CFG.confidence * 100) + '% confidence interval';
+  forest($('#patforest'), items, base, 'Pattern conversion intervals');
+}
+
+/* ---------- negative keyword candidates ---------- */
+function renderNeg(){
+  const tot = CORE.derive(CORE.totals(activeRows()));
+  const aov = tot.purch ? tot.sales / tot.purch : 0;
+  const rows = KW.filter(k => k.clicks >= CFG.minClicks && k.purch === 0)
+                 .sort((a, b) => b.cost - a.cost);
+  const sec = $('#s-neg');
+  if (!rows.length){
+    sec.hidden = false;
+    $('#negtbl').innerHTML = `<tbody><tr><td class="empty">Every keyword with ${CFG.minClicks}+ clicks has at least one purchase.</td></tr></tbody>`;
+    $('#negnote').textContent = 'nothing flagged';
+    $('#negtot').hidden = true;
+    $('#negcpbar').hidden = true;
+    return;
+  }
+  sec.hidden = false;
+
+  /* A search term feeds every keyword row whose stem it contains, so summing the
+     column would count "small wood frame" three times. Total the distinct search
+     terms behind the table instead. */
+  const seen = new Set(), uniq = [];
+  for (const r of rows) for (const m of r.members) if (!seen.has(m)){ seen.add(m); uniq.push(m); }
+  const T = CORE.totals(uniq);
+
+  $('#negnote').textContent = `${rows.length} keywords · ${usd(T.cost)} spent · $0.00 back`;
+  $('#negtot').hidden = false;
+  $('#negtot').innerHTML = [
+    ['Impressions',  nf(T.impr),   `across ${nf(T.terms)} underlying search terms`],
+    ['Clicks',       nf(T.clicks), T.impr ? pct(T.clicks / T.impr, 2) + ' CTR' : '—'],
+    ['Wasted spend', usd(T.cost),  T.clicks ? usd(T.cost / T.clicks) + ' per click' : '—']
+  ].map(c => `<div class="sm"><div class="t">${c[0]}</div><div class="v">${c[1]}</div><div class="s">${c[2]}</div></div>`).join('');
+
+  const body = rows.map(r => {
+    const cpc = r.clicks ? r.cost / r.clicks : 0;
+    const beCvr = (aov && CFG.breakeven) ? cpc / (aov * CFG.breakeven) : null;
+    const cut = beCvr != null && r.ci && r.ci.hi < beCvr;
+    return `<tr class="r" data-k="${esc(r.key)}">
+      <td class="l kw"><b>${esc(r.label)}</b></td>
+      <td>${nf(r.impr)}</td><td>${nf(r.clicks)}</td><td>${usd(r.cost)}</td>
+      <td class="l">${cut ? '<span class="pill bad">Cut</span>' : '<span class="pill na">Too early</span>'}</td></tr>`
+      + (S.open.has(r.key) ? `<tr class="exp"><td colspan="5">${memberTable(r.members, 'neg:' + r.key)}</td></tr>` : '');
+  }).join('');
+
+  const foot = `<tr class="gtot"><td class="l">Total · ${nf(T.terms)} underlying search terms</td>
+    <td>${nf(T.impr)}</td><td>${nf(T.clicks)}</td><td>${usd(T.cost)}</td><td class="l"></td></tr>`;
+
+  $('#negtbl').innerHTML = `<thead><tr><th class="l">Keyword</th><th>Impressions</th><th>Clicks</th>
+    <th>Wasted spend</th><th class="l">Verdict</th></tr></thead>
+    <tbody>${body}${foot}</tbody>`;
+  $('#negtbl').querySelectorAll('tr.r').forEach(tr => tr.onclick = () => {
+    const k = tr.dataset.k;
+    S.open.has(k) ? S.open.delete(k) : S.open.add(k);
+    render();
+  });
+  wireMemberSort($('#negtbl'), render);
+
+  /* one keyword per line, newline after the last one too */
+  const clip = rows.map(r => r.label).join('\n') + '\n';
+  $('#negcpbar').hidden = false;
+  $('#negcpnote').className = 'cpnote';
+  $('#negcpnote').textContent = `${rows.length} keywords`;
+  $('#negcopy').onclick = () => copyText(clip, $('#negcpnote'), `${rows.length} keywords`);
+}
+
+/* Clipboard API is blocked in some sandboxed frames, so fall back to execCommand. */
+function copyText(text, noteEl, restore){
+  const done = ok => {
+    if (!noteEl) return;
+    noteEl.className = 'cpnote' + (ok ? ' done' : '');
+    noteEl.textContent = ok ? 'Copied' : 'Copy failed — select the table instead';
+    setTimeout(() => { noteEl.className = 'cpnote'; noteEl.textContent = restore; }, 2200);
+  };
+  const legacy = () => {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:0;left:-9999px;opacity:0';
+      document.body.appendChild(ta);
+      ta.select(); ta.setSelectionRange(0, text.length);
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      done(ok);
+    } catch { done(false); }
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(() => done(true), legacy);
+  } else legacy();
+}
+
+/* ---------- scatter ---------- */
+function renderScatter(){
+  const host = $('#scatter'); host.innerHTML = '';
+  const pts = KW.filter(k => k.clicks > 0);
+  if (!pts.length){ host.innerHTML = '<div class="empty">No data.</div>'; return; }
+  const W = Math.max(host.clientWidth || 900, 560), H = 380;
+  const mL = 52, mR = 18, mT = 16, mB = 40;
+  const maxC = Math.max(...pts.map(p => p.clicks));
+  const maxY = Math.max(0.35, Math.min(1, Math.max(...pts.map(p => p.cvr)) * 1.1));
+  const maxCost = Math.max(...pts.map(p => p.cost)) || 1;
+  const X = c => mL + (Math.sqrt(c) / Math.sqrt(maxC)) * (W - mL - mR);
+  const Y = v => H - mB - (v / maxY) * (H - mT - mB);
+  const R = c => 3 + 15 * Math.sqrt(c / maxCost);
+
+  const svg = document.createElementNS(SVGNS, 'svg');
+  svg.setAttribute('width', '100%'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('height', H);
+  svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', 'Keyword clicks against conversion rate');
+  const add = (tag, attrs, text) => {
+    const e = document.createElementNS(SVGNS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (text != null) e.textContent = text;
+    svg.appendChild(e); return e;
+  };
+  for (let i = 0; i <= 4; i++){
+    const v = maxY * i / 4, y = Y(v);
+    add('line', {x1:mL, x2:W - mR, y1:y, y2:y, stroke:'#EAECEF'});
+    add('text', {x:mL - 8, y:y + 3.5, 'text-anchor':'end', fill:'#6E7787', 'font-family':MONO, 'font-size':10}, pct(v, 0));
+  }
+  [1, 5, 10, 25, 50, 100, 200, 400, 800].filter(v => v <= maxC).forEach(v => {
+    add('line', {x1:X(v), x2:X(v), y1:mT, y2:H - mB, stroke:'#F1F3F4'});
+    add('text', {x:X(v), y:H - mB + 15, 'text-anchor':'middle', fill:'#6E7787', 'font-family':MONO, 'font-size':10}, v);
+  });
+  add('text', {x:(mL + W - mR) / 2, y:H - 6, 'text-anchor':'middle', fill:'#6E7787',
+               'font-family':MONO, 'font-size':10, 'letter-spacing':'.07em'}, 'CLICKS');
+
+  const tot = CORE.totals(activeRows());
+  const base = tot.clicks ? tot.purch / tot.clicks : 0;
+  add('line', {x1:mL, x2:W - mR, y1:Y(base), y2:Y(base), stroke:'#1B3A8C', 'stroke-width':1.4, 'stroke-dasharray':'3 3'});
+  add('text', {x:W - mR, y:Y(base) - 6, 'text-anchor':'end', fill:'#1B3A8C',
+               'font-family':MONO, 'font-size':9.5}, 'account baseline ' + pct(base));
+
+  pts.slice().sort((a, b) => b.cost - a.cost).forEach(p => {
+    const fill = !p.sales ? '#A83226' : (p.acos <= CFG.breakeven ? '#5E8F78' : '#B8862B');
+    const c = add('circle', {class:'sc', cx:X(p.clicks), cy:Y(Math.min(p.cvr, maxY)), r:R(p.cost),
+                             fill, 'fill-opacity':0.55, stroke:fill, 'stroke-width':1});
+    c.addEventListener('mousemove', ev => tip(ev,
+      `<div class="tt">${esc(p.label)}</div><div class="tr">${pct(p.cvr)} CVR</div>
+       ${nf(p.clicks)} clicks · ${nf(p.purch)} sold<br>${usd(p.cost)} spent · ${usd(p.sales)} back<br>ACOS ${p.sales ? pct(p.acos, 0) : 'no sales'}`));
+    c.addEventListener('mouseleave', tipOff);
+  });
+  host.appendChild(svg);
+}
+
+/* ---------- summary strip ---------- */
+function renderSummary(){
+  const t = CORE.derive(CORE.totals(activeRows()));
+  const ci = CORE.wilson(t.purch, t.clicks, CFG.confidence);
+  const cells = [
+    ['Clicks', nf(t.clicks), '', ''],
+    ['Purchases', nf(t.purch), '', ''],
+    ['CVR', t.clicks ? pct(t.cvr) : '—',
+      ci ? `${Math.round(CFG.confidence * 100)}% CI ${pct(ci.lo)} – ${pct(ci.hi)}` : '', cvrTone(t.cvr)],
+    ['Spend', usd(t.cost), 'CPC ' + usd(t.cpc), ''],
+    ['Sales', usd(t.sales), t.purch ? 'AOV ' + usd(t.sales / t.purch) : '', ''],
+    ['ACOS', t.sales ? pct(t.acos, 1) : '—', '', acosTone(t.sales ? t.acos : null)]
+  ];
+  $('#sumstrip').innerHTML = cells.map(c =>
+    `<div class="sm"><div class="t">${c[0]}</div><div class="v ${c[3]}">${c[1]}</div><div class="s">${c[2]}</div></div>`).join('');
+}
+
+/* ---------- audit ---------- */
+function renderAudit(){
+  const b = BUILT;
+  const ex = b.excluded, sk = b.skipped;
+  const sum = arr => arr.reduce((a, r) => ({ impr:a.impr + r.impr, clicks:a.clicks + r.clicks,
+                                             cost:a.cost + r.cost, purch:a.purch + r.purch, sales:a.sales + r.sales }),
+                                {impr:0, clicks:0, cost:0, purch:0, sales:0});
+  const kept = sum(b.rows), exc = sum(ex), skp = sum(sk);
+  const grand = { impr:kept.impr + exc.impr + skp.impr, clicks:kept.clicks + exc.clicks + skp.clicks,
+                  cost:kept.cost + exc.cost + skp.cost, purch:kept.purch + exc.purch + skp.purch,
+                  sales:kept.sales + exc.sales + skp.sales };
+  const parsedRows = b.perFile.reduce((a, f) => a + f.rows, 0);
+  const balanced = (b.rows.length + ex.length + sk.length) === parsedRows;
+  const over = b.rows.filter(r => r.purch > r.clicks);
+  const ln = (k, v) => `<div class="ln"><span>${k}</span><span>${v}</span></div>`;
+
+  $('#audin').innerHTML =
+    b.perFile.map(f => ln('File loaded', `<b>${esc(f.name)}</b> · ${f.source} · ${nf(f.rows)} data rows`) +
+      ln('Columns read as', REQ_ORDER.map(k => `${labelFor(k)} ← <b>${esc((f.cols && f.cols[k]) || '—')}</b>`).join(' · '))).join('') +
+    (b.problems.length ? b.problems.map(p => ln('File rejected',
+        `<span class="no-tick">${esc(p.file)} — missing ${p.missing.map(labelFor).join(', ')}</span>`)).join('') : '') +
+    ln('Rows analysed', `<b>${nf(b.rows.length)}</b> search terms`) +
+    ln('ASIN targets excluded', `${nf(ex.length)} rows · ${nf(exc.impr)} impr · ${nf(exc.clicks)} clicks · ${nf(exc.purch)} purchases · ${usd(exc.sales)} sales`) +
+    ln('Rows with no usable text', nf(sk.length)) +
+    ln('Row count reconciles', balanced
+        ? `<span class="ok-tick">yes — ${nf(b.rows.length)} + ${nf(ex.length)} + ${nf(sk.length)} = ${nf(parsedRows)}</span>`
+        : `<span class="no-tick">no — ${nf(b.rows.length + ex.length + sk.length)} vs ${nf(parsedRows)} parsed</span>`) +
+    ln('Totals across every parsed row', `${nf(grand.impr)} impr · ${nf(grand.clicks)} clicks · ${nf(grand.purch)} purchases · ${usd(grand.cost)} cost · ${usd(grand.sales)} sales`) +
+    ln('Of which analysed', `${nf(kept.impr)} impr · ${nf(kept.clicks)} clicks · ${nf(kept.purch)} purchases · ${usd(kept.cost)} cost · ${usd(kept.sales)} sales`) +
+    ln('Keywords generated', `<b>${nf(KW.length)}</b> from ${nf(activeRows().length)} filtered search terms`) +
+    ln('Ignored words', esc(CFG.stopwords)) +
+    ln('Campaign filter', S.src) +
+    ln('Search term filter', S.q.trim() ? `every word in “${esc(S.q.trim())}”` : 'none') +
+    ln('Interval method', `Wilson score, ${Math.round(CFG.confidence * 100)}% two-sided, N = clicks`) +
+    ln('Significance test', `two-proportion z-test against the rest of the account, flagged at p &lt; ${CFG.alpha}`) +
+    ln('Rows with more purchases than clicks', over.length
+        ? `${over.length} — ${over.slice(0, 4).map(r => esc(r.term)).join(', ')}${over.length > 4 ? '…' : ''}. Amazon attributes these to a later click; CVR can exceed 100% and intervals are computed with purchases capped at clicks.`
+        : 'none');
+  $('#audnote').textContent = balanced ? 'reconciled' : 'check reconciliation';
+}
+
+/* ---------- master render ---------- */
+function render(){
+  const has = BUILT && BUILT.rows.length > 0;
+  $('#blank').hidden = has;
+  ['#controls', '#sumstrip', '#s-kw', '#s-kwci', '#s-pat', '#s-neg', '#s-scat', '#s-aud']
+    .forEach(id => $(id).hidden = !has);
+  $('#clr').hidden = !FILES.length;
+  $('#pick').textContent = FILES.length ? 'Add another report' : 'Load search term report';
+  if (!has){ $('#s-patres').hidden = true; $('#fname').textContent = FILES.length ? 'No usable rows' : 'No report loaded'; return; }
+
+  $('#fname').textContent = FILES.map(f => f.name).join(', ');
+  $('#fmeta').textContent = `${nf(BUILT.rows.length)} search terms`;
+  $('#srcwrap').hidden = false;
+  const srcs = ['All', ...[...new Set(BUILT.rows.map(r => r.source))].sort()];
+  $('#srcchips').innerHTML = srcs.map(s =>
+    `<button class="chip" data-s="${s}" aria-pressed="${S.src === s}">${s}</button>`).join('');
+  $('#srcchips').querySelectorAll('.chip').forEach(c => c.onclick = () => { S.src = c.dataset.s; collapseTables(); render(); });
+
+  const rows = activeRows();
+  KW = CORE.keywordStats(rows, CFG);
+  const tot = CORE.totals(rows);
+  const base = tot.clicks ? tot.purch / tot.clicks : 0;
+
+  renderSummary();
+  renderKwTable();
+
+  fillMin($('#cimin'), S.ciMin); fillMin($('#pcimin'), S.pciMin);
+  $('#cilab').textContent = Math.round(CFG.confidence * 100) + '% confidence interval';
+  const items = KW.filter(k => k.clicks >= S.ciMin && k.ci).sort((a, b) => b.cvr - a.cvr).slice(0, 10);
+  $('#cinote').textContent = `top ${items.length} by observed CVR · ${S.ciMin}+ clicks`;
+  forest($('#kwforest'), items, base, 'Keyword conversion intervals');
+
+  renderPatterns();
+  if (PATRES) analyze();
+  renderNeg();
+  renderScatter();
+  renderAudit();
+}
+function fillMin(sel, val){
+  const opts = [0, 1, 2, 3, 5, 10, 20, 30, 50];
+  if (!opts.includes(val)) opts.push(val);
+  sel.innerHTML = opts.sort((a, b) => a - b).map(v =>
+    `<option value="${v}" ${v === val ? 'selected' : ''}>${v === 0 ? 'no minimum' : v}</option>`).join('');
+}
+
+/* ---------- settings ---------- */
+function openSettings(){
+  $('#setConf').value  = String(CFG.confidence);
+  $('#setAlpha').value = String(CFG.alpha);
+  $('#setMin').value   = CFG.minClicks;
+  $('#setBe').value    = Math.round(CFG.breakeven * 100);
+  $('#setHide').value  = CFG.hideThin ? '1' : '0';
+  $('#setCvrGood').value  = +(CFG.cvrGood  * 100).toFixed(2);
+  $('#setCvrWarn').value  = +(CFG.cvrWarn  * 100).toFixed(2);
+  $('#setAcosGood').value = +(CFG.acosGood * 100).toFixed(2);
+  $('#setAcosWarn').value = +(CFG.acosWarn * 100).toFixed(2);
+  $('#setStop').value  = CFG.stopwords;
+  $('#setAsin').value  = CFG.asinPattern;
+  $('#veil').hidden = false;
+  $('#setConf').focus();
+}
+function applySettings(){
+  const be = parseFloat($('#setBe').value);
+  const mc = parseInt($('#setMin').value, 10);
+  const pat = $('#setAsin').value.trim() || CORE.DEFAULTS.asinPattern;
+  try { new RegExp(pat); } catch(e){ return; }
+  CFG.confidence  = parseFloat($('#setConf').value);
+  CFG.alpha       = parseFloat($('#setAlpha').value);
+  CFG.minClicks   = isFinite(mc) && mc >= 0 ? mc : CORE.DEFAULTS.minClicks;
+  CFG.breakeven   = isFinite(be) && be > 0 ? be / 100 : CORE.DEFAULTS.breakeven;
+  CFG.hideThin    = $('#setHide').value === '1';
+  const band = (id, dflt) => { const v = parseFloat($(id).value); return isFinite(v) && v >= 0 ? v / 100 : dflt; };
+  CFG.cvrGood  = band('#setCvrGood',  CORE.DEFAULTS.cvrGood);
+  CFG.cvrWarn  = Math.min(band('#setCvrWarn',  CORE.DEFAULTS.cvrWarn),  CFG.cvrGood);
+  CFG.acosGood = band('#setAcosGood', CORE.DEFAULTS.acosGood);
+  CFG.acosWarn = Math.max(band('#setAcosWarn', CORE.DEFAULTS.acosWarn), CFG.acosGood);
+  CFG.stopwords   = $('#setStop').value;
+  const reparse   = pat !== CFG.asinPattern;
+  CFG.asinPattern = pat;
+  S.ciMin = CFG.minClicks; S.pciMin = CFG.minClicks;
+  collapseTables();
+  store.set('kwperf.cfg', CFG);
+  if (reparse && FILES.length) rebuild();
+  render();
+}
+
+/* ---------- wiring ---------- */
+function init(){
+  $('#pick').onclick = () => $('#file').click();
+  $('#file').onchange = e => { if (e.target.files.length) load(e.target.files); e.target.value = ''; };
+  $('#clr').onclick = () => {
+    FILES = []; BUILT = null; KW = []; PATRES = null;
+    S.open.clear(); S.popen.clear(); S.mem.clear(); S.q = ''; S.src = 'All'; collapseTables();
+    $('#q').value = ''; $('#derr').hidden = true; $('#srcwrap').hidden = true;
+    render();
+  };
+  const drop = $('#drop');
+  ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => {
+    e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => {
+    e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', e => { if (e.dataTransfer && e.dataTransfer.files.length) load(e.dataTransfer.files); });
+
+  let t = null;
+  $('#q').oninput = e => { clearTimeout(t); const v = e.target.value;
+    t = setTimeout(() => { S.q = v; collapseTables(); render(); }, 180); };
+  $('#rst').onclick = () => { S.q = ''; $('#q').value = ''; S.src = 'All'; collapseTables(); render(); };
+
+  $('#cimin').onchange  = e => { S.ciMin = +e.target.value; render(); };
+  $('#pcimin').onchange = e => { S.pciMin = +e.target.value; renderPatResults(); };
+
+  $('#addpat').onclick = () => {
+    if (PATTERNS.length >= 20) return;
+    PATTERNS.push({ id:uid(), groups:[newGroup()] });
+    savePatterns(); renderPatterns();
+    const inp = $('#pwrap').querySelector('.pat:last-child .gin'); if (inp) inp.focus();
+  };
+  $('#clrpat').onclick = () => { PATTERNS = []; PATRES = null; savePatterns(); renderPatterns(); renderPatResults(); };
+  $('#analyze').onclick = analyze;
+
+  $('#audhead').onclick = () => {
+    const b = $('#audbody'); b.hidden = !b.hidden;
+    $('#audcaret').style.transform = b.hidden ? '' : 'rotate(180deg)';
+  };
+
+  $('#gear').onclick = openSettings;
+  $('#setClose').onclick = () => { $('#veil').hidden = true; };
+  $('#veil').onclick = e => { if (e.target === $('#veil')) $('#veil').hidden = true; };
+  $('#setDef').onclick = () => {
+    CFG = Object.assign({}, CORE.DEFAULTS);
+    store.set('kwperf.cfg', CFG); openSettings();
+    S.ciMin = CFG.minClicks; S.pciMin = CFG.minClicks;
+    if (FILES.length) rebuild();
+    render();
+  };
+  ['#setConf', '#setAlpha', '#setMin', '#setBe', '#setHide', '#setStop', '#setAsin',
+   '#setCvrGood', '#setCvrWarn', '#setAcosGood', '#setAcosWarn']
+    .forEach(id => { $(id).onchange = applySettings; });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#veil').hidden = true; });
+
+  let rt = null;
+  addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (BUILT) render(); }, 160); });
+
+  adoptPatterns(PATTERNS);
+  renderPatterns();
+  render();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+window.__APP = { get CFG(){ return CFG; }, get KW(){ return KW; }, get BUILT(){ return BUILT; },
+                 get PATRES(){ return PATRES; }, get PATTERNS(){ return PATTERNS; },
+                 setPatterns(p){ adoptPatterns(p); }, copyGroup, analyze, render, renderPatterns,
+                 setState(o){ Object.assign(S, o); } };
+})();
+
+</script>
+</body>
+</html>

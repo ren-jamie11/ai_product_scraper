@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feature Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --porcelain:#F4F5F1; --glaze:#FFFFFF; --ink:#131A2A; --muted:#6E7787;
+  --cobalt:#1B3A8C; --cobalt-lt:#5B7FD4; --cobalt-wash:#E8EDF8;
+  --celadon:#5E8F78; --celadon-wash:#E4EEE8;
+  --iron:#A83226; --iron-wash:#F6E5E2;
+  --amber:#B8862B; --amber-wash:#F7EEDC;
+  --rule:#DCDFE4; --rule-soft:#EAECEF;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  --disp:"Bricolage Grotesque","IBM Plex Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--porcelain);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5}
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px 96px}
+[hidden]{display:none!important}
+
+/* ---------- header ---------- */
+.masthead{padding:44px 0 20px;border-bottom:2px solid var(--ink);display:flex;align-items:flex-end;gap:20px}
+.masthead .mh{flex:1 1 auto;min-width:0}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--cobalt);margin:0 0 10px}
+h1{font-family:var(--disp);font-weight:800;font-size:clamp(28px,4.2vw,48px);line-height:1.02;letter-spacing:-.025em;margin:0;overflow-wrap:anywhere}
+.back{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  text-decoration:none;display:inline-block;margin-bottom:12px}
+.back:hover{color:var(--cobalt)}
+
+/* ---------- summary strip ---------- */
+.sumstrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:1px;background:var(--rule);
+  border:1px solid var(--rule);border-top:0;margin-bottom:24px}
+.sm{background:var(--glaze);padding:13px 14px}
+.sm .t{font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.sm .v{font-family:var(--disp);font-weight:700;font-size:19px;letter-spacing:-.015em}
+.sm .s{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px}
+.sm.warn .v{color:var(--amber)} .sm.bad .v{color:var(--iron)} .sm.good .v{color:var(--celadon)}
+
+/* ---------- action bar ---------- */
+.drop{display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:var(--glaze);border:1px solid var(--rule);
+  padding:12px 16px;margin:22px 0 0}
+.dt{font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.df{font-family:var(--mono);font-size:12px;color:var(--ink);max-width:520px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn{font-family:var(--mono);font-size:11px;letter-spacing:.05em;padding:6px 12px;border:1px solid var(--ink);
+  background:var(--ink);color:#fff;cursor:pointer;border-radius:3px}
+.btn.ghost{background:var(--glaze);color:var(--ink);border-color:var(--rule)}
+.btn.ghost:hover:not(:disabled){border-color:var(--cobalt);color:var(--cobalt)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.err{font-family:var(--mono);font-size:11px;color:var(--iron);background:var(--iron-wash);padding:5px 9px;border-radius:3px}
+.spacer{flex:1 1 auto}
+.hint{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.reset{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;background:none;border:0;
+  color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:4px}
+.reset:hover{color:var(--iron)}
+:focus-visible{outline:2px solid var(--cobalt);outline-offset:1px}
+
+/* ---------- progress ---------- */
+.prog{flex:1 1 220px;min-width:180px}
+.prog .bar{height:6px;background:var(--rule-soft);border-radius:3px;overflow:hidden}
+.prog .bar i{display:block;height:100%;width:0;background:var(--cobalt);transition:width .25s ease}
+.prog .lb{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:5px}
+
+/* ---------- sections ---------- */
+section{margin-bottom:48px}
+.shead{display:flex;align-items:baseline;gap:12px;margin-bottom:18px;padding-bottom:7px;border-bottom:1px solid var(--rule);flex-wrap:wrap}
+.shead h2{font-family:var(--disp);font-weight:700;font-size:19px;letter-spacing:-.012em;margin:0}
+.shead .note{font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-left:auto;white-space:nowrap}
+.lede{color:var(--muted);font-size:13px;margin:-6px 0 16px;max-width:74ch}
+.card{background:var(--glaze);border:1px solid var(--rule);padding:20px}
+
+/* ---------- tables ---------- */
+.tscroll{overflow-x:auto;border:1px solid var(--rule);background:var(--glaze)}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  font-weight:500;text-align:right;padding:10px 11px;border-bottom:1px solid var(--rule);white-space:nowrap;background:var(--glaze)}
+th.l{text-align:left}
+td{padding:9px 11px;text-align:right;border-bottom:1px solid var(--rule-soft);white-space:nowrap;font-variant-numeric:tabular-nums}
+td.l{text-align:left;white-space:normal}
+tbody tr.r{cursor:pointer}
+tbody tr.r:hover{background:#FAFBFC}
+td.nm b{font-family:var(--sans);font-weight:600;font-size:13.5px}
+.sub{display:block;font-family:var(--mono);font-size:9.5px;color:var(--muted);margin-top:2px}
+.pill{font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:2px;white-space:nowrap;display:inline-block}
+.pill.ok{background:var(--celadon-wash);color:var(--celadon)}
+.pill.bad{background:var(--iron-wash);color:var(--iron)}
+.pill.warn{background:var(--amber-wash);color:var(--amber)}
+.pill.na{background:var(--rule-soft);color:var(--muted)}
+.empty{padding:30px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:12px}
+
+/* ---------- empty state ---------- */
+.blank{border:1px dashed var(--rule);background:var(--glaze);padding:48px 30px;text-align:center;margin-top:26px}
+.blank h3{font-family:var(--disp);font-weight:700;font-size:22px;margin:0 0 8px;letter-spacing:-.015em}
+.blank p{color:var(--muted);margin:0 auto 18px;max-width:60ch;font-size:13px}
+.blank code{font-family:var(--mono);font-size:11.5px;background:var(--porcelain);padding:2px 5px;border-radius:2px}
+
+/* ---------- form fields ---------- */
+.fld{margin-bottom:15px}
+.fld label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:5px}
+.fld input,.fld select,.fld textarea{width:100%;font-family:var(--sans);font-size:13px;padding:7px 9px;
+  border:1px solid var(--rule);border-radius:3px;background:var(--glaze);color:var(--ink)}
+.fld textarea{font-family:var(--mono);font-size:11.5px;resize:vertical;min-height:150px;line-height:1.7}
+.fld input:focus,.fld textarea:focus{outline:none;border-color:var(--cobalt)}
+.fld .h{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.45}
+
+/* ---------- modal ---------- */
+.veil{position:fixed;inset:0;background:rgba(19,26,42,.34);z-index:90;display:flex;align-items:flex-start;
+  justify-content:center;padding:60px 20px;overflow:auto}
+.modal{background:var(--glaze);border:1px solid var(--rule);width:min(520px,100%);padding:24px 26px 22px}
+.modal h3{font-family:var(--disp);font-weight:700;font-size:20px;margin:0 0 4px;letter-spacing:-.015em}
+.modal .sd{color:var(--muted);font-size:12.5px;margin:0 0 18px}
+.mbar{display:flex;gap:9px;justify-content:flex-end;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--rule)}
+
+/* ---------- unparsed lines ---------- */
+.badlines{margin-top:14px;border:1px solid var(--iron);background:var(--iron-wash);padding:11px 13px;border-radius:3px}
+.badlines .t{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--iron);margin-bottom:7px}
+.badlines ul{margin:0;padding-left:18px}
+.badlines li{font-family:var(--mono);font-size:11px;color:var(--ink);word-break:break-all;margin-bottom:3px}
+
+/* ---------- run notes ---------- */
+.note-line{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;color:var(--ink);
+  background:var(--amber-wash);border:1px solid var(--amber);border-radius:3px;padding:9px 12px;margin-bottom:10px}
+.note-line.info{background:var(--cobalt-wash);border-color:var(--cobalt-lt)}
+.note-line .ic{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--amber);white-space:nowrap;padding-top:1px}
+.note-line.info .ic{color:var(--cobalt)}
+
+/* ---------- product cards ---------- */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px}
+.pcard{background:var(--glaze);border:1px solid var(--rule);display:flex;flex-direction:column}
+.pcard.dead{border-color:var(--iron);background:#FEFAF9}
+.pcard .top{display:flex;gap:14px;padding:16px}
+.pcard .thumb{width:88px;height:88px;flex:0 0 auto;object-fit:contain;background:var(--porcelain);
+  border:1px solid var(--rule-soft);border-radius:3px}
+.pcard .thumb.none{display:flex;align-items:center;justify-content:center;font-family:var(--mono);
+  font-size:9px;color:var(--muted);text-align:center}
+.pcard .meta{min-width:0;flex:1 1 auto}
+.pcard .ttl{font-weight:600;font-size:13px;line-height:1.36;margin:0 0 5px;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.pcard .ids{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px}
+.pcard .ids a{color:var(--cobalt);text-decoration:none}
+.pcard .ids a:hover{text-decoration:underline}
+.pcard .facts{display:flex;gap:6px;flex-wrap:wrap}
+.pcard .price{font-family:var(--disp);font-weight:700;font-size:16px;letter-spacing:-.01em}
+.pcard .foot{margin-top:auto;border-top:1px solid var(--rule-soft);display:flex;flex-wrap:wrap}
+.tabbtn{flex:1 1 auto;border:0;border-right:1px solid var(--rule-soft);background:none;cursor:pointer;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;color:var(--muted);padding:10px 8px}
+.tabbtn:last-child{border-right:0}
+.tabbtn:hover{color:var(--cobalt);background:var(--cobalt-wash)}
+.tabbtn[aria-pressed=true]{color:var(--cobalt);background:var(--cobalt-wash);box-shadow:inset 0 -2px 0 var(--cobalt)}
+.tabbtn:disabled{opacity:.4;cursor:not-allowed}
+.pbody{border-top:1px solid var(--rule-soft);background:#FBFCFD;padding:14px 16px;max-height:420px;overflow:auto}
+.pbody h4{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  font-weight:500;margin:0 0 9px}
+.pbody ul{margin:0;padding-left:18px}
+.pbody li{font-size:12.5px;line-height:1.55;margin-bottom:7px}
+.rv{border-bottom:1px solid var(--rule-soft);padding-bottom:10px;margin-bottom:10px}
+.rv:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+.rv .rh{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;margin-bottom:4px}
+.rv .stars{font-family:var(--mono);font-size:11px;color:var(--amber);white-space:nowrap}
+.rv .rt{font-weight:600;font-size:12.5px}
+.rv .rd{font-family:var(--mono);font-size:9.5px;color:var(--muted);margin-left:auto}
+.rv .rb{font-size:12.5px;line-height:1.6;color:#2A3240;white-space:pre-wrap}
+.specs{width:100%;font-size:12px}
+.specs td{text-align:left;white-space:normal;padding:5px 8px 5px 0;border-bottom:1px solid var(--rule-soft)}
+.specs td:first-child{font-family:var(--mono);font-size:10px;color:var(--muted);width:38%;vertical-align:top}
+
+@media (max-width:640px){
+  .wrap{padding:0 14px 70px}
+  .masthead{padding-top:30px}
+  .pgrid{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="masthead">
+  <div class="mh">
+    <a class="back" id="back" href="#/" hidden>&larr; All groups</a>
+    <p class="eyebrow" id="eyebrow">Amazon competitor research &middot; feature extraction</p>
+    <h1 id="title">What customers<br>actually care about.</h1>
+  </div>
+</header>
+
+<div class="err" id="globalerr" hidden style="margin-top:16px"></div>
+
+<!-- ==================== GROUPS VIEW ==================== -->
+<div id="view-groups" hidden>
+  <div class="drop">
+    <span class="dt">Groups</span>
+    <span class="df" id="groupcount">&hellip;</span>
+    <div class="spacer"></div>
+    <button class="btn" id="newgroup">New group</button>
+  </div>
+
+  <div class="blank" id="groups-blank" hidden>
+    <h3>No competitor groups yet</h3>
+    <p>A group is one product category you want to understand &mdash; <code>Vintage Gold Picture Frames</code>,
+       <code>Faux Olive Trees</code>. You paste the competitor listings into it, and every extraction run
+       is kept so you can come back to it later.</p>
+    <button class="btn" id="newgroup2">Create your first group</button>
+  </div>
+
+  <section id="groups-list" hidden style="margin-top:26px">
+    <div class="tscroll"><table id="grouptbl"></table></div>
+  </section>
+</div>
+
+<!-- ==================== GROUP DETAIL VIEW ==================== -->
+<div id="view-group" hidden>
+  <div class="drop">
+    <span class="dt">Group</span>
+    <span class="df" id="g-slug"></span>
+    <div class="prog" id="g-prog" hidden>
+      <div class="bar"><i id="g-progbar"></i></div>
+      <div class="lb" id="g-proglb"></div>
+    </div>
+    <div class="spacer"></div>
+    <span class="err" id="g-err" hidden></span>
+    <button class="btn" id="extract" disabled>Extract</button>
+  </div>
+
+  <div class="sumstrip" id="g-sum" hidden></div>
+
+  <section style="margin-top:26px">
+    <div class="shead">
+      <h2>Competitor listings</h2>
+      <span class="note" id="pastenote"></span>
+    </div>
+    <p class="lede">Paste Amazon product URLs, one per line &mdash; the long ones straight from the address bar are fine.
+       Bare ASINs work too. Duplicates are folded together automatically.</p>
+    <div class="card">
+      <div class="fld" style="margin-bottom:0">
+        <label for="urls">URLs or ASINs</label>
+        <textarea id="urls" spellcheck="false"
+          placeholder="https://www.amazon.com/Sunlit-Vintage-Picture-Antique-Tabletop/dp/B08P5LPZFJ/ref=sr_1_10&#10;https://www.amazon.com/Picture-Frame-Vintage-Frames-Tabletop/dp/B0H49KRM51&#10;B0CQ1J8XYZ"></textarea>
+        <div class="h" id="urlhint">Nothing pasted yet.</div>
+      </div>
+      <div class="badlines" id="badlines" hidden>
+        <div class="t">Couldn't read these lines</div>
+        <ul id="badlist"></ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="shead">
+      <h2>Runs</h2>
+      <span class="note" id="runnote"></span>
+    </div>
+    <div id="runs-wrap">
+      <div class="blank">
+        <h3>No runs yet</h3>
+        <p>Each time you press <b>Extract</b>, a timestamped run is saved here with the raw
+           Rainforest payloads, so nothing you pull is ever overwritten.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ==================== RUN VIEW ==================== -->
+<div id="view-run" hidden>
+  <div class="drop">
+    <span class="dt">Run</span>
+    <span class="df" id="r-id"></span>
+    <div class="spacer"></div>
+    <button class="btn ghost" id="r-reload">Reload</button>
+    <button class="btn" id="parse" disabled title="Tagging arrives in Phase 3">Parse results</button>
+  </div>
+
+  <div class="sumstrip" id="r-sum"></div>
+  <div id="r-notes"></div>
+
+  <section style="margin-top:6px">
+    <div class="shead">
+      <h2>Extracted listings</h2>
+      <span class="note" id="r-note"></span>
+    </div>
+    <p class="lede">Everything Rainforest returned, plus the raw payloads on disk. Open
+       <b>Bullets</b> or <b>Reviews</b> on any card to read the exact text that will be tagged.</p>
+    <div class="pgrid" id="r-cards"></div>
+  </section>
+</div>
+
+</div><!-- /wrap -->
+
+<!-- ==================== NEW GROUP MODAL ==================== -->
+<div class="veil" id="veil" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modaltitle">
+    <h3 id="modaltitle">New competitor group</h3>
+    <p class="sd">One group per product category. The name becomes its folder on disk.</p>
+    <div class="fld">
+      <label for="gname">Group name</label>
+      <input id="gname" type="text" placeholder="Vintage Gold Picture Frames" autocomplete="off">
+      <div class="h" id="slugpreview">Saved to <code>data/</code></div>
+    </div>
+    <div class="err" id="modalerr" hidden></div>
+    <div class="mbar">
+      <div class="spacer"></div>
+      <button class="btn ghost" id="cancelgroup">Cancel</button>
+      <button class="btn" id="creategroup">Create group</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ---------- tiny helpers ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
+  ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+
+async function api(path, opts) {
+  let res;
+  try {
+    res = await fetch(path, Object.assign({ headers: { "Content-Type": "application/json" } }, opts));
+  } catch (e) {
+    throw new Error("Couldn't reach the local server. Is python app.py still running?");
+  }
+  let body = null;
+  try { body = await res.json(); } catch (e) { /* fall through to status text */ }
+  if (!res.ok) throw new Error((body && body.error) || `Server returned ${res.status}.`);
+  return body;
+}
+
+function showError(msg) {
+  const el = $("globalerr");
+  el.textContent = msg;
+  el.hidden = !msg;
+}
+
+function slugify(name) {
+  return (name || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
+}
+
+function fmtDate(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+}
+
+function plural(n, one, many) { return `${n} ${n === 1 ? one : many}`; }
+
+function stat(label, value, sub, tone) {
+  return `<div class="sm ${tone || ""}"><div class="t">${esc(label)}</div>` +
+         `<div class="v">${esc(value)}</div>` +
+         (sub ? `<div class="s">${esc(sub)}</div>` : "") + `</div>`;
+}
+
+/* ---------- routing ---------- */
+function route() {
+  showError("");
+  const hash = location.hash || "#/";
+  const run = hash.match(/^#\/g\/([^/]+)\/r\/([^/]+)$/);
+  if (run) return renderRun(decodeURIComponent(run[1]), decodeURIComponent(run[2]));
+  const grp = hash.match(/^#\/g\/([^/]+)$/);
+  if (grp) return renderGroup(decodeURIComponent(grp[1]));
+  return renderGroups();
+}
+
+function setHeader({ eyebrow, title, back, backHref }) {
+  $("eyebrow").textContent = eyebrow;   // textContent, so pass raw text here
+  $("title").innerHTML = title;         // innerHTML, so pass escaped text here
+  $("back").hidden = !back;
+  $("back").setAttribute("href", backHref || "#/");
+}
+
+function showView(which) {
+  $("view-groups").hidden = which !== "groups";
+  $("view-group").hidden = which !== "group";
+  $("view-run").hidden = which !== "run";
+}
+
+/* ---------- groups view ---------- */
+async function renderGroups() {
+  showView("groups");
+  setHeader({
+    eyebrow: "Amazon competitor research · feature extraction",
+    title: "What customers<br>actually care about.",
+    back: false
+  });
+
+  let groups;
+  try {
+    groups = (await api("/api/groups")).groups;
+  } catch (e) { showError(e.message); return; }
+
+  $("groupcount").textContent = groups.length
+    ? plural(groups.length, "group", "groups")
+    : "None yet";
+  $("groups-blank").hidden = groups.length > 0;
+  $("groups-list").hidden = groups.length === 0;
+  if (!groups.length) return;
+
+  $("grouptbl").innerHTML =
+    `<thead><tr>
+       <th class="l">Group</th><th>Runs</th><th class="l">Last run</th><th class="l">Created</th>
+     </tr></thead><tbody>` +
+    groups.map(g => `
+      <tr class="r" data-slug="${esc(g.slug)}">
+        <td class="l nm"><b>${esc(g.name)}</b><span class="sub">${esc(g.slug)}</span></td>
+        <td>${g.run_count || 0}</td>
+        <td class="l">${g.last_run ? `<span class="pill ok">${esc(g.last_run)}</span>`
+                                   : `<span class="pill na">never</span>`}</td>
+        <td class="l">${esc(fmtDate(g.created_at))}</td>
+      </tr>`).join("") + `</tbody>`;
+
+  $("grouptbl").querySelectorAll("tr.r").forEach(tr => {
+    tr.onclick = () => { location.hash = "#/g/" + encodeURIComponent(tr.dataset.slug); };
+  });
+}
+
+/* ---------- group detail view ---------- */
+let currentSlug = null;
+
+async function renderGroup(slug) {
+  showView("group");
+  currentSlug = slug;
+
+  let group;
+  try {
+    group = (await api("/api/groups/" + encodeURIComponent(slug))).group;
+  } catch (e) {
+    setHeader({ eyebrow: "Competitor group", title: "Not found", back: true });
+    showError(e.message);
+    return;
+  }
+
+  setHeader({ eyebrow: "Competitor group", title: esc(group.name), back: true });
+  $("g-slug").textContent = "data/" + group.slug;
+
+  const runs = group.runs || [];
+  $("runnote").textContent = runs.length ? plural(runs.length, "run", "runs") : "none yet";
+
+  if (runs.length) {
+    $("runs-wrap").innerHTML =
+      `<div class="tscroll"><table>
+        <thead><tr><th class="l">Run</th><th>ASINs</th><th>Reviews</th><th class="l">Parses</th></tr></thead>
+        <tbody>` + runs.map(r => `
+          <tr class="r" data-run="${esc(r.run_id)}">
+            <td class="l nm"><b>${esc(r.run_id)}</b></td>
+            <td>${r.asins_ok != null ? esc(r.asins_ok + " / " + r.asins_total) : "—"}</td>
+            <td>${r.reviews_total != null ? esc(r.reviews_total) : "—"}</td>
+            <td class="l">${r.parses && r.parses.length
+                ? r.parses.map(p => `<span class="pill ok">${esc(p)}</span>`).join(" ")
+                : `<span class="pill na">not parsed</span>`}</td>
+          </tr>`).join("") + `</tbody></table></div>`;
+
+    $("runs-wrap").querySelectorAll("tr.r").forEach(tr => {
+      tr.onclick = () => {
+        location.hash = `#/g/${encodeURIComponent(slug)}/r/${encodeURIComponent(tr.dataset.run)}`;
+      };
+    });
+  } else {
+    $("runs-wrap").innerHTML =
+      `<div class="blank"><h3>No runs yet</h3>
+        <p>Each time you press <b>Extract</b>, a timestamped run is saved here with the raw
+           Rainforest payloads, so nothing you pull is ever overwritten.</p></div>`;
+  }
+
+  // Restore whatever was typed for this group last time.
+  const saved = localStorage.getItem("urls:" + slug) || "";
+  $("urls").value = saved;
+  refreshPreview();
+}
+
+/* ---------- ASIN preview ---------- */
+let previewTimer = null;
+
+function refreshPreview() {
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(runPreview, 250);
+}
+
+async function runPreview() {
+  const text = $("urls").value;
+  if (currentSlug) localStorage.setItem("urls:" + currentSlug, text);
+
+  if (!text.trim()) {
+    $("g-sum").hidden = true;
+    $("badlines").hidden = true;
+    $("urlhint").textContent = "Nothing pasted yet.";
+    $("pastenote").textContent = "";
+    $("extract").disabled = true;
+    return;
+  }
+
+  let r;
+  try { r = await api("/api/parse-asins", { method: "POST", body: JSON.stringify({ text }) }); }
+  catch (e) { showError(e.message); return; }
+
+  const found = r.items.length;
+  $("g-sum").hidden = false;
+  $("g-sum").innerHTML =
+    stat("Lines", r.line_count) +
+    stat("ASINs found", found, null, found ? "good" : "bad") +
+    stat("Duplicates", r.duplicates.length, r.duplicates.length ? "folded together" : null,
+         r.duplicates.length ? "warn" : "") +
+    stat("Unreadable", r.unparsed.length, null, r.unparsed.length ? "bad" : "");
+
+  $("urlhint").textContent = found
+    ? `Ready to extract ${plural(found, "ASIN", "ASINs")}: ${r.items.slice(0, 6).map(i => i.asin).join(", ")}` +
+      (found > 6 ? `, +${found - 6} more` : "")
+    : "No ASINs found in what's pasted.";
+
+  $("badlines").hidden = r.unparsed.length === 0;
+  $("badlist").innerHTML = r.unparsed.map(l => `<li>${esc(l)}</li>`).join("");
+
+  $("pastenote").textContent = found ? plural(found, "ASIN", "ASINs") : "";
+  $("extract").disabled = found === 0 || extracting;
+  $("extract").title = found
+    ? `Fetch ${plural(found, "listing", "listings")} from Rainforest`
+    : "Paste at least one Amazon URL first";
+}
+
+/* ---------- extraction ---------- */
+let extracting = false;
+
+function setProgress(pct, label) {
+  $("g-prog").hidden = false;
+  $("g-progbar").style.width = Math.max(2, pct) + "%";
+  $("g-proglb").textContent = label;
+}
+
+function clearProgress() {
+  $("g-prog").hidden = true;
+  $("g-progbar").style.width = "0%";
+}
+
+async function startExtract() {
+  const text = $("urls").value;
+  const slug = currentSlug;
+  $("g-err").hidden = true;
+  extracting = true;
+  $("extract").disabled = true;
+  $("urls").disabled = true;
+
+  let job;
+  try {
+    job = await api(`/api/groups/${encodeURIComponent(slug)}/extract`,
+                    { method: "POST", body: JSON.stringify({ text }) });
+  } catch (e) {
+    $("g-err").textContent = e.message;
+    $("g-err").hidden = false;
+    extracting = false;
+    $("urls").disabled = false;
+    refreshPreview();
+    return;
+  }
+
+  setProgress(0, `Starting — ${plural(job.asin_count, "listing", "listings")} to fetch`);
+  pollJob(job.job_id, slug, job.run_id);
+}
+
+async function pollJob(jobId, slug, runId) {
+  let snap;
+  try {
+    snap = await api("/api/jobs/" + encodeURIComponent(jobId));
+  } catch (e) {
+    $("g-err").textContent = e.message;
+    $("g-err").hidden = false;
+    extracting = false; $("urls").disabled = false; clearProgress(); refreshPreview();
+    return;
+  }
+
+  const label = snap.total ? `${snap.label} (${snap.done}/${snap.total})` : snap.label;
+  setProgress(snap.pct, label);
+
+  if (snap.state === "running") {
+    setTimeout(() => pollJob(jobId, slug, runId), 700);
+    return;
+  }
+
+  extracting = false;
+  $("urls").disabled = false;
+
+  if (snap.state === "error") {
+    $("g-err").textContent = snap.error || "The extraction failed.";
+    $("g-err").hidden = false;
+    clearProgress();
+    refreshPreview();
+    return;
+  }
+
+  setProgress(100, "Done");
+  setTimeout(() => {
+    clearProgress();
+    location.hash = `#/g/${encodeURIComponent(slug)}/r/${encodeURIComponent(runId)}`;
+  }, 400);
+}
+
+/* ---------- run view ---------- */
+function stars(n) {
+  const v = Math.round(Number(n) || 0);
+  return "★".repeat(v) + "☆".repeat(Math.max(0, 5 - v));
+}
+
+function productCard(p, idx) {
+  const dead = !p.fetch_ok;
+  const bullets = p.feature_bullets || [];
+  const reviews = p.reviews || [];
+  const specs = p.specifications || [];
+  const link = p.link || p.source_url;
+
+  const thumb = p.main_image
+    ? `<img class="thumb" src="${esc(p.main_image)}" alt="" loading="lazy"
+         onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'thumb none',textContent:'no image'}))">`
+    : `<div class="thumb none">no image</div>`;
+
+  const facts = [];
+  if (p.rating) facts.push(`<span class="pill ok">${esc(p.rating)}&#9733; &middot; ${esc((p.ratings_total || 0).toLocaleString())}</span>`);
+  facts.push(bullets.length ? `<span class="pill ok">${plural(bullets.length, "bullet", "bullets")}</span>`
+                            : `<span class="pill warn">no bullets</span>`);
+  facts.push(reviews.length ? `<span class="pill ok">${plural(reviews.length, "review", "reviews")}</span>`
+                            : `<span class="pill warn">no reviews</span>`);
+  if (p.brand) facts.push(`<span class="pill na">${esc(p.brand)}</span>`);
+
+  const warnings = (p.warnings || []).map(w =>
+    `<div class="note-line"><span class="ic">Note</span><span>${esc(w)}</span></div>`).join("");
+
+  return `
+  <div class="pcard ${dead ? "dead" : ""}" data-idx="${idx}">
+    <div class="top">
+      ${thumb}
+      <div class="meta">
+        <p class="ttl">${esc(p.title || "(no title returned)")}</p>
+        <div class="ids">
+          ${link ? `<a href="${esc(link)}" target="_blank" rel="noopener">${esc(p.asin)}</a>` : esc(p.asin)}
+          ${p.price && p.price.raw ? ` &middot; <span class="price">${esc(p.price.raw)}</span>` : ""}
+        </div>
+        <div class="facts">${facts.join("")}</div>
+      </div>
+    </div>
+    ${warnings ? `<div style="padding:0 16px 12px">${warnings}</div>` : ""}
+    <div class="foot">
+      <button class="tabbtn" data-tab="bullets" ${bullets.length ? "" : "disabled"}>Bullets ${bullets.length}</button>
+      <button class="tabbtn" data-tab="reviews" ${reviews.length ? "" : "disabled"}>Reviews ${reviews.length}</button>
+      <button class="tabbtn" data-tab="specs" ${specs.length ? "" : "disabled"}>Details ${specs.length}</button>
+    </div>
+    <div class="pbody" hidden></div>
+  </div>`;
+}
+
+function tabHtml(p, tab) {
+  if (tab === "bullets") {
+    return `<h4>Listing body &mdash; title + ${plural((p.feature_bullets || []).length, "bullet", "bullets")}</h4>
+            <ul>${(p.feature_bullets || []).map(b => `<li>${esc(b)}</li>`).join("")}</ul>`;
+  }
+  if (tab === "reviews") {
+    return `<h4>${plural((p.reviews || []).length, "review", "reviews")}</h4>` +
+      (p.reviews || []).map(r => `
+        <div class="rv">
+          <div class="rh">
+            <span class="stars">${esc(stars(r.rating))}</span>
+            <span class="rt">${esc(r.title || "(untitled)")}</span>
+            <span class="rd">${esc(r.date || "")}${r.verified_purchase ? " &middot; verified" : ""}</span>
+          </div>
+          <div class="rb">${esc(r.body)}</div>
+        </div>`).join("");
+  }
+  const rows = (p.specifications || []).map(s =>
+    `<tr><td>${esc(s.name)}</td><td>${esc(s.value)}</td></tr>`).join("");
+  const extra = [
+    ["Material", p.material], ["Colour", p.color], ["Model", p.model_number],
+    ["Category", p.categories_flat], ["Best sellers rank", p.bestsellers_rank_flat],
+  ].filter(([, v]) => v).map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join("");
+  return `<h4>Product details</h4><table class="specs">${extra}${rows}</table>`;
+}
+
+async function renderRun(slug, runId) {
+  showView("run");
+  currentSlug = slug;
+
+  let data;
+  try {
+    data = await api(`/api/runs/${encodeURIComponent(slug)}/${encodeURIComponent(runId)}`);
+  } catch (e) {
+    setHeader({ eyebrow: "Extraction run", title: "Not found", back: true });
+    showError(e.message);
+    return;
+  }
+
+  const { group, run, log } = data;
+  setHeader({
+    eyebrow: `${group.name} · extraction run`,
+    title: esc(runId),
+    back: true,
+    backHref: `#/g/${encodeURIComponent(slug)}`,
+  });
+  $("r-id").textContent = `data/${slug}/${runId}`;
+
+  const products = run.products || [];
+  $("r-note").textContent = plural(products.length, "listing", "listings");
+
+  $("r-sum").innerHTML =
+    stat("ASINs", `${log.asins_ok ?? 0} / ${log.asins_total ?? products.length}`,
+         log.asins_failed ? `${log.asins_failed} failed` : "all fetched",
+         log.asins_failed ? "bad" : "good") +
+    stat("With bullets", `${log.with_bullets_pct ?? 0}%`,
+         `${log.with_bullets ?? 0} of ${log.asins_ok ?? 0} fetched`,
+         (log.with_bullets_pct ?? 0) === 100 ? "good" : "warn") +
+    stat("With reviews", `${log.with_reviews_pct ?? 0}%`,
+         `${log.with_reviews ?? 0} of ${log.asins_ok ?? 0} fetched`,
+         (log.with_reviews_pct ?? 0) === 100 ? "good" : "warn") +
+    stat("Reviews", log.reviews_total ?? 0, `${log.reviews_avg ?? 0} avg per ASIN`) +
+    stat("Text bodies", log.bodies_total ?? 0, "to be tagged") +
+    stat("Credits left", log.credits_remaining ?? "—", "Rainforest") +
+    stat("Elapsed", `${log.elapsed_seconds ?? 0}s`, null);
+
+  const notes = (log.notes || []).map(n =>
+    `<div class="note-line info"><span class="ic">Rainforest</span><span>${esc(n)}</span></div>`).join("");
+  const fails = (log.failures || []).map(f =>
+    `<div class="note-line"><span class="ic">${esc(f.item)}</span><span>${esc(f.reason)}</span></div>`).join("");
+  $("r-notes").innerHTML = notes + fails;
+
+  $("r-cards").innerHTML = products.map(productCard).join("");
+  $("r-cards").querySelectorAll(".pcard").forEach(card => {
+    const product = products[Number(card.dataset.idx)];
+    const panel = card.querySelector(".pbody");
+    card.querySelectorAll(".tabbtn").forEach(btn => {
+      btn.onclick = () => {
+        const active = btn.getAttribute("aria-pressed") === "true";
+        card.querySelectorAll(".tabbtn").forEach(b => b.setAttribute("aria-pressed", "false"));
+        if (active) { panel.hidden = true; return; }
+        btn.setAttribute("aria-pressed", "true");
+        panel.innerHTML = tabHtml(product, btn.dataset.tab);
+        panel.hidden = false;
+      };
+    });
+  });
+
+  $("r-reload").onclick = () => renderRun(slug, runId);
+}
+
+/* ---------- new group modal ---------- */
+function openModal() {
+  $("veil").hidden = false;
+  $("modalerr").hidden = true;
+  $("gname").value = "";
+  $("slugpreview").innerHTML = "Saved to <code>data/</code>";
+  $("gname").focus();
+}
+function closeModal() { $("veil").hidden = true; }
+
+async function createGroup() {
+  const name = $("gname").value.trim();
+  const btn = $("creategroup");
+  btn.disabled = true;
+  try {
+    const { group } = await api("/api/groups", { method: "POST", body: JSON.stringify({ name }) });
+    closeModal();
+    location.hash = "#/g/" + encodeURIComponent(group.slug);
+  } catch (e) {
+    $("modalerr").textContent = e.message;
+    $("modalerr").hidden = false;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ---------- wiring ---------- */
+$("newgroup").onclick = openModal;
+$("newgroup2").onclick = openModal;
+$("cancelgroup").onclick = closeModal;
+$("creategroup").onclick = createGroup;
+$("extract").onclick = startExtract;
+$("urls").addEventListener("input", refreshPreview);
+
+$("gname").addEventListener("input", () => {
+  const s = slugify($("gname").value);
+  $("slugpreview").innerHTML = s
+    ? `Saved to <code>data/${esc(s)}/</code>`
+    : "Saved to <code>data/</code>";
+});
+$("gname").addEventListener("keydown", e => { if (e.key === "Enter") createGroup(); });
+
+$("veil").addEventListener("click", e => { if (e.target === $("veil")) closeModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("veil").hidden) closeModal(); });
+
+window.addEventListener("hashchange", route);
+route();
+</script>
+</body>
+</html>
