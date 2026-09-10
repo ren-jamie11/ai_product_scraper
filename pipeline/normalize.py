@@ -55,6 +55,33 @@ def _price(product: dict) -> dict | None:
     }
 
 
+_NUMBER = re.compile(r"\d+(?:\.\d+)?")
+
+
+def parse_price(raw: str, previous: dict | None = None) -> dict | None:
+    """Turn a hand-typed price back into the {raw, value, currency} shape.
+
+    The number is a convenience, not the truth — the raw string is what gets
+    shown. So an unparseable price is kept verbatim with a null value rather
+    than rejected, and the currency carries over from whatever we fetched.
+    """
+    raw = clean_text(raw)
+    if not raw:
+        return None
+
+    match = _NUMBER.search(raw.replace(",", ""))
+    try:
+        value = float(match.group()) if match else None
+    except ValueError:
+        value = None
+
+    return {
+        "raw": raw,
+        "value": value,
+        "currency": (previous or {}).get("currency") or "USD",
+    }
+
+
 def _images(product: dict, limit: int = 8) -> list[str]:
     images = product.get("images")
     if not isinstance(images, list):
@@ -100,6 +127,44 @@ def normalize_review(raw: dict, source: str) -> dict | None:
         "helpful_votes": raw.get("helpful_votes") or 0,
         "source": source,
     }
+
+
+def parse_pasted_reviews(text: str, existing: list[dict] | None = None) -> list[dict]:
+    """Split a pasted block into reviews — one blank line between each.
+
+    Rainforest never returns reviews for some listings, so pasting is the only
+    route for those. Whatever is pasted becomes the body; title and rating are
+    left empty for you to fill in inline if you care. Both are optional
+    downstream: tagging joins title and body, so an empty title costs nothing.
+    """
+    taken = {r.get("id") for r in (existing or [])}
+    reviews: list[dict] = []
+    counter = 1
+
+    for block in re.split(r"\n\s*\n", text or ""):
+        body = "\n".join(clean_text(line) for line in block.splitlines()).strip()
+        if len(body) < config.MIN_REVIEW_CHARS:
+            continue
+
+        # Manual ids have to stay unique within the product, and compaction
+        # merges reviews across runs, so never reuse one that already exists.
+        while f"manual_{counter}" in taken:
+            counter += 1
+        review_id = f"manual_{counter}"
+        taken.add(review_id)
+
+        reviews.append({
+            "id": review_id,
+            "title": "",
+            "body": body,
+            "rating": None,
+            "date": None,
+            "verified_purchase": False,
+            "helpful_votes": 0,
+            "source": "manual",
+        })
+
+    return reviews
 
 
 def normalize_product(fetched: dict) -> dict:

@@ -14,7 +14,7 @@ import webbrowser
 from flask import Flask, jsonify, request, send_from_directory
 
 import config
-from pipeline import asins, extract, jobs, storage
+from pipeline import asins, compact, extract, jobs, normalize, storage
 
 app = Flask(__name__, static_folder="static", static_url_path="/static")
 
@@ -87,6 +87,12 @@ def api_get_group(slug: str):
     return jsonify({"group": storage.get_group(slug)})
 
 
+@app.delete("/api/groups/<slug>")
+def api_delete_group(slug: str):
+    """Move a whole group to data/_trash/ — recoverable in the file browser."""
+    return jsonify({"trashed": storage.trash_group(slug).name})
+
+
 @app.post("/api/parse-asins")
 def api_parse_asins():
     """Preview what a pasted block resolves to. Pure regex — no network calls."""
@@ -136,14 +142,174 @@ def api_job(job_id: str):
 
 @app.get("/api/runs/<slug>/<run_id>")
 def api_run(slug: str, run_id: str):
-    """A run's products (with edits applied) plus its log."""
+    """A run's products (with edits applied), its log, and live stats.
+
+    `log` is the record of what the fetch did and never changes. `stats` is
+    recomputed over the post-edit products, so the summary strip describes what
+    is actually on screen.
+    """
     directory = storage.run_dir(slug, run_id)
     group = storage.read_json(storage.group_file(slug), {}) or {}
+
+    # Removed ASINs come along carrying `deleted: true`, so the run view can
+    # offer to restore them. Stats count only what is still live.
+    run = storage.load_run(slug, run_id, include_deleted=True)
+    live = [p for p in run["products"] if not p.get("deleted")]
+
     return jsonify({
         "group": {"name": group.get("name", slug), "slug": slug},
-        "run": storage.load_run(slug, run_id),
+        "run": run,
+        "stats": normalize.summarize(live),
         "log": storage.read_json(directory / "run_log.json", {}) or {},
     })
+
+
+@app.delete("/api/runs/<slug>/<run_id>")
+def api_delete_run(slug: str, run_id: str):
+    """Move one run to data/<slug>/_trash/ — recoverable in the file browser."""
+    return jsonify({"trashed": storage.trash_run(slug, run_id).name})
+
+
+# ---------------------------------------------------------------------------
+# Editing — edits.json is an overlay, extracted.json is never touched
+# ---------------------------------------------------------------------------
+
+@app.put("/api/runs/<slug>/<run_id>/edits")
+def api_save_edits(slug: str, run_id: str):
+    """Merge `{ASIN: {field: value}}` into the overlay. null removes a field."""
+    payload = request.get_json(silent=True) or {}
+    patch = payload.get("patch") or {}
+    if not isinstance(patch, dict) or not patch:
+        raise storage.StorageError("Nothing to save.")
+
+    clean = {asin: _clean_fields(slug, run_id, asin, fields)
+             for asin, fields in patch.items()}
+    storage.merge_edits(slug, run_id, clean)
+    return jsonify(_edit_result(slug, run_id, list(patch)))
+
+
+def _clean_fields(slug: str, run_id: str, asin: str, fields) -> dict:
+    """Normalize an edited field the same way the extractor normalizes a fetch.
+
+    Hand-typed text goes through the same emoji strip and whitespace collapse as
+    Rainforest's, and a typed price is parsed back into {raw, value, currency},
+    so nothing downstream has to care which of the two it is looking at.
+    """
+    if not isinstance(fields, dict):
+        raise storage.StorageError(f"Malformed edit for {asin}.")
+
+    product = _find_product(slug, run_id, asin)
+    clean = {}
+
+    for key, value in fields.items():
+        if value is None or key == storage.DELETED_KEY:
+            clean[key] = value
+
+        elif key == "title":
+            clean[key] = normalize.clean_text(value) or None
+
+        elif key == "price":
+            raw = value.get("raw") if isinstance(value, dict) else value
+            clean[key] = normalize.parse_price(raw, product.get("price"))
+
+        elif key == "rating":
+            try:
+                clean[key] = round(float(value), 1)
+            except (TypeError, ValueError):
+                clean[key] = None
+
+        elif key == "feature_bullets":
+            if not isinstance(value, list):
+                raise storage.StorageError("Bullets have to be a list.")
+            clean[key] = [t for t in (normalize.clean_text(b) for b in value) if t]
+
+        elif key == "reviews":
+            if not isinstance(value, list):
+                raise storage.StorageError("Reviews have to be a list.")
+            clean[key] = [_clean_review(r) for r in value if isinstance(r, dict)]
+
+        else:
+            raise storage.StorageError(f"{key} isn't an editable field.")
+
+    return clean
+
+
+def _clean_review(review: dict) -> dict:
+    review = dict(review)
+    review["title"] = normalize.clean_text(review.get("title"))
+    review["body"] = "\n".join(
+        normalize.clean_text(line) for line in str(review.get("body") or "").splitlines()
+    ).strip()
+    try:
+        review["rating"] = float(review["rating"]) if review.get("rating") is not None else None
+    except (TypeError, ValueError):
+        review["rating"] = None
+    return review
+
+
+@app.delete("/api/runs/<slug>/<run_id>/edits/<asin>")
+def api_restore_asin(slug: str, run_id: str, asin: str):
+    """Drop every override for one ASIN, back to what Rainforest returned."""
+    storage.clear_edits(slug, run_id, asin)
+    return jsonify(_edit_result(slug, run_id, [asin]))
+
+
+@app.post("/api/runs/<slug>/<run_id>/reviews")
+def api_add_reviews(slug: str, run_id: str):
+    """Append pasted reviews to an ASIN — one blank line between each.
+
+    Parsed here rather than in the browser so the emoji strip and the minimum
+    body length stay in one place, next to the rules the fetched reviews follow.
+    """
+    payload = request.get_json(silent=True) or {}
+    asin = payload.get("asin")
+
+    product = _find_product(slug, run_id, asin)
+    existing = list(product.get("reviews") or [])
+    added = normalize.parse_pasted_reviews(payload.get("text", ""), existing)
+    if not added:
+        raise storage.StorageError(
+            "Nothing there looked like a review. Paste the review text with a "
+            "blank line between each one."
+        )
+
+    storage.merge_edits(slug, run_id, {asin: {"reviews": existing + added}})
+    return jsonify({"added": len(added), **_edit_result(slug, run_id, [asin])})
+
+
+def _find_product(slug: str, run_id: str, asin: str) -> dict:
+    run = storage.load_run(slug, run_id, include_deleted=True)
+    for product in run.get("products", []):
+        if product.get("asin") == asin:
+            return product
+    raise storage.StorageError(f"{asin} isn't in this run.")
+
+
+def _edit_result(slug: str, run_id: str, asins: list[str]) -> dict:
+    """What every edit hands back: fresh stats, and the records that changed.
+
+    Returning the records means the browser never has to reconstruct what an
+    override or a restore did — it just swaps in what the server now reads.
+    """
+    products = storage.load_run(slug, run_id, include_deleted=True).get("products", [])
+    live = [p for p in products if not p.get("deleted")]
+    return {
+        "ok": True,
+        "stats": normalize.summarize(live),
+        "products": [p for p in products if p.get("asin") in set(asins)],
+    }
+
+
+# ---------------------------------------------------------------------------
+# Compaction
+# ---------------------------------------------------------------------------
+
+@app.post("/api/groups/<slug>/compact")
+def api_compact(slug: str):
+    """Merge a group's runs into one. `?dry_run=1` previews without writing."""
+    if request.args.get("dry_run"):
+        return jsonify({"preview": compact.public_report(compact.plan_compaction(slug))})
+    return jsonify({"result": compact.compact(slug)})
 
 
 # ---------------------------------------------------------------------------

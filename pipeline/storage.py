@@ -12,6 +12,11 @@ Layout on disk:
 
 Runs are timestamped and never overwritten, so re-extracting a group keeps the
 whole history.
+
+Deleting moves a folder into a sibling `_trash/` rather than removing it — every
+run cost real Rainforest credits, so a misclick should be recoverable from the
+file browser. Anything whose name starts with `_` is invisible to the listings,
+which is what keeps `_trash/` from showing up as a group or a run.
 """
 
 from __future__ import annotations
@@ -26,6 +31,10 @@ from pathlib import Path
 import config
 
 _NON_SLUG = re.compile(r"[^a-z0-9]+")
+
+# The overlay marker for an ASIN the user removed from a run. See "Edits
+# overlay" below for the shape of edits.json.
+DELETED_KEY = "__deleted"
 
 
 class StorageError(Exception):
@@ -52,6 +61,11 @@ def group_file(slug: str) -> Path:
 
 def run_dir(slug: str, run_id: str) -> Path:
     return group_dir(slug) / run_id
+
+
+def is_hidden(name: str) -> bool:
+    """`_trash` and anything else underscored is bookkeeping, not user data."""
+    return name.startswith("_") or name.startswith(".")
 
 
 def slugify(name: str) -> str:
@@ -131,7 +145,7 @@ def get_group(slug: str) -> dict:
 def list_groups() -> list[dict]:
     groups = []
     for child in data_root().iterdir():
-        if not child.is_dir():
+        if not child.is_dir() or is_hidden(child.name):
             continue
         group = read_json(child / "group.json")
         if not group:
@@ -156,7 +170,7 @@ def list_runs(slug: str) -> list[dict]:
 
     runs = []
     for child in sorted(directory.iterdir(), key=lambda p: p.name, reverse=True):
-        if not child.is_dir():
+        if not child.is_dir() or is_hidden(child.name):
             continue
         log = read_json(child / "run_log.json", {}) or {}
         runs.append({
@@ -165,12 +179,13 @@ def list_runs(slug: str) -> list[dict]:
             "asins_ok": log.get("asins_ok"),
             "asins_total": log.get("asins_total"),
             "reviews_total": log.get("reviews_total"),
+            "compacted_from": log.get("compacted_from"),
             "parses": [p.name for p in sorted(child.glob("parse-*"), reverse=True) if p.is_dir()],
         })
     return runs
 
 
-def _claim_run_dir(slug: str) -> tuple[str, Path]:
+def claim_run_dir(slug: str) -> tuple[str, Path]:
     """Create a fresh run folder, never reusing one.
 
     Run ids are second-granularity timestamps, so two runs started in the same
@@ -194,7 +209,7 @@ def create_run(slug: str, inputs: list[dict]) -> str:
     if not group_file(slug).exists():
         raise StorageError("That group no longer exists.")
 
-    run_id, directory = _claim_run_dir(slug)
+    run_id, directory = claim_run_dir(slug)
     write_json(directory / "run_log.json", {
         "run_id": run_id,
         "started_at": now_iso(),
@@ -205,11 +220,14 @@ def create_run(slug: str, inputs: list[dict]) -> str:
     return run_id
 
 
-def load_run(slug: str, run_id: str) -> dict:
+def load_run(slug: str, run_id: str, include_deleted: bool = False) -> dict:
     """Return extracted.json with edits.json applied on top.
 
     extracted.json and the raw payloads are never mutated, so the machine
     output stays visible next to whatever the user corrected by hand.
+
+    Removed ASINs are filtered out by default — tagging must never pick one up.
+    The run view asks for them back so it can offer to restore them.
     """
     directory = run_dir(slug, run_id)
     extracted = read_json(directory / "extracted.json")
@@ -217,9 +235,101 @@ def load_run(slug: str, run_id: str) -> dict:
         raise StorageError("That run has no extracted data yet.")
 
     edits = read_json(directory / "edits.json", {}) or {}
+    products = []
     for product in extracted.get("products", []):
-        override = edits.get(product.get("asin"))
+        override = dict(edits.get(product.get("asin")) or {})
+        deleted = bool(override.pop(DELETED_KEY, False))
+        if deleted and not include_deleted:
+            continue
         if override:
             product.update(override)
             product["edited_fields"] = sorted(override.keys())
+        product["deleted"] = deleted
+        products.append(product)
+
+    extracted["products"] = products
     return extracted
+
+
+# ---------------------------------------------------------------------------
+# Edits overlay
+#
+# edits.json is a diff against extracted.json, not a copy of it:
+#
+#     {"B08P5LPZFJ": {"title": "...", "reviews": [...]},
+#      "B0BADBADBA": {"__deleted": true}}
+#
+# Patches merge field-by-field. A field sent as null is removed from the
+# overlay, which is how a value goes back to whatever Rainforest returned.
+# ---------------------------------------------------------------------------
+
+def read_edits(slug: str, run_id: str) -> dict:
+    return read_json(run_dir(slug, run_id) / "edits.json", {}) or {}
+
+
+def merge_edits(slug: str, run_id: str, patch: dict) -> dict:
+    """Apply `{asin: {field: value}}` on top of the stored overlay."""
+    directory = run_dir(slug, run_id)
+    if not (directory / "extracted.json").exists():
+        raise StorageError("That run no longer exists.")
+    if not isinstance(patch, dict) or not patch:
+        raise StorageError("Nothing to save.")
+
+    edits = read_edits(slug, run_id)
+    for asin, fields in patch.items():
+        if not isinstance(fields, dict):
+            raise StorageError(f"Malformed edit for {asin}.")
+        entry = dict(edits.get(asin) or {})
+        for key, value in fields.items():
+            if value is None:
+                entry.pop(key, None)
+            else:
+                entry[key] = value
+        # An overlay entry with nothing in it is the same as no entry at all.
+        if entry:
+            edits[asin] = entry
+        else:
+            edits.pop(asin, None)
+
+    write_json(directory / "edits.json", edits)
+    return edits
+
+
+def clear_edits(slug: str, run_id: str, asin: str) -> dict:
+    """Drop every override for one ASIN — "restore original"."""
+    directory = run_dir(slug, run_id)
+    edits = read_edits(slug, run_id)
+    edits.pop(asin, None)
+    write_json(directory / "edits.json", edits)
+    return edits
+
+
+# ---------------------------------------------------------------------------
+# Deleting — into _trash/, never gone
+# ---------------------------------------------------------------------------
+
+def _move_to_trash(source: Path, trash_root: Path) -> Path:
+    """Move a folder under `trash_root`, suffixing if that name is taken."""
+    trash_root.mkdir(parents=True, exist_ok=True)
+    target, suffix = trash_root / source.name, 2
+    while target.exists():
+        target = trash_root / f"{source.name}-{suffix}"
+        suffix += 1
+    os.replace(source, target)
+    return target
+
+
+def trash_run(slug: str, run_id: str) -> Path:
+    """Move one run into data/<slug>/_trash/."""
+    source = run_dir(slug, run_id)
+    if not source.is_dir() or is_hidden(run_id):
+        raise StorageError("That run no longer exists.")
+    return _move_to_trash(source, group_dir(slug) / "_trash")
+
+
+def trash_group(slug: str) -> Path:
+    """Move a whole group, runs and all, into data/_trash/."""
+    source = group_dir(slug)
+    if not source.is_dir() or is_hidden(slug):
+        raise StorageError("That group no longer exists.")
+    return _move_to_trash(source, data_root() / "_trash")
