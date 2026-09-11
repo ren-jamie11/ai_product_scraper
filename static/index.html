@@ -350,12 +350,18 @@ tbody tr.r:hover .x,tbody tr.r .x:focus-visible{opacity:1}
     <span class="dt">Run</span>
     <span class="df" id="r-id"></span>
     <div class="spacer"></div>
+    <div class="prog" id="r-prog" hidden>
+      <div class="bar"><i id="r-progbar"></i></div>
+      <div class="lb" id="r-proglb"></div>
+    </div>
     <button class="btn ghost" id="r-reload">Reload</button>
-    <button class="btn" id="parse" disabled title="Tagging arrives in Phase 3">Parse results</button>
+    <button class="btn" id="parse">Parse results</button>
   </div>
 
+  <div class="err" id="r-err" hidden></div>
   <div class="sumstrip" id="r-sum"></div>
   <div id="r-notes"></div>
+  <div id="r-parses"></div>
 
   <section style="margin-top:6px">
     <div class="shead">
@@ -1368,7 +1374,7 @@ async function renderRun(slug, runId) {
     return;
   }
 
-  const { group, run, log, stats, meta } = data;
+  const { group, run, log, stats, meta, parses } = data;
   const label = (meta || {}).label || "";
   setHeader({
     eyebrow: `${group.name} · extraction run`,
@@ -1393,7 +1399,8 @@ async function renderRun(slug, runId) {
     onCancel: () => { $("title").innerHTML = esc(label || runId); },
   });
 
-  runState = { slug, runId, products: run.products || [], log, stats };
+  runState = { slug, runId, products: run.products || [], log, stats,
+               parses: parses || [] };
   removedOpen = false;
 
   const notes = (log.notes || []).map(n =>
@@ -1404,7 +1411,173 @@ async function renderRun(slug, runId) {
   $("r-notes").innerHTML = notes + fails;
 
   renderRunBody();
+  renderParses();
   $("r-reload").onclick = () => renderRun(slug, runId);
+  $("parse").onclick = startParse;
+}
+
+/* ---------- step 2: tagging ----------
+   A parse never alters the run it reads: each one writes its own parse-<ts>/
+   folder, so re-parsing after a prompt change keeps the earlier output to
+   compare against. Phase 5 renders the tags; here we only run them and report. */
+let parsing = false;
+
+async function renderParses() {
+  const list = runState.parses || [];
+  if (!list.length) {
+    $("r-parses").innerHTML = "";
+    return;
+  }
+
+  // Only the newest parse's log is worth loading — it's the one the summary
+  // describes, and each fetch reads a file off disk.
+  let log = {};
+  try {
+    log = (await api(runPath(`/parses/${encodeURIComponent(list[0])}`))).log || {};
+  } catch (e) { /* a half-written parse folder: show the pills, skip the stats */ }
+
+  const pills = list.map((p, i) =>
+    `<span class="pill ${i === 0 ? "ok" : "na"}">${esc(p)}</span>`).join(" ");
+
+  const stats = log.bodies_total ? `
+    <div class="sumstrip" style="margin-top:10px">
+      ${stat("Tagged", `${log.tagged} / ${log.bodies_total}`,
+             log.failed ? `${log.failed} failed` : "all bodies",
+             log.failed ? "bad" : "good")}
+      ${stat("Features", log.features_total, "concrete benefits")}
+      ${stat("Complaints", log.complaints_total, "from reviews")}
+      ${stat("Search terms", log.search_terms_total, null)}
+      ${stat("Usage keywords", log.usage_keywords_total, null)}
+      ${stat("Skipped", log.skipped, `under ${log.min_tag_chars} chars`,
+             log.skipped ? "warn" : "")}
+      ${stat("Nothing found", log.empty ?? "—", "tagged but empty")}
+      ${stat("Cost", log.cost_usd == null ? "—" : `$${log.cost_usd.toFixed(4)}`,
+             log.estimated_cost_usd == null
+               ? `${log.elapsed_seconds}s`
+               : `est. $${log.estimated_cost_usd.toFixed(4)} · ${log.elapsed_seconds}s`)}
+    </div>` : "";
+
+  $("r-parses").innerHTML = `
+    <div class="strip">
+      <div class="sh">
+        <span>${plural(list.length, "parse", "parses")} &middot; ${pills}</span>
+        <span class="hint">${esc(log.model || "")}${
+          log.prompt_sha ? ` &middot; prompt ${esc(log.prompt_sha)}` : ""}</span>
+      </div>
+    </div>${stats}`;
+}
+
+async function startParse() {
+  if (parsing) return;
+  const { slug, runId } = runState;
+  $("r-err").hidden = true;
+
+  let info;
+  try {
+    info = await api(runPath("/parse-estimate"));
+  } catch (e) {
+    $("r-err").textContent = e.message;
+    $("r-err").hidden = false;
+    return;
+  }
+
+  const est = info.estimate;
+  if (!est.to_tag) {
+    $("r-err").textContent =
+      "There is nothing long enough to tag in this run. Add bullets or reviews first.";
+    $("r-err").hidden = false;
+    return;
+  }
+
+  const line = (n, text, tone) =>
+    `<div class="ln ${tone || ""}"><b>${esc(n)}</b><span>${text}</span></div>`;
+
+  let plan = `<div class="plan">` +
+    line(est.to_tag, `text ${est.to_tag === 1 ? "body" : "bodies"} to tag
+      <span class="d">&mdash; ${plural(est.listings, "listing", "listings")} and
+      ${plural(est.reviews, "review", "reviews")}</span>`) +
+    (est.to_skip
+      ? line(est.to_skip, `skipped <span class="d">&mdash; under ${info.min_tag_chars}
+          characters, too short to hold a concrete benefit</span>`, "warn")
+      : "") +
+    (est.cost_known
+      ? line(`$${est.cost_usd.toFixed(3)}`, `estimated <span class="d">&mdash; the real figure is
+          written to parse_log.json</span>`)
+      : line("?", `cost unknown <span class="d">&mdash; no pricing set for
+          ${esc(est.model)} in config.py</span>`, "warn"));
+
+  if ((runState.parses || []).length) {
+    plan += `<div class="asins">Parsed before &mdash; this writes a new
+      <code>parse-&lt;time&gt;</code> folder and leaves the earlier tags untouched.</div>`;
+  }
+  plan += `</div>`;
+
+  const ok = await confirmModal({
+    title: "Parse this run?",
+    confirmLabel: "Parse",
+    body: `<p class="sd">One call per text body to <b>${esc(est.model)}</b>, extracting search
+             terms, features, complaints and usage keywords.</p>${plan}`,
+  });
+  if (!ok) return;
+
+  parsing = true;
+  $("parse").disabled = true;
+
+  let job;
+  try {
+    job = await api(runPath("/parse"), { method: "POST" });
+  } catch (err) {
+    $("r-err").textContent = err.message;
+    $("r-err").hidden = false;
+    parsing = false;
+    $("parse").disabled = false;
+    return;
+  }
+
+  setParseProgress(0, `Starting — ${plural(job.to_tag, "body", "bodies")} to tag`);
+  pollParse(job.job_id, slug, runId);
+}
+
+function setParseProgress(pct, label) {
+  $("r-prog").hidden = false;
+  $("r-progbar").style.width = Math.max(2, pct) + "%";
+  $("r-proglb").textContent = label;
+}
+
+async function pollParse(jobId, slug, runId) {
+  let snap;
+  try {
+    snap = await api("/api/jobs/" + encodeURIComponent(jobId));
+  } catch (e) {
+    return endParse(slug, runId, e.message);
+  }
+
+  setParseProgress(snap.pct, snap.total ? `${snap.label} (${snap.done}/${snap.total})`
+                                        : snap.label);
+
+  if (snap.state === "running") {
+    setTimeout(() => pollParse(jobId, slug, runId), 700);
+    return;
+  }
+  if (snap.state === "error") {
+    return endParse(slug, runId, snap.error || "The parse failed.");
+  }
+
+  setParseProgress(100, "Done");
+  setTimeout(() => endParse(slug, runId, null), 500);
+}
+
+function endParse(slug, runId, error) {
+  parsing = false;
+  $("parse").disabled = false;
+  $("r-prog").hidden = true;
+  $("r-progbar").style.width = "0%";
+  if (error) {
+    $("r-err").textContent = error;
+    $("r-err").hidden = false;
+    return;
+  }
+  renderRun(slug, runId);
 }
 
 /* ---------- new group modal ---------- */

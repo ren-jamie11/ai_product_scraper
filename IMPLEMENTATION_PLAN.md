@@ -23,8 +23,8 @@ Everything is local, single-user, file-backed. No database, no auth, no build st
 | Review filter | Tag all reviews; drop only empty bodies. Negative reviews are signal. |
 | Extra fields | specifications, material, color, model_number, categories_flat, bestsellers_rank_flat. |
 | Editable | title, bullets, review titles/bodies, price, rating + add/delete reviews. Raw payload never mutated. |
-| Tag schema | Full skill coverage: `search_terms`, `features`, `usage_keywords{spaces, placements, occasions, used_for}`, `avoided`. |
-| Tagging | One OpenAI call per body, `gpt-5.6-terra`, ~8 concurrent, strict JSON schema, 2 retries w/ backoff. |
+| Tag schema | Full skill coverage plus `complaints`: `search_terms`, `features`, `complaints`, `usage_keywords{spaces, placements, occasions, used_for}`, `avoided`. |
+| Tagging | One OpenAI call per body, `gpt-5.6-terra`, reasoning `low`, ~8 concurrent, strict JSON schema, 2 retries w/ backoff. |
 | Grouping | `features` only. Normalize → chunk → LLM → merge, on `gpt-5.6`. |
 | Scale target | 10–20 ASINs per group (~1,200–3,200 raw tags). |
 | Box metrics | Total tags · unique listings · unique reviews. Sorted by total tags desc. |
@@ -152,6 +152,7 @@ Price comes from `product.buybox_winner.price` (confirmed in the sample payload)
     "tags": {
       "search_terms": ["5x7 picture frames"],
       "features": ["shatter-resistant plastic cover"],
+      "complaints": [],
       "usage_keywords": {"spaces": ["office"], "placements": ["mantel"],
                          "occasions": ["wedding"], "used_for": ["family photos"]},
       "avoided": [{"phrase": "adds sophistication", "reason": "vague"}]
@@ -159,8 +160,13 @@ Price comes from `product.buybox_winner.price` (confirmed in the sample payload)
     "status": "ok", "error": null,
     "usage": {"input_tokens": 812, "output_tokens": 240}
   }],
+  "skipped": [{"body_id": "...", "text": "Love it!!", "reason": "under 30 characters"}],
   "failures": [{"body_id": "...", "reason": "Rate limited after 3 attempts"}] }
 ```
+
+`avoided[].reason` is one of `vague` · `price_claim` · `listing_fidelity` ·
+`sku_spec` · `no_product_attribute` · `generic_filler` · `service_not_product` ·
+`unsupported`. An all-empty tag set is `status: "ok"`, not a failure.
 
 ### `groups.json` — three layers, so provenance survives normalization
 
@@ -233,6 +239,42 @@ Each phase ends with something you can run and look at.
 - Pre-flight estimate: body count × mean chars ÷ 4 × input rate, shown in the Parse confirm dialog. Actuals from `response.usage` written to `parse_log.json`.
 
 **Verify:** parse a 3-ASIN run → `tagged.json` validates against the schema → hand-check one listing's output against the skill's rules → progress bar counts bodies → cost estimate lands within ~20% of actual.
+
+**Settled in Phase 3 — the sixteen judgment calls the transcription needed.** The
+skill was written for a human pasting a whole listing; a per-body prompt has to
+answer things the skill never faced. Decided, and now live in
+`pipeline/prompts/tag_body.md`:
+
+1. **Complaints get their own array.** Negative reviews are signal, but the skill
+   only knows how to extract benefits. Putting `glass arrives shattered` into
+   `features` would have Phase 4 clustering it next to `shatter-resistant cover`.
+   Scope is product + packaging; seller conduct, price framing, and vague
+   negatives go to `avoided`. Phase 4 still groups `features` only.
+2. **Bare attributes get completed only when they read as incomplete alone** —
+   `"Sturdy"` → *sturdy build*, while `scratch-resistant` and `easy to hang`
+   stay as written. A deliberate override of the skill's "leave it bare" line.
+   Never guess a *specific* component the source didn't name.
+3. **Reviews carry the product title as context, never as a tag source.** Without
+   it the model can't resolve "it"; with it unrestricted, every review would echo
+   the listing and inflate Phase 5's frequency counts.
+4. **No evidence quotes and no contradiction flagging** — both considered,
+   both dropped. Phase 6 still reconstructs provenance by fuzzy matching.
+5. **No review rating in context.** Text alone decides polarity.
+6. **Bodies under 30 chars are skipped**, recorded as `skipped` and never as a
+   failure. The threshold is blunt — `"Easy to hang"` is a real feature and only
+   12 characters — so every skipped body's full text goes to `parse_log.json`.
+   Lower `MIN_TAG_CHARS` and re-parse if a genuine feature turns up there.
+7. **No caps on tag counts** except `avoided`, which is 6 with an enum reason so
+   rejections are countable across a run.
+8. **Lowercase, singular, no trailing punctuation**; proper nouns and internal
+   hyphens kept.
+
+**Measured on the first real parse** (48 bodies, 5 ASINs, 2026-09-11): 48/48
+tagged, 0 failures, 26s, $0.066 against a $0.079 estimate (17% over). 9 bodies
+correctly yielded nothing — pure praise, listing-fidelity, or the shopper's own
+situation. Re-tagging 15 bodies at `medium` reasoning gave identical feature sets
+on 9 of 15 and the same total feature count (30 vs 31), the differences being
+word order and merge boundaries rather than better extraction — so `low` stays.
 
 ### Phase 4 — Step 3: grouping
 

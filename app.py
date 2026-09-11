@@ -14,7 +14,7 @@ import webbrowser
 from flask import Flask, jsonify, request, send_from_directory
 
 import config
-from pipeline import asins, compact, extract, jobs, normalize, storage
+from pipeline import asins, compact, extract, jobs, normalize, storage, tagging
 
 app = Flask(__name__, static_folder="static", static_url_path="/static")
 
@@ -25,6 +25,11 @@ app = Flask(__name__, static_folder="static", static_url_path="/static")
 
 @app.errorhandler(storage.StorageError)
 def handle_storage_error(exc: storage.StorageError):
+    return jsonify({"error": str(exc)}), 400
+
+
+@app.errorhandler(tagging.TaggingError)
+def handle_tagging_error(exc: tagging.TaggingError):
     return jsonify({"error": str(exc)}), 400
 
 
@@ -170,6 +175,71 @@ def api_extract(slug: str):
     }), 202
 
 
+# ---------------------------------------------------------------------------
+# Step 2 — tagging
+#
+# A parse never touches the run it reads. Each one writes its own parse-<ts>/
+# folder, so re-parsing after a prompt change leaves the earlier output intact
+# and the two can be compared side by side.
+# ---------------------------------------------------------------------------
+
+@app.get("/api/runs/<slug>/<run_id>/parse-estimate")
+def api_parse_estimate(slug: str, run_id: str):
+    """Body count and cost, for the confirm dialog. Spends nothing."""
+    products = storage.load_run(slug, run_id).get("products", [])
+    return jsonify({
+        "estimate": tagging.estimate(normalize.build_bodies(products)),
+        "openai_key_set": bool(config.OPENAI_API_KEY),
+        "min_tag_chars": config.MIN_TAG_CHARS,
+    })
+
+
+@app.post("/api/runs/<slug>/<run_id>/parse")
+def api_parse(slug: str, run_id: str):
+    """Kick off tagging in the background and hand back a job id."""
+    if not config.OPENAI_API_KEY:
+        raise storage.StorageError("OPENAI_API_KEY is empty in config.py.")
+
+    products = storage.load_run(slug, run_id).get("products", [])
+    bodies = normalize.build_bodies(products)
+    if not bodies:
+        raise storage.StorageError(
+            "There is nothing to tag in this run — no listing has bullets or "
+            "reviews. Add some by hand above, then parse again."
+        )
+
+    jobs.prune()
+    to_tag = len(tagging.partition(bodies)[0])
+    job = jobs.start(
+        f"Tagging {to_tag} bodies…",
+        lambda j: tagging.run_tagging(j, slug, run_id),
+        total=to_tag,
+    )
+    return jsonify({"job_id": job.id, "run_id": run_id, "to_tag": to_tag}), 202
+
+
+@app.get("/api/runs/<slug>/<run_id>/parses")
+def api_list_parses(slug: str, run_id: str):
+    return jsonify({"parses": storage.list_parses(slug, run_id)})
+
+
+@app.get("/api/runs/<slug>/<run_id>/parses/<parse_id>")
+def api_parse_result(slug: str, run_id: str, parse_id: str):
+    """One parse's tags and its log. Phase 5 renders these; Phase 3 verifies them."""
+    directory = storage.run_dir(slug, run_id) / parse_id
+    if storage.is_hidden(parse_id) or not directory.is_dir():
+        raise storage.StorageError("That parse no longer exists.")
+
+    tagged = storage.read_json(directory / "tagged.json")
+    if not tagged:
+        raise storage.StorageError("That parse didn't finish — nothing was written.")
+
+    return jsonify({
+        "tagged": tagged,
+        "log": storage.read_json(directory / "parse_log.json", {}) or {},
+    })
+
+
 @app.get("/api/jobs/<job_id>")
 def api_job(job_id: str):
     job = jobs.get(job_id)
@@ -200,6 +270,7 @@ def api_run(slug: str, run_id: str):
         "stats": normalize.summarize(live),
         "log": storage.read_json(directory / "run_log.json", {}) or {},
         "meta": storage.read_run_meta(slug, run_id),
+        "parses": storage.list_parses(slug, run_id),
     })
 
 

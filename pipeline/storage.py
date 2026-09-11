@@ -232,6 +232,38 @@ def claim_run_dir(slug: str) -> tuple[str, Path]:
             suffix += 1
 
 
+def claim_parse_dir(slug: str, run_id: str) -> tuple[str, Path]:
+    """Create a fresh parse folder inside a run, never reusing one.
+
+    Same contract as claim_run_dir: the mkdir itself is the collision check, so
+    two parses started in the same second can't overwrite each other. Keeping
+    every parse means you can re-tag with a changed prompt and still compare the
+    old output against the new.
+    """
+    directory = run_dir(slug, run_id)
+    if not (directory / "extracted.json").exists():
+        raise StorageError("That run has no extracted data to parse.")
+
+    base = f"parse-{new_run_id()}"
+    candidate, suffix = base, 2
+    while True:
+        target = directory / candidate
+        try:
+            target.mkdir(parents=False, exist_ok=False)
+            return candidate, target
+        except FileExistsError:
+            candidate = f"{base}-{suffix}"
+            suffix += 1
+
+
+def list_parses(slug: str, run_id: str) -> list[str]:
+    """Parse folder names for a run, newest first."""
+    directory = run_dir(slug, run_id)
+    if not directory.is_dir():
+        return []
+    return [p.name for p in sorted(directory.glob("parse-*"), reverse=True) if p.is_dir()]
+
+
 def create_run(slug: str, inputs: list[dict]) -> str:
     """Start a new run folder for a group and return its run id."""
     if not group_file(slug).exists():

@@ -75,6 +75,36 @@ MIN_REVIEW_CHARS = int(os.getenv("MIN_REVIEW_CHARS", "1"))
 
 
 # ---------------------------------------------------------------------------
+# Tagging
+# ---------------------------------------------------------------------------
+
+# Bodies shorter than this are skipped without a call. "Love it!!" cannot hold a
+# concrete benefit, and at ~400 bodies a run the junk adds up.
+#
+# It is a blunt instrument: "Easy to hang" is a real feature and only 12
+# characters. So every skipped body's full text is written to parse_log.json —
+# if a genuine feature turns up in that list, lower this and re-parse.
+MIN_TAG_CHARS = int(os.getenv("MIN_TAG_CHARS", "30"))
+
+# Reasoning effort for the tagging model. Start low: the prompt carries explicit
+# rules and three worked examples, so most of the work is pattern-matching.
+# Measured 2026-09-11 over 15 bodies — medium gave identical feature sets on 9 of
+# them and the same total count, differing only in word order and where it drew
+# merge boundaries, for 21% more output tokens. Low stays.
+OPENAI_TAG_REASONING = os.getenv("OPENAI_TAG_REASONING", "low")
+
+# A ceiling, not a target. Tag counts are deliberately uncapped, so this exists
+# only to stop a pathological response from running away. A body that hits it is
+# recorded as a failure with the reason spelled out, never silently truncated.
+TAG_MAX_OUTPUT_TOKENS = int(os.getenv("TAG_MAX_OUTPUT_TOKENS", "4000"))
+
+# Rough output tokens per body, used only for the pre-parse cost estimate. The
+# real number is written to parse_log.json after every run — check it there and
+# adjust this if the estimate drifts.
+TAG_EST_OUTPUT_TOKENS = int(os.getenv("TAG_EST_OUTPUT_TOKENS", "320"))
+
+
+# ---------------------------------------------------------------------------
 # Concurrency and retries
 # ---------------------------------------------------------------------------
 
