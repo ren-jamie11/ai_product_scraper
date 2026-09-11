@@ -87,15 +87,37 @@ pruning*, *microwave and dishwasher safe*.
 
 | Exclude | Examples |
 |---|---|
-| Vague praise | looks beautiful, great quality, well designed, stunning, gorgeous |
+| Praise or criticism that names no product attribute | looks beautiful, great quality, well designed, stunning, gorgeous, looks great on the counter |
 | Price and value claims | great price, affordable, worth the money, can't beat it |
 | Listing-fidelity claims | exactly as described, as pictured, better than the photos |
-| SKU specs that don't generalize | color, shape, size, pack count |
+| Specific SKU values | gold, blue, 5x7, set of 4 — the *value*, not the attribute; see below |
 | Reviewer framing with no product attribute | "I like candid shots in smaller frames" describes the shopper, not the frame |
 
 When the shopper's situation *does* reveal a capability, keep the capability:
 "I don't have the largest space to do my Pilates but this mat works just fine in
 that space" → **suitable for small spaces**.
+
+### Named attributes with a vague qualifier
+
+**Reviews only.** Knowing *which* qualities customers care about is worth
+capturing even when their description of the quality is unspecific.
+
+Keep the label when a review names an **attribute dimension** — color, size,
+shape, texture, weight, finish, material feel — and attaches an evaluative signal
+to it. The signal may be an adjective, kept as the review wrote it, or a bare verb
+of approval ("like", "love"), normalized to *nice <dimension>*. Generalize the
+specific value away: the dimension is what recurs across the catalogue.
+
+- "both the colour and texture are very nice" → *nice color and texture*
+- "Colors are very pretty" → *pretty colors*
+- "We like the color, the shape and the size" → *nice color*, *nice shape*, *nice size*
+- "The blue is beautiful colour's" → *beautiful color* — never *beautiful blue*
+- "Such a nice, heavy duty fruit bowl! Looks great on counter." → *heavy-duty bowl* only. *Looks great* names no attribute; *counter* is a `placements` keyword.
+- "great price great quality" → nothing. Neither names an attribute, and one is price framing.
+
+A dimension named with no judgment at all — "comes in gold", "it's 5x7" — is still
+`sku_spec`. The same wording in a **listing** bullet is marketing boilerplate and
+is still `vague`.
 
 ### How to word the label
 
@@ -131,6 +153,8 @@ Work from these anchors; judge new cases by their closest match:
 | "Heavy" (source said "frame" in the same review) | heavy frame | component named by the source |
 | "feels solid" | solid build | bare, reads incomplete alone |
 | "The tempered glass is scratch-resistant" | scratch-resistant glass | component named — never leave this bare |
+| "We like the color" | nice color | attribute named, approval verb normalized |
+| "nice size on the counter" | suitable size for counter | the anchor is what makes the size claim informative; *counter* also goes to `placements` |
 
 Never produce *scratch-resistant frame* when the source only said
 "scratch-resistant". Inferring a neutral whole-product noun is allowed; guessing
@@ -171,11 +195,16 @@ a product-design fact, not bad luck.
 
 - Seller or service conduct — "seller never responded", "shipping was slow" → `service_not_product`
 - Price framing — "feels cheap for the price", "not worth it" → `price_claim`
-- Vague negatives with no attribute — "disappointing", "cheap feeling", "hated it" → `vague`
+- Negatives that name no attribute — "disappointing", "cheap feeling", "hated it" → `vague`
 - The shopper's own situation — "didn't work for my needs", "too big for my wall" → `no_product_attribute`
 
-Vagueness is filtered on both sides. "Beautiful" is not a feature, and
-"disappointing" is not a complaint.
+The named-attribute rule above applies symmetrically here: a negative that names
+an attribute dimension is a complaint even when the criticism is unspecific.
+"the color is dull" → *dull color*; "the shape is awkward" → *awkward shape*.
+
+The filter is about **naming an attribute**, not about being specific. "Beautiful"
+is not a feature and "disappointing" is not a complaint, because neither names
+anything — but "pretty colors" and "dull color" both do.
 
 Listings essentially never produce complaints. Reviews are where these live.
 
@@ -229,10 +258,10 @@ this fixed set:
 
 | reason | use when |
 |---|---|
-| `vague` | praise or criticism with no concrete attribute |
+| `vague` | praise or criticism that names no product attribute at all |
 | `price_claim` | price, value, or worth-the-money framing |
 | `listing_fidelity` | matches the description or the photos |
-| `sku_spec` | color, shape, size, or pack count, in a `features` context |
+| `sku_spec` | a specific value — gold, blue, 5x7, set of 4 — in a `features` context, or an attribute dimension named with no judgment attached |
 | `no_product_attribute` | reviewer framing or their own situation |
 | `generic_filler` | home, space, room, area, decor as a usage keyword |
 | `service_not_product` | seller conduct, shipping speed, customer support |
@@ -332,9 +361,10 @@ A very nice quality frame. Heavy. The glass is glued to the frame so it stays in
 ```
 
 Note three things. *Heavy* became **heavy frame** because the review itself says
-"frame". *gold picture frame* is a legitimate search term even though gold is a
-colour — SKU specifics are allowed in `search_terms` and rejected in `features`,
-which is why "I got the gold one" also appears in `avoided`. And one sentence
+"frame". *gold picture frame* is a legitimate search term — specific values are
+allowed in `search_terms` and rejected in `features`, which is why "I got the gold
+one" also appears in `avoided`; the review names the colour but passes no judgment
+on it, so there is nothing to keep. And one sentence
 produced both a feature and a complaint.
 
 ### 3 — Thin review
@@ -366,6 +396,9 @@ Really pretty but didn't work for my needs.
 }
 ```
 
-Nothing here describes the product. "didn't work for my needs" is the shopper's
-situation, not a defect, so it is not a complaint. Empty is the right answer —
-do not reach into the context block to fill the arrays.
+Nothing here names an attribute — "really pretty" attaches to the product as a
+whole, not to its colour, shape, or finish, so it stays `vague`. Had the review
+said "the colour is really pretty", *pretty color* would be a feature.
+"didn't work for my needs" is the shopper's situation, not a defect, so it is not
+a complaint. Empty is the right answer — do not reach into the context block to
+fill the arrays.
