@@ -65,6 +65,7 @@ SCHEMA = {
         "search_terms": dict(_STRINGS),
         "features": dict(_STRINGS),
         "complaints": dict(_STRINGS),
+        "assembly_maintenance": dict(_STRINGS),
         "usage_keywords": _usage_keywords(),
         "avoided": {
             "type": "array",
@@ -79,7 +80,10 @@ SCHEMA = {
             },
         },
     },
-    "required": ["search_terms", "features", "complaints", "usage_keywords", "avoided"],
+    "required": [
+        "search_terms", "features", "complaints", "assembly_maintenance",
+        "usage_keywords", "avoided",
+    ],
     "additionalProperties": False,
 }
 
@@ -87,6 +91,7 @@ EMPTY_TAGS = {
     "search_terms": [],
     "features": [],
     "complaints": [],
+    "assembly_maintenance": [],
     "usage_keywords": {"spaces": [], "placements": [], "occasions": [], "used_for": []},
     "avoided": [],
 }
@@ -314,6 +319,7 @@ def _clean(tags) -> dict:
         "search_terms": strings(tags.get("search_terms")),
         "features": strings(tags.get("features")),
         "complaints": strings(tags.get("complaints")),
+        "assembly_maintenance": strings(tags.get("assembly_maintenance")),
         "usage_keywords": {
             facet: strings(raw_usage.get(facet))
             for facet in ("spaces", "placements", "occasions", "used_for")
@@ -553,6 +559,7 @@ def _any_tags(tags: dict) -> bool:
     usage = tags.get("usage_keywords") or {}
     return bool(
         tags.get("search_terms") or tags.get("features") or tags.get("complaints")
+        or tags.get("assembly_maintenance")
         or any(usage.get(f) for f in ("spaces", "placements", "occasions", "used_for"))
     )
 
@@ -571,6 +578,7 @@ def _counts(tagged: list[dict]) -> dict:
         "search_terms_total": total("search_terms"),
         "features_total": total("features"),
         "complaints_total": total("complaints"),
+        "assembly_maintenance_total": total("assembly_maintenance"),
         "usage_keywords_total": usage_total,
         "avoided_total": total("avoided"),
     }

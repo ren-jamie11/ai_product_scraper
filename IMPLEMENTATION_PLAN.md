@@ -23,7 +23,7 @@ Everything is local, single-user, file-backed. No database, no auth, no build st
 | Review filter | Tag all reviews; drop only empty bodies. Negative reviews are signal. |
 | Extra fields | specifications, material, color, model_number, categories_flat, bestsellers_rank_flat. |
 | Editable | title, bullets, review titles/bodies, price, rating + add/delete reviews. Raw payload never mutated. |
-| Tag schema | Full skill coverage plus `complaints`: `search_terms`, `features`, `complaints`, `usage_keywords{spaces, placements, occasions, used_for}`, `avoided`. |
+| Tag schema | Full skill coverage plus `complaints` and `assembly_maintenance`: `search_terms`, `features`, `complaints`, `assembly_maintenance`, `usage_keywords{spaces, placements, occasions, used_for}`, `avoided`. |
 | Tagging | One OpenAI call per body, `gpt-5.6-terra`, reasoning `low`, ~8 concurrent, strict JSON schema, 2 retries w/ backoff. |
 | Grouping | `features` only. Normalize → chunk → LLM → merge, on `gpt-5.6`. |
 | Scale target | 10–20 ASINs per group (~1,200–3,200 raw tags). |
@@ -153,6 +153,7 @@ Price comes from `product.buybox_winner.price` (confirmed in the sample payload)
       "search_terms": ["5x7 picture frames"],
       "features": ["shatter-resistant plastic cover"],
       "complaints": [],
+      "assembly_maintenance": ["wipe with a dry soft cloth only"],
       "usage_keywords": {"spaces": ["office"], "placements": ["mantel"],
                          "occasions": ["wedding"], "used_for": ["family photos"]},
       "avoided": [{"phrase": "adds sophistication", "reason": "vague"}]

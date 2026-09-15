@@ -1446,6 +1446,7 @@ async function renderParses() {
              log.failed ? "bad" : "good")}
       ${stat("Features", log.features_total, "concrete benefits")}
       ${stat("Complaints", log.complaints_total, "from reviews")}
+      ${stat("Assembly & care", log.assembly_maintenance_total ?? "—", "instructions")}
       ${stat("Search terms", log.search_terms_total, null)}
       ${stat("Usage keywords", log.usage_keywords_total, null)}
       ${stat("Skipped", log.skipped, `under ${log.min_tag_chars} chars`,
@@ -1516,7 +1517,8 @@ async function startParse() {
     title: "Parse this run?",
     confirmLabel: "Parse",
     body: `<p class="sd">One call per text body to <b>${esc(est.model)}</b>, extracting search
-             terms, features, complaints and usage keywords.</p>${plan}`,
+             terms, features, complaints, assembly &amp; care instructions and usage
+             keywords.</p>${plan}`,
   });
   if (!ok) return;
 
