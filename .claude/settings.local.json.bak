@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "defaultMode": "auto",
+    "deny": [
+      "Bash(rm *)",
+      "Bash(rmdir *)",
+      "Bash(unlink *)",
+      "Bash(shred *)",
+      "Bash(truncate *)",
+      "Bash(git clean *)",
+      "Bash(git rm *)",
+      "Bash(find * -delete*)",
+      "Bash(find * -exec rm*)",
+      "Bash(xargs rm*)",
+      "Bash(sudo rm *)",
+      "PowerShell(Remove-Item *)",
+      "PowerShell(ri *)",
+      "PowerShell(rm *)",
+      "PowerShell(rmdir *)",
+      "PowerShell(rd *)",
+      "PowerShell(del *)",
+      "PowerShell(erase *)",
+      "PowerShell(Clear-Content *)",
+      "PowerShell(clc *)",
+      "PowerShell(Remove-ItemProperty *)",
+      "PowerShell(git clean *)",
+      "PowerShell(git rm *)"
+    ],
+    "allow": [
+      "Bash",
+      "PowerShell",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs"
+    ]
+  }
+}

@@ -10,12 +10,18 @@ from __future__ import annotations
 import time
 
 import config
-from pipeline import normalize, rainforest, storage
+from pipeline import compact, normalize, rainforest, storage
 
 
-def run_extraction(job, slug: str, run_id: str, items: list[dict], domain: str) -> dict:
+def run_extraction(job, slug: str, run_id: str, items: list[dict], domain: str,
+                   to_fetch: list[dict] | None = None) -> dict:
     """
-    Fetch and normalize every ASIN in `items`.
+    Build a run out of `items`, fetching only `to_fetch` from Rainforest.
+
+    Anything in `items` but not in `to_fetch` is already held complete
+    elsewhere in the group and is carried across instead of bought again. When
+    `to_fetch` is omitted every item is fetched, which is what a group with no
+    earlier runs amounts to.
 
     Reports progress through `job` as each ASIN lands, and returns the summary
     that the UI shows in its stat strip.
@@ -24,8 +30,15 @@ def run_extraction(job, slug: str, run_id: str, items: list[dict], domain: str) 
     directory = storage.run_dir(slug, run_id)
     raw_dir = directory / "raw"
 
-    job.set_total(len(items))
-    job.step(label=f"Fetching {len(items)} listings from Rainforest…", count=0)
+    if to_fetch is None:
+        to_fetch = items
+    carried = len(items) - len(to_fetch)
+
+    job.set_total(len(to_fetch))
+    if to_fetch:
+        job.step(label=f"Fetching {len(to_fetch)} listings from Rainforest…", count=0)
+    else:
+        job.step(label="Everything you pasted is already here…", count=0)
 
     fetched: list[dict] = []
     credits_left = None
@@ -41,9 +54,9 @@ def run_extraction(job, slug: str, run_id: str, items: list[dict], domain: str) 
             job.fail_item(result["asin"], result["error"])
 
         fetched.append(result)
-        job.step(label=f"Fetched {len(fetched)} of {len(items)} listings")
+        job.step(label=f"Fetched {len(fetched)} of {len(to_fetch)} listings")
 
-    results = rainforest.fetch_all(items, domain, on_result=on_result, on_note=job.note)
+    results = rainforest.fetch_all(to_fetch, domain, on_result=on_result, on_note=job.note)
 
     for result in results:
         if result.get("product"):
@@ -61,10 +74,9 @@ def run_extraction(job, slug: str, run_id: str, items: list[dict], domain: str) 
         )
 
     job.step(label="Organising the results…", count=0)
-    products = [normalize.normalize_product(r) for r in results]
-    summary = normalize.summarize(products)
+    fresh = {p["asin"]: p for p in (normalize.normalize_product(r) for r in results)}
 
-    stubborn = [p["asin"] for p in products if p.get("fetch_ok") and not p.get("reviews")]
+    stubborn = [a for a, p in fresh.items() if p.get("fetch_ok") and not p.get("reviews")]
     if stubborn:
         shown = ", ".join(stubborn[:5]) + (f" and {len(stubborn) - 5} more" if len(stubborn) > 5 else "")
         job.note(
@@ -73,18 +85,33 @@ def run_extraction(job, slug: str, run_id: str, items: list[dict], domain: str) 
             f"{config.PRODUCT_ATTEMPTS} tries. Their bullets are still usable."
         )
 
-    extracted = {
+    # Fold the fetch into whatever the group already held. An ASIN we skipped
+    # comes across whole; one we re-fetched keeps the better of the two records
+    # with their reviews merged, so a flaky response can't lose us anything.
+    resolved = compact.resolve(slug, items, fresh, run_id)
+    compact.copy_raw(slug, resolved["raw_from"], raw_dir)
+
+    if carried:
+        job.note(
+            f"{carried} of the {len(items)} ASINs {'was' if carried == 1 else 'were'} "
+            f"already complete in this group, so {'it was' if carried == 1 else 'they were'} "
+            f"carried across instead of fetched again "
+            f"({carried} {'credit' if carried == 1 else 'credits'} saved)."
+        )
+
+    storage.write_json(directory / "extracted.json", {
         "group": slug,
         "run_id": run_id,
         "amazon_domain": domain,
         "fetched_at": storage.now_iso(),
         "review_source": "product listing only" if not config.TRY_REVIEWS_ENDPOINT else "auto",
-        "products": products,
-    }
-    storage.write_json(directory / "extracted.json", extracted)
+        "products": resolved["products"],
+    })
+    storage.write_json(directory / "edits.json", resolved["edits"])
 
-    if not (directory / "edits.json").exists():
-        storage.write_json(directory / "edits.json", {})
+    # Summarize the run as it now reads — carried ASINs and merged reviews
+    # included — rather than only what this fetch returned.
+    summary = normalize.summarize(storage.load_run(slug, run_id).get("products", []))
 
     log = {
         "run_id": run_id,
@@ -95,6 +122,9 @@ def run_extraction(job, slug: str, run_id: str, items: list[dict], domain: str) 
         "credits_remaining": credits_left,
         "api_calls": api_calls,
         "review_retries": retries,
+        "fetched": len(to_fetch),
+        "carried": carried,
+        "outcomes": resolved["outcomes"],
         "notes": list(job.notes),
         "failures": list(job.failures),
         "inputs": items,

@@ -172,6 +172,72 @@ td.nm b{font-family:var(--sans);font-weight:600;font-size:13.5px}
 .specs td{text-align:left;white-space:normal;padding:5px 8px 5px 0;border-bottom:1px solid var(--rule-soft)}
 .specs td:first-child{font-family:var(--mono);font-size:10px;color:var(--muted);width:38%;vertical-align:top}
 
+/* ---------- inline editing ---------- */
+.ed{cursor:text;border-radius:2px;transition:background .12s}
+.ed:hover{background:var(--cobalt-wash);box-shadow:0 0 0 3px var(--cobalt-wash)}
+.ed.on{background:var(--celadon-wash);box-shadow:0 0 0 3px var(--celadon-wash)}
+.ed.was{box-shadow:inset 2px 0 0 var(--cobalt);padding-left:7px}
+.inl{width:100%;font-family:inherit;font-size:inherit;line-height:inherit;color:inherit;
+  border:1px solid var(--cobalt);border-radius:2px;padding:3px 5px;background:var(--glaze);resize:vertical}
+.inl:focus{outline:none}
+textarea.inl{min-height:56px;display:block}
+.ehint{font-family:var(--mono);font-size:9.5px;color:var(--muted);margin:-3px 0 9px}
+.x{border:0;background:none;cursor:pointer;color:var(--muted);font-size:14px;line-height:1;
+  padding:2px 5px;border-radius:2px;font-family:var(--mono)}
+.x:hover{color:var(--iron);background:var(--iron-wash)}
+.pcard .top{position:relative}
+.pcard .rm{position:absolute;top:8px;right:8px;opacity:0;transition:opacity .12s}
+.pcard .meta{padding-right:20px}   /* keep the title clear of the remove button */
+.pcard:hover .rm,.pcard .rm:focus-visible{opacity:1}
+.pbody li,.pbody .rv{position:relative}
+.pbody li .x,.pbody .rv .x{position:absolute;top:-1px;right:-2px;opacity:0}
+.pbody li:hover .x,.pbody .rv:hover .x,.pbody .x:focus-visible{opacity:1}
+.pbody li{padding-right:22px} .pbody .rv{padding-right:22px}
+.addrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;color:var(--cobalt);background:none;
+  border:1px dashed var(--rule);border-radius:3px;padding:6px 10px;cursor:pointer;margin-top:6px;width:100%}
+.addrow:hover{border-color:var(--cobalt);background:var(--cobalt-wash)}
+.paste{margin-top:10px}
+.paste textarea{width:100%;font-family:var(--mono);font-size:11.5px;line-height:1.6;min-height:120px;
+  border:1px solid var(--cobalt);border-radius:3px;padding:8px 9px;background:var(--glaze);color:var(--ink);resize:vertical}
+.paste textarea:focus{outline:none}
+.paste .pb{display:flex;gap:8px;align-items:center;margin-top:8px}
+
+/* ---------- removed strip ---------- */
+.strip{background:var(--glaze);border:1px solid var(--rule);padding:10px 14px;margin-bottom:16px}
+.strip .sh{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.strip .sh .lnk{margin-left:auto}
+.lnk{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;background:none;
+  border:0;color:var(--cobalt);cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:2px}
+.lnk:hover{color:var(--ink)}
+.strip ul{list-style:none;margin:10px 0 0;padding:0}
+.strip li{display:flex;align-items:center;gap:10px;font-size:12.5px;padding:5px 0;border-top:1px solid var(--rule-soft)}
+.strip li .a{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.strip li .t{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- row actions in tables ---------- */
+td.act,th.act{width:34px;padding:4px 6px;text-align:center}
+tbody tr.r .x{opacity:0}
+tbody tr.r:hover .x,tbody tr.r .x:focus-visible{opacity:1}
+
+/* ---------- checkbox ---------- */
+.chk{display:flex;gap:9px;align-items:flex-start;margin-top:14px;cursor:pointer;font-size:12.5px}
+.chk input{margin:2px 0 0;accent-color:var(--cobalt);flex:0 0 auto}
+.chk em{display:block;font-style:normal;font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:3px}
+
+/* ---------- table action bar ---------- */
+.tbar{display:flex;align-items:center;gap:12px;justify-content:flex-end;margin-top:12px}
+.tbar .hint{margin-right:auto}
+
+/* ---------- compaction preview ---------- */
+.plan{border:1px solid var(--rule);background:var(--porcelain);padding:12px 14px;margin:4px 0 14px}
+.plan .ln{display:flex;gap:10px;align-items:baseline;font-size:12.5px;padding:3px 0}
+.plan .ln b{font-family:var(--disp);font-size:16px;min-width:34px;text-align:right}
+.plan .ln .d{color:var(--muted)}
+.plan .warn{color:var(--amber)} .plan .bad{color:var(--iron)}
+.plan .asins{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:8px;
+  padding-top:8px;border-top:1px solid var(--rule);word-break:break-all}
+
 @media (max-width:640px){
   .wrap{padding:0 14px 70px}
   .masthead{padding-top:30px}
@@ -226,12 +292,14 @@ td.nm b{font-family:var(--sans);font-weight:600;font-size:13.5px}
     </div>
     <div class="spacer"></div>
     <span class="err" id="g-err" hidden></span>
+    <button class="btn" id="addlistings" hidden>Add</button>
+    <button class="btn ghost" id="canceladd" hidden>Cancel</button>
     <button class="btn" id="extract" disabled>Extract</button>
   </div>
 
   <div class="sumstrip" id="g-sum" hidden></div>
 
-  <section style="margin-top:26px">
+  <section style="margin-top:26px" id="paste-panel">
     <div class="shead">
       <h2>Competitor listings</h2>
       <span class="note" id="pastenote"></span>
@@ -245,6 +313,11 @@ td.nm b{font-family:var(--sans);font-weight:600;font-size:13.5px}
           placeholder="https://www.amazon.com/Sunlit-Vintage-Picture-Antique-Tabletop/dp/B08P5LPZFJ/ref=sr_1_10&#10;https://www.amazon.com/Picture-Frame-Vintage-Frames-Tabletop/dp/B0H49KRM51&#10;B0CQ1J8XYZ"></textarea>
         <div class="h" id="urlhint">Nothing pasted yet.</div>
       </div>
+      <label class="chk" for="refetch">
+        <input type="checkbox" id="refetch">
+        <span>Re-fetch ASINs I already have
+          <em id="refetchhint">Skips anything this group already holds with bullets and reviews.</em></span>
+      </label>
       <div class="badlines" id="badlines" hidden>
         <div class="t">Couldn't read these lines</div>
         <ul id="badlist"></ul>
@@ -264,6 +337,10 @@ td.nm b{font-family:var(--sans);font-weight:600;font-size:13.5px}
            Rainforest payloads, so nothing you pull is ever overwritten.</p>
       </div>
     </div>
+    <div class="tbar" id="compact-bar" hidden>
+      <span class="hint">Merges every run into one, keeping the best copy of each ASIN.</span>
+      <button class="btn ghost" id="compact">Compact</button>
+    </div>
   </section>
 </div>
 
@@ -273,12 +350,18 @@ td.nm b{font-family:var(--sans);font-weight:600;font-size:13.5px}
     <span class="dt">Run</span>
     <span class="df" id="r-id"></span>
     <div class="spacer"></div>
+    <div class="prog" id="r-prog" hidden>
+      <div class="bar"><i id="r-progbar"></i></div>
+      <div class="lb" id="r-proglb"></div>
+    </div>
     <button class="btn ghost" id="r-reload">Reload</button>
-    <button class="btn" id="parse" disabled title="Tagging arrives in Phase 3">Parse results</button>
+    <button class="btn" id="parse">Parse results</button>
   </div>
 
+  <div class="err" id="r-err" hidden></div>
   <div class="sumstrip" id="r-sum"></div>
   <div id="r-notes"></div>
+  <div id="r-parses"></div>
 
   <section style="margin-top:6px">
     <div class="shead">
@@ -286,7 +369,10 @@ td.nm b{font-family:var(--sans);font-weight:600;font-size:13.5px}
       <span class="note" id="r-note"></span>
     </div>
     <p class="lede">Everything Rainforest returned, plus the raw payloads on disk. Open
-       <b>Bullets</b> or <b>Reviews</b> on any card to read the exact text that will be tagged.</p>
+       <b>Bullets</b> or <b>Reviews</b> on any card to read the exact text that will be tagged.
+       <b>Double-click</b> anything to correct it &mdash; your edits are kept separately, so
+       what the API returned is never overwritten.</p>
+    <div id="r-removed"></div>
     <div class="pgrid" id="r-cards"></div>
   </section>
 </div>
@@ -308,6 +394,20 @@ td.nm b{font-family:var(--sans);font-weight:600;font-size:13.5px}
       <div class="spacer"></div>
       <button class="btn ghost" id="cancelgroup">Cancel</button>
       <button class="btn" id="creategroup">Create group</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== CONFIRM MODAL ==================== -->
+<div class="veil" id="cveil" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ctitle">
+    <h3 id="ctitle"></h3>
+    <div id="cbody"></div>
+    <div class="err" id="cerr" hidden></div>
+    <div class="mbar">
+      <div class="spacer"></div>
+      <button class="btn ghost" id="cno">Cancel</button>
+      <button class="btn" id="cyes">Confirm</button>
     </div>
   </div>
 </div>
@@ -350,12 +450,103 @@ function fmtDate(iso) {
   return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
 }
 
+function fmtDateTime(value) {
+  if (!value) return "—";
+  const d = new Date(value);
+  if (isNaN(d)) return String(value);
+  return d.toLocaleString(undefined, {
+    month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+  });
+}
+
+/* A run id IS its creation timestamp, in local time — 2026-09-10_182244.
+   run_log's started_at is rewritten when the run *finishes*, so the id is the
+   truer answer and the log is only the fallback. */
+function runCreated(run) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})_(\d{2})(\d{2})(\d{2})/.exec(run.run_id || "");
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+  return run.started_at || null;
+}
+
 function plural(n, one, many) { return `${n} ${n === 1 ? one : many}`; }
 
 function stat(label, value, sub, tone) {
   return `<div class="sm ${tone || ""}"><div class="t">${esc(label)}</div>` +
          `<div class="v">${esc(value)}</div>` +
          (sub ? `<div class="s">${esc(sub)}</div>` : "") + `</div>`;
+}
+
+/* ---------- confirm dialog ----------
+   A second veil rather than a generalised one: the new-group modal is a form
+   with its own wiring, and two small dialogs beat one that does both jobs. */
+let confirmResolve = null;
+
+function confirmModal({ title, body, confirmLabel = "Confirm" }) {
+  $("ctitle").textContent = title;
+  $("cbody").innerHTML = body;
+  $("cerr").hidden = true;
+  $("cyes").textContent = confirmLabel;
+  $("cyes").disabled = false;
+  $("cveil").hidden = false;
+  $("cno").focus();
+  return new Promise(resolve => { confirmResolve = resolve; });
+}
+
+function closeConfirm(answer) {
+  if (!confirmResolve) return;
+  const resolve = confirmResolve;
+  confirmResolve = null;
+  $("cveil").hidden = true;
+  resolve(answer);
+}
+
+/* ---------- inline editing ----------
+   Double-click swaps the element's content for an input. Enter (or blur)
+   saves, Escape restores. Multi-line fields keep Enter for newlines and save
+   on Ctrl/Cmd+Enter or blur. */
+function editable(el, { value, multiline, placeholder, onSave, onCancel }) {
+  el.classList.add("ed");
+  el.title = "Double-click to edit";
+  // Assignment, not addEventListener: card elements are rebuilt on every
+  // render, but the run title is the page's one persistent h1, and stacking
+  // handlers there would leave the oldest closure — with the oldest value —
+  // winning the race.
+  el.ondblclick = event => {
+    event.stopPropagation();
+    if (el.dataset.editing) return;
+    el.dataset.editing = "1";
+    el.classList.add("on");
+
+    const input = document.createElement(multiline ? "textarea" : "input");
+    input.className = "inl";
+    input.value = value ?? "";
+    if (placeholder) input.placeholder = placeholder;
+    el.textContent = "";
+    el.appendChild(input);
+    input.focus();
+    if (multiline) input.style.height = Math.min(260, input.scrollHeight + 6) + "px";
+    else input.select();
+
+    let settled = false;
+    const finish = commit => {
+      if (settled) return;
+      settled = true;
+      const next = input.value;
+      delete el.dataset.editing;
+      el.classList.remove("on");
+      if (commit && next !== (value ?? "")) onSave(next);
+      else onCancel();
+    };
+
+    input.addEventListener("blur", () => finish(true));
+    input.addEventListener("keydown", e => {
+      if (e.key === "Escape") { e.preventDefault(); finish(false); }
+      else if (e.key === "Enter" && (!multiline || e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        input.blur();
+      }
+    });
+  };
 }
 
 /* ---------- routing ---------- */
@@ -371,7 +562,16 @@ function route() {
 
 function setHeader({ eyebrow, title, back, backHref }) {
   $("eyebrow").textContent = eyebrow;   // textContent, so pass raw text here
-  $("title").innerHTML = title;         // innerHTML, so pass escaped text here
+
+  // The h1 survives every view change, so shed any editable binding the run
+  // view left on it before the next view claims it.
+  const h1 = $("title");
+  h1.classList.remove("ed", "on");
+  h1.removeAttribute("title");
+  h1.ondblclick = null;
+  delete h1.dataset.editing;
+
+  h1.innerHTML = title;                 // innerHTML, so pass escaped text here
   $("back").hidden = !back;
   $("back").setAttribute("href", backHref || "#/");
 }
@@ -406,18 +606,38 @@ async function renderGroups() {
   $("grouptbl").innerHTML =
     `<thead><tr>
        <th class="l">Group</th><th>Runs</th><th class="l">Last run</th><th class="l">Created</th>
+       <th class="act"></th>
      </tr></thead><tbody>` +
     groups.map(g => `
-      <tr class="r" data-slug="${esc(g.slug)}">
+      <tr class="r" data-slug="${esc(g.slug)}" data-name="${esc(g.name)}"
+          data-runs="${g.run_count || 0}">
         <td class="l nm"><b>${esc(g.name)}</b><span class="sub">${esc(g.slug)}</span></td>
         <td>${g.run_count || 0}</td>
         <td class="l">${g.last_run ? `<span class="pill ok">${esc(g.last_run)}</span>`
                                    : `<span class="pill na">never</span>`}</td>
         <td class="l">${esc(fmtDate(g.created_at))}</td>
+        <td class="act"><button class="x" title="Delete this group">&times;</button></td>
       </tr>`).join("") + `</tbody>`;
 
   $("grouptbl").querySelectorAll("tr.r").forEach(tr => {
     tr.onclick = () => { location.hash = "#/g/" + encodeURIComponent(tr.dataset.slug); };
+    tr.querySelector(".x").onclick = async event => {
+      event.stopPropagation();   // the whole row is a link to the group
+      const runs = Number(tr.dataset.runs);
+      const ok = await confirmModal({
+        title: `Delete "${tr.dataset.name}"?`,
+        body: `<p class="sd">This moves the group and ${
+          runs ? plural(runs, "run", "runs") : "its (empty) folder"
+        } to <code>data/_trash/</code>. Nothing is erased &mdash; you can drag the folder back
+        in your file browser if you change your mind.</p>`,
+        confirmLabel: "Delete group",
+      });
+      if (!ok) return;
+      try {
+        await api("/api/groups/" + encodeURIComponent(tr.dataset.slug), { method: "DELETE" });
+      } catch (e) { showError(e.message); return; }
+      renderGroups();
+    };
   });
 }
 
@@ -442,24 +662,47 @@ async function renderGroup(slug) {
 
   const runs = group.runs || [];
   $("runnote").textContent = runs.length ? plural(runs.length, "run", "runs") : "none yet";
+  $("compact-bar").hidden = runs.length === 0;
+  $("compact").onclick = () => startCompact(slug);
+
+  // Restore whatever was typed for this group last time, before the panel
+  // reads it back to work out whether Extract should be enabled.
+  $("urls").value = localStorage.getItem("urls:" + slug) || "";
+
+  // Adding listings is a deliberate act once a group has runs — but a group
+  // with none has nothing else worth showing, so the panel starts open there.
+  groupHasRuns = runs.length > 0;
+  setPastePanel(!groupHasRuns);
 
   if (runs.length) {
     $("runs-wrap").innerHTML =
       `<div class="tscroll"><table>
-        <thead><tr><th class="l">Run</th><th>ASINs</th><th>Reviews</th><th class="l">Parses</th></tr></thead>
+        <thead><tr><th class="l">Run</th><th class="l">Created</th><th>ASINs</th><th>Reviews</th>
+          <th class="l">Parses</th><th class="act"></th></tr></thead>
         <tbody>` + runs.map(r => `
-          <tr class="r" data-run="${esc(r.run_id)}">
-            <td class="l nm"><b>${esc(r.run_id)}</b></td>
+          <tr class="r" data-run="${esc(r.run_id)}"
+              data-asins="${r.asins_ok != null ? esc(r.asins_ok) : "?"}"
+              data-parses="${(r.parses || []).length}">
+            <td class="l nm"><b>${esc(r.label || r.run_id)}</b>${r.label
+                ? `<span class="sub">${esc(r.run_id)}</span>` : ""}${r.compacted_from
+                ? `<span class="sub">compacted from ${plural(r.compacted_from.length, "run", "runs")}</span>`
+                : ""}</td>
+            <td class="l">${esc(fmtDateTime(runCreated(r)))}</td>
             <td>${r.asins_ok != null ? esc(r.asins_ok + " / " + r.asins_total) : "—"}</td>
             <td>${r.reviews_total != null ? esc(r.reviews_total) : "—"}</td>
             <td class="l">${r.parses && r.parses.length
                 ? r.parses.map(p => `<span class="pill ok">${esc(p)}</span>`).join(" ")
                 : `<span class="pill na">not parsed</span>`}</td>
+            <td class="act"><button class="x" title="Delete this run">&times;</button></td>
           </tr>`).join("") + `</tbody></table></div>`;
 
     $("runs-wrap").querySelectorAll("tr.r").forEach(tr => {
       tr.onclick = () => {
         location.hash = `#/g/${encodeURIComponent(slug)}/r/${encodeURIComponent(tr.dataset.run)}`;
+      };
+      tr.querySelector(".x").onclick = event => {
+        event.stopPropagation();   // the whole row opens the run
+        deleteRun(slug, tr.dataset);
       };
     });
   } else {
@@ -468,11 +711,106 @@ async function renderGroup(slug) {
         <p>Each time you press <b>Extract</b>, a timestamped run is saved here with the raw
            Rainforest payloads, so nothing you pull is ever overwritten.</p></div>`;
   }
+}
 
-  // Restore whatever was typed for this group last time.
-  const saved = localStorage.getItem("urls:" + slug) || "";
-  $("urls").value = saved;
-  refreshPreview();
+/* ---------- the paste panel ----------
+   Collapsed, the action bar offers "Add"; open, it offers "Cancel" and
+   "Extract". Cancelling keeps the draft — runPreview already persists it per
+   group in localStorage, so reopening shows what you typed. */
+let groupHasRuns = false;
+
+function setPastePanel(open) {
+  $("paste-panel").hidden = !open;
+  $("addlistings").hidden = open || !groupHasRuns;
+  // Nothing to collapse back to on a group with no runs, so no Cancel there.
+  $("canceladd").hidden = !open || !groupHasRuns;
+  $("extract").hidden = !open;
+  if (!open) $("g-sum").hidden = true;
+  else refreshPreview();
+}
+
+/* ---------- deleting a run ---------- */
+async function deleteRun(slug, data) {
+  const parses = Number(data.parses);
+  const ok = await confirmModal({
+    title: `Delete run ${data.run}?`,
+    body: `<p class="sd">This moves the run &mdash; its ${data.asins} fetched
+      ${data.asins === "1" ? "listing" : "listings"}, the raw Rainforest payloads${
+        parses ? `, and ${plural(parses, "parse", "parses")}` : ""
+      } &mdash; to <code>data/${esc(slug)}/_trash/</code>. Nothing is erased, so you can drag
+      the folder back in your file browser.</p>`,
+    confirmLabel: "Delete run",
+  });
+  if (!ok) return;
+
+  try {
+    await api(`/api/runs/${encodeURIComponent(slug)}/${encodeURIComponent(data.run)}`,
+              { method: "DELETE" });
+  } catch (e) { showError(e.message); return; }
+  renderGroup(slug);
+}
+
+/* ---------- compaction ----------
+   The preview is computed by the server and shown before anything moves, so
+   you can see exactly which ASINs survive and which runs get trashed. */
+function compactionPlan(p) {
+  const line = (n, text, tone) =>
+    `<div class="ln ${tone || ""}"><b>${esc(n)}</b><span>${text}</span></div>`;
+
+  let html = `<div class="plan">` +
+    line(p.kept_count, `unique ${p.kept_count === 1 ? "ASIN" : "ASINs"} kept`, "") +
+    line(p.reviews_total, `reviews in total` +
+      (p.reviews_gained ? ` <span class="d">&mdash; ${p.reviews_gained} merged back in from
+        older runs</span>` : "")) +
+    (p.duplicates
+      ? line(p.duplicates, `duplicate ${p.duplicates === 1 ? "ASIN" : "ASINs"} resolved
+          <span class="d">&mdash; kept the copy with both bullets and reviews, then the most
+          recent</span>`)
+      : "") +
+    (p.dropped_asins.length
+      ? line(p.dropped_asins.length, `dropped <span class="d">&mdash; no bullets and no reviews
+          in any run</span>`, "warn")
+      : "") +
+    line(p.runs, `${p.runs === 1 ? "run moves" : "runs move"} to <code>_trash/</code>`, "bad");
+
+  if (p.dropped_asins.length) {
+    html += `<div class="asins">Dropping ${esc(p.dropped_asins.join(", "))}</div>`;
+  }
+  if (p.parses.length) {
+    html += `<div class="asins">${plural(p.parses.length, "parse", "parses")} won't carry over
+      &mdash; they refer to the old runs, which keep them in <code>_trash/</code>.</div>`;
+  }
+  return html + `</div>`;
+}
+
+async function startCompact(slug) {
+  $("compact").disabled = true;
+  let preview;
+  try {
+    preview = (await api(`/api/groups/${encodeURIComponent(slug)}/compact?dry_run=1`,
+                         { method: "POST" })).preview;
+  } catch (e) {
+    showError(e.message);
+    return;
+  } finally {
+    $("compact").disabled = false;
+  }
+
+  const ok = await confirmModal({
+    title: `Compact ${plural(preview.runs, "run", "runs")} into one`,
+    body: compactionPlan(preview) +
+      `<p class="sd">A new run is written first; the originals only move afterwards.</p>`,
+    confirmLabel: "Compact",
+  });
+  if (!ok) return;
+
+  let result;
+  try {
+    result = (await api(`/api/groups/${encodeURIComponent(slug)}/compact`,
+                        { method: "POST" })).result;
+  } catch (e) { showError(e.message); return; }
+
+  location.hash = `#/g/${encodeURIComponent(slug)}/r/${encodeURIComponent(result.run_id)}`;
 }
 
 /* ---------- ASIN preview ---------- */
@@ -487,41 +825,70 @@ async function runPreview() {
   const text = $("urls").value;
   if (currentSlug) localStorage.setItem("urls:" + currentSlug, text);
 
+  // A debounced call can land after the panel was collapsed. Don't let it put
+  // the summary strip back on screen.
+  if ($("paste-panel").hidden) return;
+
   if (!text.trim()) {
     $("g-sum").hidden = true;
     $("badlines").hidden = true;
     $("urlhint").textContent = "Nothing pasted yet.";
     $("pastenote").textContent = "";
+    $("refetchhint").textContent =
+      "Skips anything this group already holds with bullets and reviews.";
     $("extract").disabled = true;
     return;
   }
 
   let r;
-  try { r = await api("/api/parse-asins", { method: "POST", body: JSON.stringify({ text }) }); }
-  catch (e) { showError(e.message); return; }
+  try {
+    r = await api("/api/parse-asins", {
+      method: "POST",
+      body: JSON.stringify({ text, slug: currentSlug, refetch: $("refetch").checked }),
+    });
+  } catch (e) { showError(e.message); return; }
 
   const found = r.items.length;
+  const held = (r.held || []).length;
+  const willFetch = r.to_fetch ? r.to_fetch.length : found;
+
   $("g-sum").hidden = false;
   $("g-sum").innerHTML =
     stat("Lines", r.line_count) +
     stat("ASINs found", found, null, found ? "good" : "bad") +
+    stat("Already have", held, held ? "won't be fetched" : null, held ? "good" : "") +
+    stat("Will fetch", willFetch, willFetch ? "costs credits" : "no credits",
+         willFetch ? "warn" : "good") +
     stat("Duplicates", r.duplicates.length, r.duplicates.length ? "folded together" : null,
          r.duplicates.length ? "warn" : "") +
     stat("Unreadable", r.unparsed.length, null, r.unparsed.length ? "bad" : "");
 
-  $("urlhint").textContent = found
-    ? `Ready to extract ${plural(found, "ASIN", "ASINs")}: ${r.items.slice(0, 6).map(i => i.asin).join(", ")}` +
-      (found > 6 ? `, +${found - 6} more` : "")
-    : "No ASINs found in what's pasted.";
+  $("urlhint").textContent = !found
+    ? "No ASINs found in what's pasted."
+    : held
+      ? `Ready to extract ${found} — fetching ${willFetch}, ` +
+        `${held} already complete in this group.`
+      : `Ready to extract ${plural(found, "ASIN", "ASINs")}: ` +
+        r.items.slice(0, 6).map(i => i.asin).join(", ") +
+        (found > 6 ? `, +${found - 6} more` : "");
+
+  $("refetchhint").textContent = r.refetch
+    ? `Fetching all ${plural(found, "ASIN", "ASINs")}, including any already here.`
+    : held
+      ? `${plural(held, "ASIN", "ASINs")} would be skipped: ` + r.held.slice(0, 4).join(", ") +
+        (held > 4 ? `, +${held - 4} more` : "")
+      : "Nothing pasted is already here — everything will be fetched.";
 
   $("badlines").hidden = r.unparsed.length === 0;
   $("badlist").innerHTML = r.unparsed.map(l => `<li>${esc(l)}</li>`).join("");
 
   $("pastenote").textContent = found ? plural(found, "ASIN", "ASINs") : "";
   $("extract").disabled = found === 0 || extracting;
-  $("extract").title = found
-    ? `Fetch ${plural(found, "listing", "listings")} from Rainforest`
-    : "Paste at least one Amazon URL first";
+  $("extract").title = !found
+    ? "Paste at least one Amazon URL first"
+    : willFetch
+      ? `Fetch ${plural(willFetch, "listing", "listings")} from Rainforest`
+      : "Everything pasted is already here — no credits will be spent";
 }
 
 /* ---------- extraction ---------- */
@@ -548,8 +915,10 @@ async function startExtract() {
 
   let job;
   try {
-    job = await api(`/api/groups/${encodeURIComponent(slug)}/extract`,
-                    { method: "POST", body: JSON.stringify({ text }) });
+    job = await api(`/api/groups/${encodeURIComponent(slug)}/extract`, {
+      method: "POST",
+      body: JSON.stringify({ text, refetch: $("refetch").checked }),
+    });
   } catch (e) {
     $("g-err").textContent = e.message;
     $("g-err").hidden = false;
@@ -559,7 +928,10 @@ async function startExtract() {
     return;
   }
 
-  setProgress(0, `Starting — ${plural(job.asin_count, "listing", "listings")} to fetch`);
+  setProgress(0, job.fetch_count
+    ? `Starting — ${plural(job.fetch_count, "listing", "listings")} to fetch` +
+      (job.held_count ? `, ${job.held_count} already here` : "")
+    : `Collecting ${plural(job.asin_count, "listing", "listings")} you already have`);
   pollJob(job.job_id, slug, job.run_id);
 }
 
@@ -600,18 +972,35 @@ async function pollJob(jobId, slug, runId) {
   }, 400);
 }
 
-/* ---------- run view ---------- */
+/* ---------- run view ----------
+   `runState.products` is the whole run including removed ASINs, exactly as the
+   server sees it. Every edit hands back the records it changed, so the view is
+   re-rendered from the server's answer rather than from a guess about what the
+   edit did. */
+let runState = null;
+let removedOpen = false;
+
 function stars(n) {
+  if (n == null || n === "") return "no rating";
   const v = Math.round(Number(n) || 0);
   return "★".repeat(v) + "☆".repeat(Math.max(0, 5 - v));
 }
 
-function productCard(p, idx) {
+function editedFields(p) {
+  return (p.edited_fields || []).filter(f => f !== "__deleted");
+}
+
+function wasEdited(p, field) {
+  return editedFields(p).includes(field) ? " was" : "";
+}
+
+function productCard(p) {
   const dead = !p.fetch_ok;
   const bullets = p.feature_bullets || [];
   const reviews = p.reviews || [];
   const specs = p.specifications || [];
   const link = p.link || p.source_url;
+  const edits = editedFields(p);
 
   const thumb = p.main_image
     ? `<img class="thumb" src="${esc(p.main_image)}" alt="" loading="lazy"
@@ -619,33 +1008,40 @@ function productCard(p, idx) {
     : `<div class="thumb none">no image</div>`;
 
   const facts = [];
-  if (p.rating) facts.push(`<span class="pill ok">${esc(p.rating)}&#9733; &middot; ${esc((p.ratings_total || 0).toLocaleString())}</span>`);
+  facts.push(`<span class="pill ${p.rating ? "ok" : "na"}${wasEdited(p, "rating")}" data-f="rating">` +
+             `${esc(p.rating || "—")}&#9733; &middot; ${esc((p.ratings_total || 0).toLocaleString())}</span>`);
   facts.push(bullets.length ? `<span class="pill ok">${plural(bullets.length, "bullet", "bullets")}</span>`
                             : `<span class="pill warn">no bullets</span>`);
   facts.push(reviews.length ? `<span class="pill ok">${plural(reviews.length, "review", "reviews")}</span>`
                             : `<span class="pill warn">no reviews</span>`);
   if (p.brand) facts.push(`<span class="pill na">${esc(p.brand)}</span>`);
+  if (edits.length) facts.push(`<span class="pill" style="background:var(--cobalt-wash);color:var(--cobalt)"
+    title="Edited: ${esc(edits.join(", "))}">edited</span>`);
 
   const warnings = (p.warnings || []).map(w =>
     `<div class="note-line"><span class="ic">Note</span><span>${esc(w)}</span></div>`).join("");
 
   return `
-  <div class="pcard ${dead ? "dead" : ""}" data-idx="${idx}">
+  <div class="pcard ${dead ? "dead" : ""}" data-asin="${esc(p.asin)}">
     <div class="top">
+      <button class="x rm" title="Remove this ASIN from the run">&times;</button>
       ${thumb}
       <div class="meta">
-        <p class="ttl">${esc(p.title || "(no title returned)")}</p>
+        <p class="ttl${wasEdited(p, "title")}" data-f="title">${esc(p.title || "(no title returned)")}</p>
         <div class="ids">
           ${link ? `<a href="${esc(link)}" target="_blank" rel="noopener">${esc(p.asin)}</a>` : esc(p.asin)}
-          ${p.price && p.price.raw ? ` &middot; <span class="price">${esc(p.price.raw)}</span>` : ""}
+          &middot; <span class="price${wasEdited(p, "price")}" data-f="price">${
+            esc((p.price && p.price.raw) || "no price")}</span>
         </div>
         <div class="facts">${facts.join("")}</div>
       </div>
     </div>
     ${warnings ? `<div style="padding:0 16px 12px">${warnings}</div>` : ""}
+    ${edits.length ? `<div style="padding:0 16px 12px">
+      <button class="lnk restore">Restore original</button></div>` : ""}
     <div class="foot">
-      <button class="tabbtn" data-tab="bullets" ${bullets.length ? "" : "disabled"}>Bullets ${bullets.length}</button>
-      <button class="tabbtn" data-tab="reviews" ${reviews.length ? "" : "disabled"}>Reviews ${reviews.length}</button>
+      <button class="tabbtn" data-tab="bullets">Bullets ${bullets.length}</button>
+      <button class="tabbtn" data-tab="reviews">Reviews ${reviews.length}</button>
       <button class="tabbtn" data-tab="specs" ${specs.length ? "" : "disabled"}>Details ${specs.length}</button>
     </div>
     <div class="pbody" hidden></div>
@@ -654,21 +1050,41 @@ function productCard(p, idx) {
 
 function tabHtml(p, tab) {
   if (tab === "bullets") {
-    return `<h4>Listing body &mdash; title + ${plural((p.feature_bullets || []).length, "bullet", "bullets")}</h4>
-            <ul>${(p.feature_bullets || []).map(b => `<li>${esc(b)}</li>`).join("")}</ul>`;
+    const bullets = p.feature_bullets || [];
+    return `<h4>Listing body &mdash; title + ${plural(bullets.length, "bullet", "bullets")}</h4>
+      <p class="ehint">Double-click a bullet to edit it. Ctrl+Enter saves, Escape cancels.</p>
+      <ul>${bullets.map((b, i) => `<li data-i="${i}">${esc(b)}
+        <button class="x" title="Delete this bullet">&times;</button></li>`).join("")}</ul>
+      <button class="addrow" data-add="bullet">+ add bullet</button>`;
   }
+
   if (tab === "reviews") {
-    return `<h4>${plural((p.reviews || []).length, "review", "reviews")}</h4>` +
-      (p.reviews || []).map(r => `
-        <div class="rv">
+    const reviews = p.reviews || [];
+    return `<h4>${plural(reviews.length, "review", "reviews")}</h4>` +
+      (reviews.length ? `<p class="ehint">Double-click a title, body or rating to edit it.</p>` : "") +
+      reviews.map((r, i) => `
+        <div class="rv" data-i="${i}">
+          <button class="x" title="Delete this review">&times;</button>
           <div class="rh">
-            <span class="stars">${esc(stars(r.rating))}</span>
-            <span class="rt">${esc(r.title || "(untitled)")}</span>
-            <span class="rd">${esc(r.date || "")}${r.verified_purchase ? " &middot; verified" : ""}</span>
+            <span class="stars" data-f="rating">${esc(stars(r.rating))}</span>
+            <span class="rt" data-f="title">${esc(r.title || "(untitled)")}</span>
+            <span class="rd">${esc(r.date || "")}${r.verified_purchase ? " &middot; verified" : ""}${
+              r.source === "manual" ? " &middot; pasted" : ""}</span>
           </div>
-          <div class="rb">${esc(r.body)}</div>
-        </div>`).join("");
+          <div class="rb" data-f="body">${esc(r.body)}</div>
+        </div>`).join("") +
+      `<button class="addrow" data-add="reviews">+ add reviews</button>
+       <div class="paste" hidden>
+         <textarea spellcheck="false"
+           placeholder="Paste reviews here &mdash; one blank line between each.&#10;&#10;The frame is much heavier than I expected and feels solid.&#10;&#10;The easel back kept collapsing every time I stood it up."></textarea>
+         <div class="pb">
+           <button class="btn" data-do="save">Add reviews</button>
+           <button class="btn ghost" data-do="cancel">Cancel</button>
+           <span class="hint">Blank line between each review.</span>
+         </div>
+       </div>`;
   }
+
   const rows = (p.specifications || []).map(s =>
     `<tr><td>${esc(s.name)}</td><td>${esc(s.value)}</td></tr>`).join("");
   const extra = [
@@ -676,6 +1092,273 @@ function tabHtml(p, tab) {
     ["Category", p.categories_flat], ["Best sellers rank", p.bestsellers_rank_flat],
   ].filter(([, v]) => v).map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join("");
   return `<h4>Product details</h4><table class="specs">${extra}${rows}</table>`;
+}
+
+/* ---------- edits ---------- */
+function product(asin) {
+  return runState.products.find(p => p.asin === asin);
+}
+
+/* Edits run one at a time. Clicking a delete button while a field is being
+   edited fires that field's blur-save and the click together — without a queue
+   the second request would be built from state the first one had already
+   changed, and would quietly undo it. `build` is called only once the previous
+   edit has landed, so it always sees current data. */
+let editChain = Promise.resolve();
+
+function queueEdit(build) {
+  editChain = editChain.then(async () => {
+    const request = build();
+    if (!request) return;
+    let result;
+    try {
+      result = await request;
+    } catch (e) {
+      showError(e.message);
+      return;
+    }
+    showError("");
+    (result.products || []).forEach(fresh => {
+      const at = runState.products.findIndex(p => p.asin === fresh.asin);
+      if (at >= 0) runState.products[at] = fresh;
+    });
+    runState.stats = result.stats || runState.stats;
+    renderRunBody();
+  });
+  return editChain;
+}
+
+function runPath(suffix) {
+  return `/api/runs/${encodeURIComponent(runState.slug)}/` +
+         `${encodeURIComponent(runState.runId)}${suffix}`;
+}
+
+/** `fields` may be an object, or a function returning one when its turn comes. */
+function saveField(asin, fields) {
+  return queueEdit(() => api(runPath("/edits"), {
+    method: "PUT",
+    body: JSON.stringify({ patch: { [asin]: typeof fields === "function" ? fields() : fields } }),
+  }));
+}
+
+function restoreProduct(asin) {
+  return queueEdit(() =>
+    api(runPath(`/edits/${encodeURIComponent(asin)}`), { method: "DELETE" }));
+}
+
+function addReviews(asin, text) {
+  return queueEdit(() =>
+    api(runPath("/reviews"), { method: "POST", body: JSON.stringify({ asin, text }) }));
+}
+
+/* ---------- wiring one card ---------- */
+function wireCard(card) {
+  const asin = card.dataset.asin;
+  const p = product(asin);
+  const panel = card.querySelector(".pbody");
+
+  editable(card.querySelector(".ttl"), {
+    value: p.title || "", multiline: true, placeholder: "Product title",
+    onSave: v => saveField(asin, { title: v.trim() || null }),
+    onCancel: () => renderRunBody(),
+  });
+
+  editable(card.querySelector(".price"), {
+    value: (p.price && p.price.raw) || "", placeholder: "$19.99",
+    onSave: v => saveField(asin, { price: v.trim() ? { raw: v.trim() } : null }),
+    onCancel: () => renderRunBody(),
+  });
+
+  editable(card.querySelector('.pill[data-f="rating"]'), {
+    value: p.rating == null ? "" : String(p.rating), placeholder: "4.7",
+    onSave: v => saveField(asin, { rating: v.trim() === "" ? null : v.trim() }),
+    onCancel: () => renderRunBody(),
+  });
+
+  card.querySelector(".rm").onclick = () => saveField(asin, { __deleted: true });
+  const restore = card.querySelector(".restore");
+  if (restore) restore.onclick = () => restoreProduct(asin);
+
+  card.querySelectorAll(".tabbtn").forEach(btn => {
+    btn.onclick = () => {
+      const active = btn.getAttribute("aria-pressed") === "true";
+      card.querySelectorAll(".tabbtn").forEach(b => b.setAttribute("aria-pressed", "false"));
+      if (active) { panel.hidden = true; delete card.dataset.tab; return; }
+      btn.setAttribute("aria-pressed", "true");
+      card.dataset.tab = btn.dataset.tab;
+      openTab(card, btn.dataset.tab);
+    };
+  });
+
+  if (card.dataset.tab) {
+    const btn = card.querySelector(`.tabbtn[data-tab="${card.dataset.tab}"]`);
+    if (btn) { btn.setAttribute("aria-pressed", "true"); openTab(card, card.dataset.tab); }
+  }
+}
+
+function openTab(card, tab) {
+  const asin = card.dataset.asin;
+  const p = product(asin);
+  const panel = card.querySelector(".pbody");
+  panel.innerHTML = tabHtml(p, tab);
+  panel.hidden = false;
+
+  if (tab === "bullets") wireBullets(card, p, panel);
+  if (tab === "reviews") wireReviews(card, p, panel);
+}
+
+function wireBullets(card, p, panel) {
+  const asin = p.asin;
+  const bullets = () => (product(asin).feature_bullets || []).slice();
+
+  panel.querySelectorAll("li").forEach(li => {
+    const i = Number(li.dataset.i);
+    editable(li, {
+      value: (p.feature_bullets || [])[i] || "", multiline: true,
+      onSave: v => saveField(asin, () => {
+        const next = bullets();
+        if (v.trim()) next[i] = v.trim(); else next.splice(i, 1);
+        return { feature_bullets: next };
+      }),
+      onCancel: () => renderRunBody(),
+    });
+    li.querySelector(".x").onclick = e => {
+      e.stopPropagation();
+      saveField(asin, () => {
+        const next = bullets();
+        next.splice(i, 1);
+        return { feature_bullets: next };
+      });
+    };
+  });
+
+  panel.querySelector('[data-add="bullet"]').onclick = () => {
+    card.dataset.tab = "bullets";
+    saveField(asin, () => ({
+      feature_bullets: bullets().concat("New bullet — double-click to edit"),
+    }));
+  };
+}
+
+function wireReviews(card, p, panel) {
+  const asin = p.asin;
+  const reviews = () => (product(asin).reviews || []).map(r => Object.assign({}, r));
+
+  panel.querySelectorAll(".rv").forEach(row => {
+    const i = Number(row.dataset.i);
+    const current = (p.reviews || [])[i] || {};
+
+    const save = patch => saveField(asin, () => {
+      const next = reviews();
+      Object.assign(next[i], patch);
+      return { reviews: next };
+    });
+
+    editable(row.querySelector('[data-f="title"]'), {
+      value: current.title || "", placeholder: "Review title",
+      onSave: v => save({ title: v.trim() }),
+      onCancel: () => renderRunBody(),
+    });
+    editable(row.querySelector('[data-f="body"]'), {
+      value: current.body || "", multiline: true,
+      onSave: v => save({ body: v.trim() }),
+      onCancel: () => renderRunBody(),
+    });
+    editable(row.querySelector('[data-f="rating"]'), {
+      value: current.rating == null ? "" : String(current.rating), placeholder: "5",
+      onSave: v => save({ rating: v.trim() === "" ? null : Number(v) || null }),
+      onCancel: () => renderRunBody(),
+    });
+
+    row.querySelector(".x").onclick = e => {
+      e.stopPropagation();
+      saveField(asin, () => {
+        const next = reviews();
+        next.splice(i, 1);
+        return { reviews: next };
+      });
+    };
+  });
+
+  const box = panel.querySelector(".paste");
+  const area = box.querySelector("textarea");
+  panel.querySelector('[data-add="reviews"]').onclick = () => {
+    box.hidden = false;
+    area.focus();
+  };
+  box.querySelector('[data-do="cancel"]').onclick = () => { box.hidden = true; area.value = ""; };
+  box.querySelector('[data-do="save"]').onclick = async () => {
+    const text = area.value;
+    if (!text.trim()) return;
+    card.dataset.tab = "reviews";
+    await addReviews(asin, text);
+  };
+}
+
+/* ---------- rendering ---------- */
+function renderRunBody() {
+  const live = runState.products.filter(p => !p.deleted);
+  const removed = runState.products.filter(p => p.deleted);
+  const log = runState.log;
+  const s = runState.stats;
+
+  // The log records what the fetch did and never changes; the strip describes
+  // what is on screen now. Say which whenever the two have drifted apart.
+  const edited = s.asins_total !== (log.asins_total ?? s.asins_total) ||
+                 s.reviews_total !== (log.reviews_total ?? s.reviews_total) ||
+                 s.bullets_total !== (log.bullets_total ?? s.bullets_total);
+  const since = edited ? "after edits" : null;
+
+  $("r-note").textContent = plural(live.length, "listing", "listings");
+  $("r-sum").innerHTML =
+    stat("ASINs", `${s.asins_ok} / ${s.asins_total}`,
+         since || (s.asins_failed ? `${s.asins_failed} failed` : "all fetched"),
+         s.asins_failed ? "bad" : "good") +
+    stat("With bullets", `${s.with_bullets_pct}%`, `${s.with_bullets} of ${s.asins_ok} fetched`,
+         s.with_bullets_pct === 100 ? "good" : "warn") +
+    stat("With reviews", `${s.with_reviews_pct}%`, `${s.with_reviews} of ${s.asins_ok} fetched`,
+         s.with_reviews_pct === 100 ? "good" : "warn") +
+    stat("Reviews", s.reviews_total, `${s.reviews_avg} avg per ASIN`) +
+    stat("Text bodies", s.bodies_total, "to be tagged") +
+    stat("Credits left", log.credits_remaining ?? "—", "Rainforest") +
+    stat("Elapsed", `${log.elapsed_seconds ?? 0}s`, since);
+
+  $("r-removed").innerHTML = removed.length ? `
+    <div class="strip">
+      <div class="sh">
+        <span>${plural(removed.length, "ASIN", "ASINs")} removed from this run</span>
+        <button class="lnk toggle">${removedOpen ? "Hide" : "Show"}</button>
+      </div>
+      <ul ${removedOpen ? "" : "hidden"}>${removed.map(p => `
+        <li data-asin="${esc(p.asin)}">
+          <span class="a">${esc(p.asin)}</span>
+          <span class="t">${esc(p.title || "(no title returned)")}</span>
+          <button class="lnk">Restore</button>
+        </li>`).join("")}</ul>
+    </div>` : "";
+
+  if (removed.length) {
+    $("r-removed").querySelector(".toggle").onclick = () => {
+      removedOpen = !removedOpen;
+      renderRunBody();
+    };
+    $("r-removed").querySelectorAll("li").forEach(li => {
+      li.querySelector(".lnk").onclick = () =>
+        saveField(li.dataset.asin, { __deleted: null });
+    });
+  }
+
+  // Keep whichever tab each card had open across a re-render.
+  const openTabs = {};
+  $("r-cards").querySelectorAll(".pcard").forEach(c => {
+    if (c.dataset.tab) openTabs[c.dataset.asin] = c.dataset.tab;
+  });
+
+  $("r-cards").innerHTML = live.map(productCard).join("");
+  $("r-cards").querySelectorAll(".pcard").forEach(card => {
+    if (openTabs[card.dataset.asin]) card.dataset.tab = openTabs[card.dataset.asin];
+    wireCard(card);
+  });
 }
 
 async function renderRun(slug, runId) {
@@ -691,56 +1374,210 @@ async function renderRun(slug, runId) {
     return;
   }
 
-  const { group, run, log } = data;
+  const { group, run, log, stats, meta, parses } = data;
+  const label = (meta || {}).label || "";
   setHeader({
     eyebrow: `${group.name} · extraction run`,
-    title: esc(runId),
+    title: esc(label || runId),
     back: true,
     backHref: `#/g/${encodeURIComponent(slug)}`,
   });
   $("r-id").textContent = `data/${slug}/${runId}`;
 
-  const products = run.products || [];
-  $("r-note").textContent = plural(products.length, "listing", "listings");
+  // Name the run by double-clicking its title. The id underneath never
+  // changes — ordering and compaction both read it as a timestamp.
+  editable($("title"), {
+    value: label,
+    placeholder: runId,
+    onSave: async v => {
+      try {
+        await api(`/api/runs/${encodeURIComponent(slug)}/${encodeURIComponent(runId)}/meta`,
+                  { method: "PUT", body: JSON.stringify({ label: v }) });
+      } catch (e) { showError(e.message); }
+      renderRun(slug, runId);
+    },
+    onCancel: () => { $("title").innerHTML = esc(label || runId); },
+  });
 
-  $("r-sum").innerHTML =
-    stat("ASINs", `${log.asins_ok ?? 0} / ${log.asins_total ?? products.length}`,
-         log.asins_failed ? `${log.asins_failed} failed` : "all fetched",
-         log.asins_failed ? "bad" : "good") +
-    stat("With bullets", `${log.with_bullets_pct ?? 0}%`,
-         `${log.with_bullets ?? 0} of ${log.asins_ok ?? 0} fetched`,
-         (log.with_bullets_pct ?? 0) === 100 ? "good" : "warn") +
-    stat("With reviews", `${log.with_reviews_pct ?? 0}%`,
-         `${log.with_reviews ?? 0} of ${log.asins_ok ?? 0} fetched`,
-         (log.with_reviews_pct ?? 0) === 100 ? "good" : "warn") +
-    stat("Reviews", log.reviews_total ?? 0, `${log.reviews_avg ?? 0} avg per ASIN`) +
-    stat("Text bodies", log.bodies_total ?? 0, "to be tagged") +
-    stat("Credits left", log.credits_remaining ?? "—", "Rainforest") +
-    stat("Elapsed", `${log.elapsed_seconds ?? 0}s`, null);
+  runState = { slug, runId, products: run.products || [], log, stats,
+               parses: parses || [] };
+  removedOpen = false;
 
   const notes = (log.notes || []).map(n =>
-    `<div class="note-line info"><span class="ic">Rainforest</span><span>${esc(n)}</span></div>`).join("");
+    `<div class="note-line info"><span class="ic">${
+      log.compacted_from ? "Compacted" : "Rainforest"}</span><span>${esc(n)}</span></div>`).join("");
   const fails = (log.failures || []).map(f =>
     `<div class="note-line"><span class="ic">${esc(f.item)}</span><span>${esc(f.reason)}</span></div>`).join("");
   $("r-notes").innerHTML = notes + fails;
 
-  $("r-cards").innerHTML = products.map(productCard).join("");
-  $("r-cards").querySelectorAll(".pcard").forEach(card => {
-    const product = products[Number(card.dataset.idx)];
-    const panel = card.querySelector(".pbody");
-    card.querySelectorAll(".tabbtn").forEach(btn => {
-      btn.onclick = () => {
-        const active = btn.getAttribute("aria-pressed") === "true";
-        card.querySelectorAll(".tabbtn").forEach(b => b.setAttribute("aria-pressed", "false"));
-        if (active) { panel.hidden = true; return; }
-        btn.setAttribute("aria-pressed", "true");
-        panel.innerHTML = tabHtml(product, btn.dataset.tab);
-        panel.hidden = false;
-      };
-    });
-  });
-
+  renderRunBody();
+  renderParses();
   $("r-reload").onclick = () => renderRun(slug, runId);
+  $("parse").onclick = startParse;
+}
+
+/* ---------- step 2: tagging ----------
+   A parse never alters the run it reads: each one writes its own parse-<ts>/
+   folder, so re-parsing after a prompt change keeps the earlier output to
+   compare against. Phase 5 renders the tags; here we only run them and report. */
+let parsing = false;
+
+async function renderParses() {
+  const list = runState.parses || [];
+  if (!list.length) {
+    $("r-parses").innerHTML = "";
+    return;
+  }
+
+  // Only the newest parse's log is worth loading — it's the one the summary
+  // describes, and each fetch reads a file off disk.
+  let log = {};
+  try {
+    log = (await api(runPath(`/parses/${encodeURIComponent(list[0])}`))).log || {};
+  } catch (e) { /* a half-written parse folder: show the pills, skip the stats */ }
+
+  const pills = list.map((p, i) =>
+    `<span class="pill ${i === 0 ? "ok" : "na"}">${esc(p)}</span>`).join(" ");
+
+  const stats = log.bodies_total ? `
+    <div class="sumstrip" style="margin-top:10px">
+      ${stat("Tagged", `${log.tagged} / ${log.bodies_total}`,
+             log.failed ? `${log.failed} failed` : "all bodies",
+             log.failed ? "bad" : "good")}
+      ${stat("Features", log.features_total, "concrete benefits")}
+      ${stat("Complaints", log.complaints_total, "from reviews")}
+      ${stat("Search terms", log.search_terms_total, null)}
+      ${stat("Usage keywords", log.usage_keywords_total, null)}
+      ${stat("Skipped", log.skipped, `under ${log.min_tag_chars} chars`,
+             log.skipped ? "warn" : "")}
+      ${stat("Nothing found", log.empty ?? "—", "tagged but empty")}
+      ${stat("Cost", log.cost_usd == null ? "—" : `$${log.cost_usd.toFixed(4)}`,
+             log.estimated_cost_usd == null
+               ? `${log.elapsed_seconds}s`
+               : `est. $${log.estimated_cost_usd.toFixed(4)} · ${log.elapsed_seconds}s`)}
+    </div>` : "";
+
+  $("r-parses").innerHTML = `
+    <div class="strip">
+      <div class="sh">
+        <span>${plural(list.length, "parse", "parses")} &middot; ${pills}</span>
+        <span class="hint">${esc(log.model || "")}${
+          log.prompt_sha ? ` &middot; prompt ${esc(log.prompt_sha)}` : ""}</span>
+      </div>
+    </div>${stats}`;
+}
+
+async function startParse() {
+  if (parsing) return;
+  const { slug, runId } = runState;
+  $("r-err").hidden = true;
+
+  let info;
+  try {
+    info = await api(runPath("/parse-estimate"));
+  } catch (e) {
+    $("r-err").textContent = e.message;
+    $("r-err").hidden = false;
+    return;
+  }
+
+  const est = info.estimate;
+  if (!est.to_tag) {
+    $("r-err").textContent =
+      "There is nothing long enough to tag in this run. Add bullets or reviews first.";
+    $("r-err").hidden = false;
+    return;
+  }
+
+  const line = (n, text, tone) =>
+    `<div class="ln ${tone || ""}"><b>${esc(n)}</b><span>${text}</span></div>`;
+
+  let plan = `<div class="plan">` +
+    line(est.to_tag, `text ${est.to_tag === 1 ? "body" : "bodies"} to tag
+      <span class="d">&mdash; ${plural(est.listings, "listing", "listings")} and
+      ${plural(est.reviews, "review", "reviews")}</span>`) +
+    (est.to_skip
+      ? line(est.to_skip, `skipped <span class="d">&mdash; under ${info.min_tag_chars}
+          characters, too short to hold a concrete benefit</span>`, "warn")
+      : "") +
+    (est.cost_known
+      ? line(`$${est.cost_usd.toFixed(3)}`, `estimated <span class="d">&mdash; the real figure is
+          written to parse_log.json</span>`)
+      : line("?", `cost unknown <span class="d">&mdash; no pricing set for
+          ${esc(est.model)} in config.py</span>`, "warn"));
+
+  if ((runState.parses || []).length) {
+    plan += `<div class="asins">Parsed before &mdash; this writes a new
+      <code>parse-&lt;time&gt;</code> folder and leaves the earlier tags untouched.</div>`;
+  }
+  plan += `</div>`;
+
+  const ok = await confirmModal({
+    title: "Parse this run?",
+    confirmLabel: "Parse",
+    body: `<p class="sd">One call per text body to <b>${esc(est.model)}</b>, extracting search
+             terms, features, complaints and usage keywords.</p>${plan}`,
+  });
+  if (!ok) return;
+
+  parsing = true;
+  $("parse").disabled = true;
+
+  let job;
+  try {
+    job = await api(runPath("/parse"), { method: "POST" });
+  } catch (err) {
+    $("r-err").textContent = err.message;
+    $("r-err").hidden = false;
+    parsing = false;
+    $("parse").disabled = false;
+    return;
+  }
+
+  setParseProgress(0, `Starting — ${plural(job.to_tag, "body", "bodies")} to tag`);
+  pollParse(job.job_id, slug, runId);
+}
+
+function setParseProgress(pct, label) {
+  $("r-prog").hidden = false;
+  $("r-progbar").style.width = Math.max(2, pct) + "%";
+  $("r-proglb").textContent = label;
+}
+
+async function pollParse(jobId, slug, runId) {
+  let snap;
+  try {
+    snap = await api("/api/jobs/" + encodeURIComponent(jobId));
+  } catch (e) {
+    return endParse(slug, runId, e.message);
+  }
+
+  setParseProgress(snap.pct, snap.total ? `${snap.label} (${snap.done}/${snap.total})`
+                                        : snap.label);
+
+  if (snap.state === "running") {
+    setTimeout(() => pollParse(jobId, slug, runId), 700);
+    return;
+  }
+  if (snap.state === "error") {
+    return endParse(slug, runId, snap.error || "The parse failed.");
+  }
+
+  setParseProgress(100, "Done");
+  setTimeout(() => endParse(slug, runId, null), 500);
+}
+
+function endParse(slug, runId, error) {
+  parsing = false;
+  $("parse").disabled = false;
+  $("r-prog").hidden = true;
+  $("r-progbar").style.width = "0%";
+  if (error) {
+    $("r-err").textContent = error;
+    $("r-err").hidden = false;
+    return;
+  }
+  renderRun(slug, runId);
 }
 
 /* ---------- new group modal ---------- */
@@ -775,7 +1612,10 @@ $("newgroup2").onclick = openModal;
 $("cancelgroup").onclick = closeModal;
 $("creategroup").onclick = createGroup;
 $("extract").onclick = startExtract;
+$("addlistings").onclick = () => { setPastePanel(true); $("urls").focus(); };
+$("canceladd").onclick = () => setPastePanel(false);
 $("urls").addEventListener("input", refreshPreview);
+$("refetch").addEventListener("change", refreshPreview);
 
 $("gname").addEventListener("input", () => {
   const s = slugify($("gname").value);
@@ -786,7 +1626,16 @@ $("gname").addEventListener("input", () => {
 $("gname").addEventListener("keydown", e => { if (e.key === "Enter") createGroup(); });
 
 $("veil").addEventListener("click", e => { if (e.target === $("veil")) closeModal(); });
-document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("veil").hidden) closeModal(); });
+
+$("cyes").onclick = () => closeConfirm(true);
+$("cno").onclick = () => closeConfirm(false);
+$("cveil").addEventListener("click", e => { if (e.target === $("cveil")) closeConfirm(false); });
+
+document.addEventListener("keydown", e => {
+  if (e.key !== "Escape") return;
+  if (!$("cveil").hidden) closeConfirm(false);
+  else if (!$("veil").hidden) closeModal();
+});
 
 window.addEventListener("hashchange", route);
 route();
