@@ -27,8 +27,10 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 # One call per text body, high volume — a mid tier is the right trade here.
 OPENAI_TAG_MODEL = os.getenv("OPENAI_TAG_MODEL", "gpt-5.6-terra")
 
-# Few calls, real judgment required — worth the frontier model.
-OPENAI_GROUP_MODEL = os.getenv("OPENAI_GROUP_MODEL", "gpt-5.6")
+# One call per tag list, real judgment required — worth the strongest model on the
+# Settings menu. Base `gpt-5.6` is deliberately not offered there, so the default
+# is the top of the luna/terra/sol family.
+OPENAI_GROUP_MODEL = os.getenv("OPENAI_GROUP_MODEL", "gpt-5.6-sol")
 
 # USD per 1,000,000 tokens, used only for the cost estimate shown before a parse.
 # VERIFY these against https://openai.com/api/pricing — they are placeholders.
@@ -117,8 +119,28 @@ OPENAI_MAX_RETRIES = int(os.getenv("OPENAI_MAX_RETRIES", "2"))
 # Grouping
 # ---------------------------------------------------------------------------
 
-# Unique tags sent to the model in one grouping call.
-GROUP_CHUNK_SIZE = int(os.getenv("GROUP_CHUNK_SIZE", "150"))
+# A safety valve, not the normal path. Clustering works by comparing every tag
+# against every other one, so splitting a list across calls destroys exactly the
+# comparisons that matter — two tags in different chunks can never be judged
+# together. Measured 2026-09-15: the largest list on disk (olive trees, 290 unique
+# features) is ~2,264 tokens, and the 20-ASIN target lands near ~4,700. Everything
+# real fits in one call, so this only engages if a list is pathologically large.
+GROUP_CHUNK_SIZE = int(os.getenv("GROUP_CHUNK_SIZE", "1200"))
+
+# Reasoning effort for the grouping model. Higher than tagging's `low` because
+# this step is judgment, not pattern-matching: deciding that "sturdy bowl" and
+# "thick build" are one customer concern while "real glass front" and "clear,
+# vivid viewing" are two is the whole job.
+OPENAI_GROUP_REASONING = os.getenv("OPENAI_GROUP_REASONING", "medium")
+
+# A ceiling, not a target. A 290-tag list returning ~36 clusters with titles,
+# descriptions and indices runs about 2,400 output tokens; this leaves room for a
+# much larger category without letting a runaway response bill forever.
+GROUP_MAX_OUTPUT_TOKENS = int(os.getenv("GROUP_MAX_OUTPUT_TOKENS", "8000"))
+
+# Rough output tokens per list, for the pre-grouping cost estimate. Actuals land
+# in cluster_log.json after every run — check there and adjust if this drifts.
+GROUP_EST_OUTPUT_TOKENS = int(os.getenv("GROUP_EST_OUTPUT_TOKENS", "2400"))
 
 
 # ---------------------------------------------------------------------------

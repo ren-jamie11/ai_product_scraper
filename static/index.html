@@ -117,6 +117,10 @@ td.nm b{font-family:var(--sans);font-weight:600;font-size:13.5px}
 .modal h3{font-family:var(--disp);font-weight:700;font-size:20px;margin:0 0 4px;letter-spacing:-.015em}
 .modal .sd{color:var(--muted);font-size:12.5px;margin:0 0 18px}
 .mbar{display:flex;gap:9px;justify-content:flex-end;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--rule)}
+/* model and effort belong together, so they sit on one line and wrap as a pair */
+.spair{display:flex;gap:14px}
+.spair .fld{flex:1 1 0;min-width:0}
+@media (max-width:520px){.spair{display:block}}
 
 /* ---------- unparsed lines ---------- */
 .badlines{margin-top:14px;border:1px solid var(--iron);background:var(--iron-wash);padding:11px 13px;border-radius:3px}
@@ -255,6 +259,8 @@ tbody tr.r:hover .x,tbody tr.r .x:focus-visible{opacity:1}
     <p class="eyebrow" id="eyebrow">Amazon competitor research &middot; feature extraction</p>
     <h1 id="title">What customers<br>actually care about.</h1>
   </div>
+  <button class="btn ghost" id="opensettings"
+          title="Which model and how much reasoning to spend">Settings</button>
 </header>
 
 <div class="err" id="globalerr" hidden style="margin-top:16px"></div>
@@ -355,6 +361,7 @@ tbody tr.r:hover .x,tbody tr.r .x:focus-visible{opacity:1}
       <div class="lb" id="r-proglb"></div>
     </div>
     <button class="btn ghost" id="r-reload">Reload</button>
+    <button class="btn ghost" id="group" hidden>Group tags</button>
     <button class="btn" id="parse">Parse results</button>
   </div>
 
@@ -408,6 +415,44 @@ tbody tr.r:hover .x,tbody tr.r .x:focus-visible{opacity:1}
       <div class="spacer"></div>
       <button class="btn ghost" id="cno">Cancel</button>
       <button class="btn" id="cyes">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SETTINGS MODAL ==================== -->
+<div class="veil" id="sveil" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="stitle">
+    <h3 id="stitle">Models &amp; reasoning</h3>
+    <p class="sd">Tagging makes one call per text body, so it runs on a cheaper model.
+       Grouping makes one call per tag list and is pure judgement, so it's worth more.
+       Changes apply to the next run, never to one already in flight.</p>
+
+    <div class="spair">
+      <div class="fld">
+        <label for="s-tag-model">Tagging model</label>
+        <select id="s-tag-model"></select>
+      </div>
+      <div class="fld">
+        <label for="s-tag-reasoning">Tagging reasoning</label>
+        <select id="s-tag-reasoning"></select>
+      </div>
+    </div>
+    <div class="spair">
+      <div class="fld">
+        <label for="s-group-model">Grouping model</label>
+        <select id="s-group-model"></select>
+      </div>
+      <div class="fld">
+        <label for="s-group-reasoning">Grouping reasoning</label>
+        <select id="s-group-reasoning"></select>
+      </div>
+    </div>
+
+    <div class="err" id="serr" hidden></div>
+    <div class="mbar">
+      <div class="spacer"></div>
+      <button class="btn ghost" id="scancel">Cancel</button>
+      <button class="btn" id="ssave">Save</button>
     </div>
   </div>
 </div>
@@ -1414,6 +1459,7 @@ async function renderRun(slug, runId) {
   renderParses();
   $("r-reload").onclick = () => renderRun(slug, runId);
   $("parse").onclick = startParse;
+  $("group").onclick = startGroup;
 }
 
 /* ---------- step 2: tagging ----------
@@ -1424,6 +1470,7 @@ let parsing = false;
 
 async function renderParses() {
   const list = runState.parses || [];
+  $("group").hidden = !list.length;
   if (!list.length) {
     $("r-parses").innerHTML = "";
     return;
@@ -1431,9 +1478,11 @@ async function renderParses() {
 
   // Only the newest parse's log is worth loading — it's the one the summary
   // describes, and each fetch reads a file off disk.
-  let log = {};
+  let log = {}, clusterLog = {};
   try {
-    log = (await api(runPath(`/parses/${encodeURIComponent(list[0])}`))).log || {};
+    const result = await api(runPath(`/parses/${encodeURIComponent(list[0])}`));
+    log = result.log || {};
+    clusterLog = result.cluster_log || {};
   } catch (e) { /* a half-written parse folder: show the pills, skip the stats */ }
 
   const pills = list.map((p, i) =>
@@ -1458,6 +1507,30 @@ async function renderParses() {
                : `est. $${log.estimated_cost_usd.toFixed(4)} · ${log.elapsed_seconds}s`)}
     </div>` : "";
 
+  // Step 3's own strip, shown only once a grouping has run. Phase 5 renders the
+  // clusters themselves; this is just enough to see that it worked and what it cost.
+  const clusters = (clusterLog.lists || []).map(l =>
+    stat(l.title, l.clusters, `from ${l.unique_tags} tags`,
+         l.status === "failed" ? "bad" : "")).join("");
+
+  const clusterStrip = clusterLog.lists ? `
+    <div class="strip" style="margin-top:14px">
+      <div class="sh">
+        <span>Clusters &middot; <span class="pill ok">${esc(clusterLog.parse_id || "")}</span></span>
+        <span class="hint">${esc(clusterLog.model || "")}${
+          clusterLog.reasoning ? ` &middot; ${esc(clusterLog.reasoning)}` : ""}${
+          clusterLog.prompt_sha ? ` &middot; prompt ${esc(clusterLog.prompt_sha)}` : ""}</span>
+      </div>
+    </div>
+    <div class="sumstrip" style="margin-top:10px">
+      ${clusters}
+      ${stat("Repairs", clusterLog.repairs ?? 0,
+             clusterLog.repairs ? "see cluster_log.json" : "every tag placed once",
+             clusterLog.repairs ? "warn" : "good")}
+      ${stat("Cost", clusterLog.cost_usd == null ? "—" : `$${clusterLog.cost_usd.toFixed(4)}`,
+             `${clusterLog.elapsed_seconds}s`)}
+    </div>` : "";
+
   $("r-parses").innerHTML = `
     <div class="strip">
       <div class="sh">
@@ -1465,7 +1538,7 @@ async function renderParses() {
         <span class="hint">${esc(log.model || "")}${
           log.prompt_sha ? ` &middot; prompt ${esc(log.prompt_sha)}` : ""}</span>
       </div>
-    </div>${stats}`;
+    </div>${stats}${clusterStrip}`;
 }
 
 async function startParse() {
@@ -1582,6 +1655,170 @@ function endParse(slug, runId, error) {
   renderRun(slug, runId);
 }
 
+/* ---------- step 3: grouping ----------
+   Separate from parsing on purpose. Re-tagging costs about four times what
+   re-grouping does, so keeping them apart means the clustering prompt can be
+   tuned against a parse you already paid for. Writes clusters.json, clusters.md
+   and cluster_log.json into the same parse-<ts>/ folder the tags came from. */
+let grouping = false;
+
+async function startGroup() {
+  if (grouping || parsing) return;
+  const { slug, runId } = runState;
+  const parseId = (runState.parses || [])[0];
+  if (!parseId) return;
+  $("r-err").hidden = true;
+
+  const path = runPath(`/parses/${encodeURIComponent(parseId)}/group`);
+
+  let info;
+  try {
+    info = await api(path + "-estimate");
+  } catch (e) {
+    $("r-err").textContent = e.message;
+    $("r-err").hidden = false;
+    return;
+  }
+
+  const est = info.estimate;
+  if (!est.to_group) {
+    $("r-err").textContent =
+      "This parse found no features, complaints or care instructions, so there is " +
+      "nothing to group. Parse again, or add more reviews first.";
+    $("r-err").hidden = false;
+    return;
+  }
+
+  const line = (n, text, tone) =>
+    `<div class="ln ${tone || ""}"><b>${esc(n)}</b><span>${text}</span></div>`;
+
+  let plan = `<div class="plan">` +
+    est.lists.map(l => line(l.unique_tags,
+      `${esc(l.title.toLowerCase())} <span class="d">&mdash; from
+       ${plural(l.occurrences, "mention", "mentions")}</span>`)).join("") +
+    (est.cost_known
+      ? line(`$${est.cost_usd.toFixed(3)}`, `estimated <span class="d">&mdash; the real figure is
+          written to cluster_log.json</span>`)
+      : line("?", `cost unknown <span class="d">&mdash; no pricing set for
+          ${esc(est.model)} in config.py</span>`, "warn"));
+
+  if (info.already_grouped) {
+    plan += `<div class="asins">Grouped before &mdash; this replaces
+      <code>clusters.json</code> for this parse.</div>`;
+  }
+  plan += `</div>`;
+
+  const ok = await confirmModal({
+    title: "Group this parse's tags?",
+    confirmLabel: "Group tags",
+    body: `<p class="sd">One call per list to <b>${esc(est.model)}</b> at
+             <b>${esc(est.reasoning)}</b> reasoning, sorting every tag into exactly one
+             semantic cluster with a title and a one-line description.</p>${plan}`,
+  });
+  if (!ok) return;
+
+  grouping = true;
+  $("group").disabled = true;
+
+  let job;
+  try {
+    job = await api(path, { method: "POST" });
+  } catch (err) {
+    $("r-err").textContent = err.message;
+    $("r-err").hidden = false;
+    grouping = false;
+    $("group").disabled = false;
+    return;
+  }
+
+  setParseProgress(0, `Starting — ${plural(job.to_group, "list", "lists")} to group`);
+  pollGroup(job.job_id, slug, runId);
+}
+
+async function pollGroup(jobId, slug, runId) {
+  let snap;
+  try {
+    snap = await api("/api/jobs/" + encodeURIComponent(jobId));
+  } catch (e) {
+    return endGroup(slug, runId, e.message);
+  }
+
+  setParseProgress(snap.pct, snap.total ? `${snap.label} (${snap.done}/${snap.total})`
+                                        : snap.label);
+
+  if (snap.state === "running") {
+    setTimeout(() => pollGroup(jobId, slug, runId), 700);
+    return;
+  }
+  if (snap.state === "error") {
+    return endGroup(slug, runId, snap.error || "The grouping failed.");
+  }
+
+  setParseProgress(100, "Done");
+  setTimeout(() => endGroup(slug, runId, null), 500);
+}
+
+function endGroup(slug, runId, error) {
+  grouping = false;
+  $("group").disabled = false;
+  $("r-prog").hidden = true;
+  $("r-progbar").style.width = "0%";
+  if (error) {
+    $("r-err").textContent = error;
+    $("r-err").hidden = false;
+    return;
+  }
+  renderRun(slug, runId);
+}
+
+/* ---------- settings ---------- */
+const SETTING_FIELDS = {
+  "s-tag-model": ["tag_model", "models"],
+  "s-tag-reasoning": ["tag_reasoning", "efforts"],
+  "s-group-model": ["group_model", "models"],
+  "s-group-reasoning": ["group_reasoning", "efforts"],
+};
+
+async function openSettings() {
+  $("serr").hidden = true;
+  $("sveil").hidden = false;
+
+  let data;
+  try {
+    data = await api("/api/settings");
+  } catch (e) {
+    $("serr").textContent = e.message;
+    $("serr").hidden = false;
+    return;
+  }
+
+  for (const [id, [key, listName]] of Object.entries(SETTING_FIELDS)) {
+    $(id).innerHTML = data.options[listName]
+      .map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
+    $(id).value = data.settings[key];
+  }
+  $("s-tag-model").focus();
+}
+
+async function saveSettings() {
+  const patch = {};
+  for (const [id, [key]] of Object.entries(SETTING_FIELDS)) patch[key] = $(id).value;
+
+  $("ssave").disabled = true;
+  try {
+    await api("/api/settings", { method: "PUT", body: JSON.stringify(patch) });
+    $("sveil").hidden = true;
+    // The parse and group confirm dialogs quote the model, so anything on screen
+    // showing the old one has to be redrawn.
+    if (runState.slug) renderParses();
+  } catch (e) {
+    $("serr").textContent = e.message;
+    $("serr").hidden = false;
+  } finally {
+    $("ssave").disabled = false;
+  }
+}
+
 /* ---------- new group modal ---------- */
 function openModal() {
   $("veil").hidden = false;
@@ -1633,9 +1870,17 @@ $("cyes").onclick = () => closeConfirm(true);
 $("cno").onclick = () => closeConfirm(false);
 $("cveil").addEventListener("click", e => { if (e.target === $("cveil")) closeConfirm(false); });
 
+$("opensettings").onclick = openSettings;
+$("scancel").onclick = () => { $("sveil").hidden = true; };
+$("ssave").onclick = saveSettings;
+$("sveil").addEventListener("click", e => {
+  if (e.target === $("sveil")) $("sveil").hidden = true;
+});
+
 document.addEventListener("keydown", e => {
   if (e.key !== "Escape") return;
   if (!$("cveil").hidden) closeConfirm(false);
+  else if (!$("sveil").hidden) $("sveil").hidden = true;
   else if (!$("veil").hidden) closeModal();
 });
 
