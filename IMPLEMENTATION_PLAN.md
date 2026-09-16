@@ -302,9 +302,45 @@ word order and merge boundaries rather than better extraction — so `low` stays
 
 **Verify:** open a parsed run → boxes sorted correctly → expand each subheading → hover shows the right ASIN → click shows the full review → counts on the box match the expanded lists.
 
+**Settled in Phase 5 (built 2026-09-16).** Sentence highlighting moved up from Phase 6
+to the centre of this phase, and the secondary search-terms / usage-keywords section
+moved out to a later one. What was decided and measured:
+
+- **Attribution is deterministic and lives in `pipeline/attribution.py`.** Each body is
+  split into sentence-like units (newlines, `.!?;`, bullet headers before a colon, and
+  the `out.The` no-space breaks reviews are full of). Words are Porter-stemmed with a
+  short irregular map (leaf/leaves, big/large, picture/photo). Every tag word is weighted
+  by rarity across the parse (log IDF over units), with the scaffolding the tagger
+  injects — completion nouns like *build*, *finish*, and normalised approval like *nice*,
+  *suitable* — at a quarter weight. The best unit wins when ≥40% of the tag's weight is
+  present **and** at least one matched word is distinctive (top 60% of rarity), or when
+  every tag word is present. Highlights are the matched words, merged when adjacent.
+- **Measured over 2,512 mentions across all seven parsed groups:** 92.0% confident
+  overall · listings 99.9% · reviews 89.0% · English text only 94.1% · complaints 85.4%,
+  with ≈97% of confident matches hand-verified as the right sentence. Of the 8% left,
+  28% are non-English reviews (the tagger translates; nothing lexical can reach them),
+  the rest are true paraphrases. Both show the whole body instead — a wrong sentence is
+  worse than none. `python -m pipeline.attribution <slug> <run>` prints this table for
+  one parse; run it before and after touching the word lists or thresholds.
+- **Results are a render-ready model** from `GET …/parses/<parse>/results`
+  (`pipeline/results.py`): clusters with tags split into listing and review chips,
+  every mention attributed, and the bodies and products they point at, keyed by id.
+  Computed on request (≈100 ms), nothing written to disk.
+- **UI decisions from scoping.** Clusters rank by mentions (occurrences), and the card
+  shows both mentions and distinct tags plus listings, reviews and "in N of M products".
+  One chip per distinct tag per source, with a `×N` count; hover shows the first source,
+  click pages through all. Collapsed cards preview the top three tags. A dotted chip
+  means no confident sentence: hover shows the first 200 characters, the panel the full
+  text unmarked. Results are their own view (`#/g/<slug>/r/<run>/p/<parse>`).
+- **Tagged-but-ungrouped parses are never rendered.** Only a grouped parse is a link on
+  the run and group views; the results URL for one that isn't shows an empty state with
+  a link back to the run, where Group tags already lives.
+
 ### Phase 6 — Deferred refinements (flagged, not built yet)
 
-- **Deterministic sentence highlighting.** In the source panel, bold the sentence a tag came from. Approach: split the body into sentences, score each against the tag by content-word overlap (stopword-stripped, stemmed), highlight the best match above a threshold, highlight nothing when confidence is low. Paraphrased tags will sometimes miss — that's expected and acceptable, and silence beats a wrong highlight.
+- **Search terms and usage keywords.** Flat frequency lists (spaces / placements /
+  occasions / used_for), each chip opening the same source panel. The data is in
+  `tagged.json` already; only the section is missing.
 - **Deeper grouping rules.** The four rules above are a starting point. Once you've seen real output, we tighten them — likely around component-vs-attribute boundaries and how aggressively near-synonyms merge.
 
 ---

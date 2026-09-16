@@ -242,11 +242,82 @@ tbody tr.r:hover .x,tbody tr.r .x:focus-visible{opacity:1}
 .plan .asins{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:8px;
   padding-top:8px;border-top:1px solid var(--rule);word-break:break-all}
 
+/* ---------- results: cluster cards ---------- */
+a.pill{text-decoration:none}
+a.pill:hover{text-decoration:underline}
+.ctl{display:flex;align-items:center;gap:8px}
+.ctl select{font-family:var(--sans);font-size:12.5px;padding:5px 8px;border:1px solid var(--rule);
+  background:var(--glaze);border-radius:3px;color:var(--ink)}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.cl{padding:0;display:flex;flex-direction:column}
+.cl .ch{padding:16px 18px 12px;cursor:pointer;display:flex;gap:10px;align-items:flex-start;user-select:none}
+.cl .ch:hover{background:#FBFCFD}
+.cl .num{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--muted);padding-top:4px;min-width:20px}
+.cl h3{font-family:var(--disp);font-weight:700;font-size:16px;letter-spacing:-.012em;margin:0 0 4px;line-height:1.25}
+.cl .desc{color:var(--muted);font-size:12.5px;line-height:1.45;margin:0 0 8px}
+.cl .cnt{font-family:var(--mono);font-size:10.5px;color:var(--muted);line-height:1.6}
+.cl .cnt b{color:var(--ink);font-weight:600}
+.cl .caret{margin-left:auto;padding-top:2px}
+.cl .cb{padding:0 18px 16px}
+.cl .cb h4{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  font-weight:500;margin:12px 0 7px}
+.bubs{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.bub{display:inline-flex;align-items:center;gap:6px;background:var(--cobalt-wash);color:var(--cobalt);border-radius:11px;
+  padding:3px 10px;font-family:var(--sans);font-size:12px;line-height:1.35;cursor:pointer;border:1px solid transparent;text-align:left}
+.bub:hover,.bub:focus-visible{border-color:var(--cobalt)}
+.bub i{font-style:normal;font-family:var(--mono);font-size:10px;opacity:.7}
+.bub.soft{text-decoration:underline dotted;text-underline-offset:3px}
+.bub.plain{cursor:default;background:var(--rule-soft);color:var(--muted)}
+.bub.plain:hover{border-color:transparent}
+mark{background:#F2D06B;color:var(--ink);padding:0 1px;border-radius:2px}
+
+/* ---------- results: hover card ---------- */
+#tip{position:fixed;pointer-events:none;z-index:80;background:var(--ink);color:#fff;padding:10px 12px;border-radius:3px;
+  font-family:var(--sans);font-size:12px;line-height:1.5;opacity:0;transition:opacity .1s;max-width:min(420px,calc(100vw - 24px));
+  box-shadow:0 4px 14px rgba(19,26,42,.22)}
+#tip.on{opacity:1}
+#tip .tt{font-family:var(--mono);color:#9FB8E8;letter-spacing:.06em;text-transform:uppercase;font-size:9.5px}
+#tip .tr{font-size:12px;font-weight:600;margin:2px 0 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#tip .th{display:flex;gap:10px;margin-bottom:8px}
+#tip .th img,#tip .th .noimg{width:56px;height:56px;flex:0 0 auto;object-fit:contain;background:#fff;border-radius:3px}
+.noimg{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center}
+#tip .sent{color:#E6E9F0}
+#tip .foot{font-family:var(--mono);font-size:9.5px;color:#9FB8E8;margin-top:7px}
+
+/* ---------- results: source panel ---------- */
+.pveil{position:fixed;inset:0;background:rgba(19,26,42,.22);z-index:84}
+#panel{position:fixed;top:0;right:0;height:100%;width:min(560px,100%);background:var(--glaze);border-left:1px solid var(--rule);
+  z-index:85;overflow:auto;padding:22px 24px 40px;transform:translateX(100%);transition:transform .16s ease}
+#panel.on{transform:none}
+.ph{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px}
+.ph .eyebrow{margin:0 0 4px}
+.ph h3{font-family:var(--disp);font-weight:700;font-size:20px;margin:0;letter-spacing:-.015em;line-height:1.2}
+.ph .x{margin-left:auto;font-size:18px;flex:0 0 auto}
+.pager{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-bottom:14px}
+.pager button{font-family:var(--mono);font-size:12px;padding:2px 9px;border:1px solid var(--rule);background:var(--glaze);
+  color:var(--ink);cursor:pointer;border-radius:3px}
+.pager button:hover:not(:disabled){border-color:var(--cobalt);color:var(--cobalt)}
+.pager button:disabled{opacity:.35;cursor:not-allowed}
+.psrc{display:flex;gap:14px;padding:14px;border:1px solid var(--rule);background:var(--porcelain);margin-bottom:14px}
+.psrc img,.psrc .noimg{width:96px;height:96px;flex:0 0 auto;object-fit:contain;background:var(--glaze);border:1px solid var(--rule-soft);border-radius:3px}
+.psrc .meta{min-width:0;flex:1 1 auto}
+.psrc .ttl{font-weight:600;font-size:13px;line-height:1.36;margin:0 0 5px}
+.psrc .ids{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px}
+.psrc .ids a{color:var(--cobalt);text-decoration:none}
+.psrc .ids a:hover{text-decoration:underline}
+.psrc .facts{display:flex;gap:6px;flex-wrap:wrap}
+.ptext{font-size:13px;line-height:1.65;white-space:pre-wrap;color:#2A3240;overflow-wrap:anywhere}
+.ptext .hit{background:var(--amber-wash);box-shadow:0 0 0 3px var(--amber-wash);border-radius:2px}
+.pother h4{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  font-weight:500;margin:20px 0 8px}
+
 @media (max-width:640px){
   .wrap{padding:0 14px 70px}
   .masthead{padding-top:30px}
-  .pgrid{grid-template-columns:1fr}
+  .pgrid,.cgrid{grid-template-columns:1fr}
+  #panel{padding:18px 16px 40px}
 }
+@media (prefers-reduced-motion:reduce){#panel{transition:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -362,6 +433,7 @@ tbody tr.r:hover .x,tbody tr.r .x:focus-visible{opacity:1}
     </div>
     <button class="btn ghost" id="r-reload">Reload</button>
     <button class="btn ghost" id="group" hidden>Group tags</button>
+    <button class="btn" id="results" hidden>View results</button>
     <button class="btn" id="parse">Parse results</button>
   </div>
 
@@ -384,7 +456,34 @@ tbody tr.r:hover .x,tbody tr.r .x:focus-visible{opacity:1}
   </section>
 </div>
 
+<!-- ==================== RESULTS VIEW ==================== -->
+<div id="view-results" hidden>
+  <div class="drop">
+    <span class="dt">Results</span>
+    <span class="df" id="res-id"></span>
+    <div class="ctl" id="res-sel-wrap" hidden>
+      <label class="dt" for="res-sel">Parse</label>
+      <select id="res-sel"></select>
+    </div>
+    <div class="spacer"></div>
+    <span class="hint" id="res-model"></span>
+    <a class="btn ghost" id="res-back" href="#/">Back to run</a>
+  </div>
+
+  <div class="sumstrip" id="res-sum" hidden></div>
+  <p class="lede" id="res-lede" hidden>Clusters are ranked by mentions. Open a cluster to see every tag,
+     listings and reviews apart. <b>Hover</b> a tag for the sentence it came from;
+     <b>click</b> it for the full source. A dotted tag is one where no single sentence
+     could be pinned down, so you get the whole text instead.</p>
+  <div id="res-body"></div>
+</div>
+
 </div><!-- /wrap -->
+
+<!-- ==================== HOVER CARD + SOURCE PANEL ==================== -->
+<div id="tip" aria-hidden="true"></div>
+<div class="pveil" id="pveil" hidden></div>
+<aside id="panel" hidden aria-label="Tag source"></aside>
 
 <!-- ==================== NEW GROUP MODAL ==================== -->
 <div class="veil" id="veil" hidden>
@@ -598,6 +697,9 @@ function editable(el, { value, multiline, placeholder, onSave, onCancel }) {
 function route() {
   showError("");
   const hash = location.hash || "#/";
+  const res = hash.match(/^#\/g\/([^/]+)\/r\/([^/]+)\/p\/([^/]+)$/);
+  if (res) return renderResults(decodeURIComponent(res[1]), decodeURIComponent(res[2]),
+                                decodeURIComponent(res[3]));
   const run = hash.match(/^#\/g\/([^/]+)\/r\/([^/]+)$/);
   if (run) return renderRun(decodeURIComponent(run[1]), decodeURIComponent(run[2]));
   const grp = hash.match(/^#\/g\/([^/]+)$/);
@@ -625,6 +727,26 @@ function showView(which) {
   $("view-groups").hidden = which !== "groups";
   $("view-group").hidden = which !== "group";
   $("view-run").hidden = which !== "run";
+  $("view-results").hidden = which !== "results";
+  // The hover card and source panel belong to the results view only.
+  tipOff();
+  closePanel();
+}
+
+function resultsHref(slug, runId, parseId) {
+  return `#/g/${encodeURIComponent(slug)}/r/${encodeURIComponent(runId)}` +
+         `/p/${encodeURIComponent(parseId)}`;
+}
+
+/* A parse pill: a link when the parse has been grouped, a plain marker otherwise.
+   Tags alone are an intermediate step, so only a grouped parse opens anywhere. */
+function parsePill(slug, runId, p, newest) {
+  if (p.grouped) {
+    return `<a class="pill ok" href="${resultsHref(slug, runId, p.id)}"
+              title="Open results">${esc(p.id)}</a>`;
+  }
+  return `<span class="pill ${newest ? "warn" : "na"}" title="Tagged but not grouped yet">${
+    esc(p.id)} &middot; not grouped</span>`;
 }
 
 /* ---------- groups view ---------- */
@@ -736,13 +858,14 @@ async function renderGroup(slug) {
             <td>${r.asins_ok != null ? esc(r.asins_ok + " / " + r.asins_total) : "—"}</td>
             <td>${r.reviews_total != null ? esc(r.reviews_total) : "—"}</td>
             <td class="l">${r.parses && r.parses.length
-                ? r.parses.map(p => `<span class="pill ok">${esc(p)}</span>`).join(" ")
+                ? r.parses.map((p, i) => parsePill(slug, r.run_id, p, i === 0)).join(" ")
                 : `<span class="pill na">not parsed</span>`}</td>
             <td class="act"><button class="x" title="Delete this run">&times;</button></td>
           </tr>`).join("") + `</tbody></table></div>`;
 
     $("runs-wrap").querySelectorAll("tr.r").forEach(tr => {
-      tr.onclick = () => {
+      tr.onclick = event => {
+        if (event.target.closest("a")) return;   // a parse pill goes to its results
         location.hash = `#/g/${encodeURIComponent(slug)}/r/${encodeURIComponent(tr.dataset.run)}`;
       };
       tr.querySelector(".x").onclick = event => {
@@ -1460,6 +1583,10 @@ async function renderRun(slug, runId) {
   $("r-reload").onclick = () => renderRun(slug, runId);
   $("parse").onclick = startParse;
   $("group").onclick = startGroup;
+  $("results").onclick = () => {
+    const newest = (runState.parses || [])[0];
+    if (newest && newest.grouped) location.hash = resultsHref(slug, runId, newest.id);
+  };
 }
 
 /* ---------- step 2: tagging ----------
@@ -1471,6 +1598,7 @@ let parsing = false;
 async function renderParses() {
   const list = runState.parses || [];
   $("group").hidden = !list.length;
+  $("results").hidden = !(list[0] && list[0].grouped);
   if (!list.length) {
     $("r-parses").innerHTML = "";
     return;
@@ -1480,13 +1608,12 @@ async function renderParses() {
   // describes, and each fetch reads a file off disk.
   let log = {}, clusterLog = {};
   try {
-    const result = await api(runPath(`/parses/${encodeURIComponent(list[0])}`));
+    const result = await api(runPath(`/parses/${encodeURIComponent(list[0].id)}`));
     log = result.log || {};
     clusterLog = result.cluster_log || {};
   } catch (e) { /* a half-written parse folder: show the pills, skip the stats */ }
 
-  const pills = list.map((p, i) =>
-    `<span class="pill ${i === 0 ? "ok" : "na"}">${esc(p)}</span>`).join(" ");
+  const pills = list.map((p, i) => parsePill(runState.slug, runState.runId, p, i === 0)).join(" ");
 
   const stats = log.bodies_total ? `
     <div class="sumstrip" style="margin-top:10px">
@@ -1665,7 +1792,7 @@ let grouping = false;
 async function startGroup() {
   if (grouping || parsing) return;
   const { slug, runId } = runState;
-  const parseId = (runState.parses || [])[0];
+  const parseId = ((runState.parses || [])[0] || {}).id;
   if (!parseId) return;
   $("r-err").hidden = true;
 
@@ -1770,6 +1897,404 @@ function endGroup(slug, runId, error) {
   }
   renderRun(slug, runId);
 }
+
+/* ---------- step 4: results ----------
+   One request returns everything the view needs — clusters with their tags split
+   by source, every mention already attributed to a sentence, and the bodies and
+   products they point at, keyed by id. Hover and click never touch the network. */
+let resultsState = null;
+
+async function renderResults(slug, runId, parseId) {
+  showView("results");
+  currentSlug = slug;
+  resultsState = null;
+
+  const runHref = `#/g/${encodeURIComponent(slug)}/r/${encodeURIComponent(runId)}`;
+  $("res-id").textContent = `data/${slug}/${runId}/${parseId}`;
+  $("res-back").setAttribute("href", runHref);
+  $("res-sum").hidden = true;
+  $("res-lede").hidden = true;
+  $("res-sel-wrap").hidden = true;
+  $("res-model").textContent = "";
+  $("res-body").innerHTML = "";
+
+  // The run answers two things before results are fetched: what the group is
+  // called, and whether this parse has been grouped at all.
+  let runData;
+  try {
+    runData = await api(`/api/runs/${encodeURIComponent(slug)}/${encodeURIComponent(runId)}`);
+  } catch (e) {
+    setHeader({ eyebrow: "Results", title: "Not found", back: true, backHref: runHref });
+    showError(e.message);
+    return;
+  }
+  const groupName = runData.group.name;
+  setHeader({ eyebrow: `${groupName} · results`, title: esc(groupName),
+              back: true, backHref: runHref });
+
+  const parses = runData.parses || [];
+  const grouped = parses.filter(p => p.grouped);
+  if (grouped.length > 1) {
+    $("res-sel-wrap").hidden = false;
+    $("res-sel").innerHTML = grouped.map(p =>
+      `<option value="${esc(p.id)}">${esc(p.id)}</option>`).join("");
+    $("res-sel").value = parseId;
+    $("res-sel").onchange = () => { location.hash = resultsHref(slug, runId, $("res-sel").value); };
+  }
+
+  const here = parses.find(p => p.id === parseId);
+  if (!here || !here.grouped) {
+    $("res-body").innerHTML = `
+      <div class="blank">
+        <h3>${here ? "This parse hasn't been grouped yet" : "That parse doesn't exist"}</h3>
+        <p>${here
+          ? "Tags on their own are only half the picture. Group them into clusters first, then come back here."
+          : "It may have been deleted, or the address is wrong."}</p>
+        <a class="btn" href="${runHref}">${here ? "Back to the run to group tags" : "Back to the run"}</a>
+      </div>`;
+    return;
+  }
+
+  let data;
+  try {
+    data = await api(`/api/runs/${encodeURIComponent(slug)}/${encodeURIComponent(runId)}` +
+                     `/parses/${encodeURIComponent(parseId)}/results`);
+  } catch (e) { showError(e.message); return; }
+
+  // Every tag in a body is an occurrence somewhere; this lets the panel's
+  // "other tags from this source" chips behave exactly like cluster chips.
+  const byBodyTag = new Map();
+  for (const [ref, o] of Object.entries(data.occurrences)) {
+    const key = o.body_id + " " + o.text;
+    if (!byBodyTag.has(key)) byBodyTag.set(key, ref);
+  }
+
+  let expanded = [];
+  try { expanded = JSON.parse(localStorage.getItem(`results:${slug}:${parseId}`) || "[]"); }
+  catch (e) { expanded = []; }
+
+  resultsState = { slug, runId, parseId, data, byBodyTag, expanded: new Set(expanded) };
+  $("res-model").textContent = [data.model, data.reasoning].filter(Boolean).join(" · ");
+  renderResultsBody();
+}
+
+function renderResultsBody() {
+  const d = resultsState.data;
+  const pct = d.mentions ? Math.round(100 * d.attributed / d.mentions) : 0;
+
+  $("res-sum").hidden = false;
+  $("res-sum").innerHTML =
+    d.sections.map(s => stat(s.title, s.clusters.length,
+      s.status === "failed" ? "failed" : plural(s.mentions, "mention", "mentions"),
+      s.status === "failed" ? "bad" : "")).join("") +
+    stat("Traced to a sentence", `${pct}%`, `${d.attributed} of ${d.mentions} mentions`,
+         pct >= 90 ? "good" : "warn") +
+    stat("Products", d.products_total, "in this run");
+  $("res-lede").hidden = false;
+
+  $("res-body").innerHTML = d.sections.map(sectionHtml).join("");
+}
+
+function sectionHtml(s) {
+  const head = `<div class="shead"><h2>${esc(s.title)}</h2>
+    <span class="note">${plural(s.clusters.length, "cluster", "clusters")} &middot; ${
+      plural(s.mentions, "mention", "mentions")}</span></div>`;
+  if (s.status === "failed") {
+    return `<section>${head}<div class="note-line"><span class="ic">Failed</span>
+      <span>${esc(s.error || "This list could not be grouped.")}</span></div></section>`;
+  }
+  if (!s.clusters.length) {
+    return `<section>${head}<div class="blank"><h3>Nothing here</h3>
+      <p>No ${esc(s.title.toLowerCase())} tags came out of this parse.</p></div></section>`;
+  }
+  return `<section>${head}<div class="cgrid">${
+    s.clusters.map(c => clusterHtml(s, c)).join("")}</div></section>`;
+}
+
+function clusterHtml(s, c) {
+  const key = `${s.key}:${c.cluster_id}`;
+  const open = resultsState.expanded.has(key);
+  const total = resultsState.data.products_total;
+
+  const counts =
+    `<b>${plural(c.total_tags, "mention", "mentions")}</b> &middot; ` +
+    `${plural(c.distinct_tags, "distinct tag", "distinct tags")} &middot; ` +
+    `${plural(c.unique_listings, "listing", "listings")} &middot; ` +
+    `${plural(c.unique_reviews, "review", "reviews")} &middot; ` +
+    `in ${c.unique_asins} of ${total} ${total === 1 ? "product" : "products"}`;
+
+  let body;
+  if (open) {
+    body =
+      (c.listing_tags.length
+        ? `<h4>From listings (${c.listing_tags.length})</h4>
+           <div class="bubs">${c.listing_tags.map(t => chipHtml(t, c.title)).join("")}</div>` : "") +
+      (c.review_tags.length
+        ? `<h4>From reviews (${c.review_tags.length})</h4>
+           <div class="bubs">${c.review_tags.map(t => chipHtml(t, c.title)).join("")}</div>` : "");
+  } else {
+    const more = c.distinct_tags - c.preview.length;
+    body = `<div class="bubs">${c.preview.map(t => chipHtml(t, c.title)).join("")}${
+      more > 0 ? `<button class="lnk more">+${more} more</button>` : ""}</div>`;
+  }
+
+  return `
+  <div class="card cl" data-k="${esc(key)}">
+    <div class="ch" role="button" aria-expanded="${open}">
+      <span class="num">${esc(String(c.number).padStart(2, "0"))}</span>
+      <div style="min-width:0;flex:1 1 auto">
+        <h3>${esc(c.title)}</h3>
+        ${c.description ? `<p class="desc">${esc(c.description)}</p>` : ""}
+        <div class="cnt">${counts}</div>
+      </div>
+      <span class="caret">${open ? "&#9662;" : "&#9656;"}</span>
+    </div>
+    <div class="cb">${body}</div>
+  </div>`;
+}
+
+/* A chip carries the ids of every mention it stands for. Dotted means the first
+   one has no confident sentence — you get the whole text instead of a guess. */
+function chipHtml(t, clusterTitle) {
+  const first = resultsState.data.occurrences[t.occ_ids[0]];
+  const soft = !(first && first.match.confident);
+  return `<button class="bub${soft ? " soft" : ""}" data-occs="${esc(t.occ_ids.join(" "))}"
+            data-cluster="${esc(clusterTitle)}">${esc(t.display)}${
+            t.count > 1 ? `<i>&times;${t.count}</i>` : ""}</button>`;
+}
+
+function toggleCluster(key) {
+  const set = resultsState.expanded;
+  if (set.has(key)) set.delete(key); else set.add(key);
+  try {
+    localStorage.setItem(`results:${resultsState.slug}:${resultsState.parseId}`,
+                         JSON.stringify([...set]));
+  } catch (e) { /* preference only */ }
+  renderResultsBody();
+}
+
+$("res-body").addEventListener("click", e => {
+  const more = e.target.closest(".more");
+  const head = e.target.closest(".ch");
+  const card = e.target.closest(".cl");
+  if (!card) return;
+  if (more || head) toggleCluster(card.dataset.k);
+});
+
+/* ---------- highlighting ----------
+   Spans are character offsets into the body text, straight from the server.
+   Text is escaped segment by segment, so a review containing "<b>" can never
+   become markup. */
+function markRange(text, a, b, spans) {
+  let out = "", pos = a;
+  for (const [s, e] of spans) {
+    if (s < pos || e > b) continue;
+    out += esc(text.slice(pos, s)) + `<mark>${esc(text.slice(s, e))}</mark>`;
+    pos = e;
+  }
+  return out + esc(text.slice(pos, b));
+}
+
+function markedSentence(text, m) {
+  return markRange(text, m.unit[0], m.unit[1], m.spans);
+}
+
+function markedBody(text, m) {
+  if (!m.confident) return esc(text);
+  const [a, b] = m.unit;
+  return esc(text.slice(0, a)) +
+    `<span class="hit">${markRange(text, a, b, m.spans)}</span>` +
+    esc(text.slice(b));
+}
+
+function thumbHtml(src, cls) {
+  return src
+    ? `<img class="${cls || ""}" src="${esc(src)}" alt="" loading="lazy"
+         onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'noimg ${cls || ""}',textContent:'no image'}))">`
+    : `<div class="noimg ${cls || ""}">no image</div>`;
+}
+
+function sourceLabel(o, b) {
+  if (o.body_type !== "review") return "listing";
+  const r = b.review;
+  return "review" + (r && r.rating != null ? ` · ${stars(r.rating)}` : "") +
+         (r && r.date ? ` · ${r.date}` : "");
+}
+
+/* ---------- hover card ---------- */
+function tipHtml(occs) {
+  const d = resultsState.data;
+  const o = d.occurrences[occs[0]];
+  if (!o) return "";
+  const b = d.bodies[o.body_id];
+  const p = d.products[o.asin] || {};
+  const m = o.match;
+
+  const sentence = m.confident
+    ? markedSentence(b.text, m)
+    : esc(b.text.replace(/\s+/g, " ").slice(0, 200)) + (b.text.length > 200 ? "&hellip;" : "");
+
+  return `
+    <div class="th">${thumbHtml(p.main_image)}
+      <div style="min-width:0">
+        <div class="tt">${esc(o.asin)} &middot; ${esc(sourceLabel(o, b))}</div>
+        <div class="tr">${esc(p.title || "(no title)")}</div>
+      </div>
+    </div>
+    <div class="sent">${sentence}</div>
+    ${m.confident ? "" : `<div class="foot">No exact sentence found &mdash; click for the full text</div>`}
+    ${occs.length > 1 ? `<div class="foot">1 of ${occs.length} sources &middot; click to see all</div>` : ""}`;
+}
+
+function tipShow(ev, html) {
+  const t = $("tip");
+  t.innerHTML = html;
+  t.classList.add("on");
+  tipMove(ev);
+}
+
+function tipMove(ev) {
+  const t = $("tip");
+  const r = t.getBoundingClientRect();
+  let x = ev.clientX + 14, y = ev.clientY - r.height - 12;
+  if (x + r.width > innerWidth - 8) x = Math.max(8, ev.clientX - r.width - 14);
+  if (y < 8) y = ev.clientY + 18;
+  if (y + r.height > innerHeight - 8) y = Math.max(8, innerHeight - r.height - 8);
+  t.style.left = x + "px";
+  t.style.top = y + "px";
+}
+
+function tipOff() {
+  const t = $("tip");
+  if (t) t.classList.remove("on");
+}
+
+/* Chips live in cluster cards and in the panel, so the wiring is document-wide. */
+document.addEventListener("mouseover", e => {
+  const bub = e.target.closest(".bub[data-occs]");
+  if (!bub || !resultsState) return;
+  tipShow(e, tipHtml(bub.dataset.occs.split(" ")));
+});
+document.addEventListener("mousemove", e => {
+  if (!$("tip").classList.contains("on")) return;
+  if (!e.target.closest(".bub[data-occs]")) { tipOff(); return; }
+  tipMove(e);
+});
+document.addEventListener("mouseout", e => {
+  if (e.target.closest && e.target.closest(".bub[data-occs]") &&
+      !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest(".bub[data-occs]"))) {
+    tipOff();
+  }
+});
+document.addEventListener("click", e => {
+  const bub = e.target.closest(".bub[data-occs]");
+  if (!bub || !resultsState) return;
+  e.stopPropagation();
+  openPanel(bub.dataset.occs.split(" "), bub.dataset.cluster || "");
+});
+
+/* ---------- source panel ---------- */
+let panelState = null;
+
+function openPanel(occs, clusterTitle) {
+  panelState = { occs, at: 0, cluster: clusterTitle };
+  tipOff();
+  $("pveil").hidden = false;
+  $("panel").hidden = false;
+  renderPanel();
+  requestAnimationFrame(() => $("panel").classList.add("on"));
+}
+
+function closePanel() {
+  const panel = $("panel");
+  if (!panel || panel.hidden) return;
+  panel.classList.remove("on");
+  panel.hidden = true;
+  $("pveil").hidden = true;
+  panelState = null;
+}
+
+function renderPanel() {
+  const { occs, at, cluster } = panelState;
+  const d = resultsState.data;
+  const o = d.occurrences[occs[at]];
+  const b = d.bodies[o.body_id];
+  const p = d.products[o.asin] || {};
+  const m = o.match;
+  const link = p.link;
+
+  const facts = [];
+  if (p.price) facts.push(`<span class="pill na">${esc(p.price)}</span>`);
+  if (p.rating) facts.push(`<span class="pill ok">${esc(p.rating)}&#9733; &middot; ${
+    esc((p.ratings_total || 0).toLocaleString())}</span>`);
+  if (p.brand) facts.push(`<span class="pill na">${esc(p.brand)}</span>`);
+  if (p.deleted) facts.push(`<span class="pill warn">removed from run</span>`);
+
+  const review = o.body_type === "review" ? (b.review
+    ? `<div class="rv" style="border:0;padding:0;margin:0 0 10px">
+         <div class="rh">
+           <span class="stars">${esc(stars(b.review.rating))}</span>
+           <span class="rt">${esc(b.review.title || "(untitled)")}</span>
+           <span class="rd">${esc(b.review.date || "")}${b.review.verified_purchase ? " &middot; verified" : ""}${
+             b.review.source === "manual" ? " &middot; pasted" : ""}</span>
+         </div>
+       </div>`
+    : `<div class="note-line info" style="margin-bottom:10px"><span class="ic">Note</span>
+         <span>This review was removed from the run after it was tagged; its text is still here.</span></div>`)
+    : "";
+
+  const others = [];
+  for (const [key, label] of [["features", "Features"], ["complaints", "Complaints"],
+                              ["assembly_maintenance", "Assembly &amp; care"]]) {
+    const tags = (b.tags[key] || []).filter(t => t !== o.text);
+    if (!tags.length) continue;
+    others.push(`<h4>${label} from this source (${tags.length})</h4><div class="bubs">${
+      tags.map(t => {
+        const ref = resultsState.byBodyTag.get(o.body_id + " " + t);
+        if (!ref) return `<span class="bub plain">${esc(t)}</span>`;
+        const soft = !d.occurrences[ref].match.confident;
+        return `<button class="bub${soft ? " soft" : ""}" data-occs="${esc(ref)}"
+                  data-cluster="">${esc(t)}</button>`;
+      }).join("")}</div>`);
+  }
+
+  $("panel").innerHTML = `
+    <div class="ph">
+      <div style="min-width:0">
+        ${cluster ? `<p class="eyebrow">${esc(cluster)}</p>` : ""}
+        <h3>${esc(o.text)}</h3>
+      </div>
+      <button class="x" id="pclose" title="Close (Esc)">&times;</button>
+    </div>
+    ${occs.length > 1 ? `
+      <div class="pager">
+        <button id="pprev" ${at === 0 ? "disabled" : ""}>&lsaquo;</button>
+        <span>Source ${at + 1} of ${occs.length}</span>
+        <button id="pnext" ${at === occs.length - 1 ? "disabled" : ""}>&rsaquo;</button>
+      </div>` : ""}
+    <div class="psrc">
+      ${thumbHtml(p.main_image)}
+      <div class="meta">
+        <p class="ttl">${esc(p.title || "(no title returned)")}</p>
+        <div class="ids">${link
+          ? `<a href="${esc(link)}" target="_blank" rel="noopener">${esc(o.asin)}</a>`
+          : esc(o.asin)} &middot; ${esc(o.body_type)}</div>
+        <div class="facts">${facts.join("")}</div>
+      </div>
+    </div>
+    ${review}
+    ${m.confident ? "" : `<div class="note-line info" style="margin-bottom:10px"><span class="ic">Note</span>
+      <span>No single sentence could be pinned down for this tag, so here is the whole text.</span></div>`}
+    <div class="ptext">${markedBody(b.text, m)}</div>
+    <div class="pother">${others.join("")}</div>`;
+
+  $("pclose").onclick = closePanel;
+  const prev = $("pprev"), next = $("pnext");
+  if (prev) prev.onclick = () => { panelState.at -= 1; renderPanel(); $("panel").scrollTop = 0; };
+  if (next) next.onclick = () => { panelState.at += 1; renderPanel(); $("panel").scrollTop = 0; };
+}
+
+$("pveil").addEventListener("click", closePanel);
 
 /* ---------- settings ---------- */
 const SETTING_FIELDS = {
@@ -1882,6 +2407,7 @@ document.addEventListener("keydown", e => {
   if (!$("cveil").hidden) closeConfirm(false);
   else if (!$("sveil").hidden) $("sveil").hidden = true;
   else if (!$("veil").hidden) closeModal();
+  else if (!$("panel").hidden) closePanel();
 });
 
 window.addEventListener("hashchange", route);

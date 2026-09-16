@@ -14,8 +14,8 @@ import webbrowser
 from flask import Flask, jsonify, request, send_from_directory
 
 import config
-from pipeline import (asins, compact, extract, grouping, jobs, normalize, settings,
-                      storage, tagging)
+from pipeline import (asins, compact, extract, grouping, jobs, normalize, results,
+                      settings, storage, tagging)
 
 app = Flask(__name__, static_folder="static", static_url_path="/static")
 
@@ -256,6 +256,18 @@ def api_parse_result(slug: str, run_id: str, parse_id: str):
         "clusters": storage.read_json(directory / "clusters.json"),
         "cluster_log": storage.read_json(directory / "cluster_log.json", {}) or {},
     })
+
+
+# ---------------------------------------------------------------------------
+# Step 4 — results
+# ---------------------------------------------------------------------------
+
+@app.get("/api/runs/<slug>/<run_id>/parses/<parse_id>/results")
+def api_results(slug: str, run_id: str, parse_id: str):
+    """Clusters with their tags split by source, every tag attributed to a sentence,
+    and the bodies and products they point at. Only a grouped parse has results;
+    an ungrouped one gets a plain 400 the UI shows as an empty state."""
+    return jsonify(results.build(slug, run_id, parse_id))
 
 
 # ---------------------------------------------------------------------------
