@@ -32,9 +32,15 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import config
-from pipeline import grouping, storage, tagging
+from pipeline import grouping, settings, storage, tagging
 
 PROMPT_PATH = Path(__file__).parent / "prompts" / "group_themes.md"
+
+# Theme grouping always runs at this effort. Measured 2026-09-17: at `medium` the
+# same prompt grouped olive trees differently on every run (6 to 22 cluster pairs
+# placed unlike the hand-made example); `high` was consistent. Deliberately not a
+# setting, so the Settings "Grouping reasoning" dropdown only governs tag clustering.
+REASONING = "high"
 
 # Everything the theme step writes into a parse folder. run_grouping removes all of
 # them before it writes new clusters.
@@ -69,6 +75,12 @@ class ThemeError(Exception):
 # ---------------------------------------------------------------------------
 # Prompt, eligibility, fingerprint, files
 # ---------------------------------------------------------------------------
+
+def theme_choice() -> dict:
+    """Model and effort for one theme run: the Settings grouping model, pinned to
+    REASONING. Mirrors grouping.group_choice() except for the effort."""
+    return {"model": settings.resolve("group_model"), "reasoning": REASONING}
+
 
 def load_prompt() -> tuple[str, str]:
     """The instruction text and a hash of it, for themes_log.json."""
@@ -279,7 +291,7 @@ def estimate(clusters_doc: dict, prompt: str | None = None) -> dict:
     if prompt is None:
         prompt, _ = load_prompt()
 
-    choice = grouping.group_choice()
+    choice = theme_choice()
     prompt_tokens = len(prompt) // 4
     lists, skipped, input_tokens, output_tokens = [], [], 0, 0
 
@@ -330,7 +342,7 @@ def run_themes(job, slug: str, run_id: str, parse_id: str,
     """
     started = time.perf_counter()
     prompt, prompt_sha = load_prompt()
-    choice = grouping.group_choice()
+    choice = theme_choice()
 
     if clusters_doc is None:
         clusters_doc = load_clusters(slug, run_id, parse_id)

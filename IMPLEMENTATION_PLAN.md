@@ -341,11 +341,15 @@ moved out to a later one. What was decided and measured:
 One more level above clusters. A **theme** is a set of related clusters with a title and a
 one-sentence summary; a **cluster** is unchanged. "Group" is never used for either, since it
 already means a competitor category and the clustering step. Rules come from the
-`review-cluster-grouping` skill (`pipeline/prompts/group_themes.md` restates its core rules,
-with no theme-count target and nothing quoted from `group-clustering-examples/`).
+`review-cluster-grouping` skill (`pipeline/prompts/group_themes.md` restates its core rules
+with no theme-count target, adds a benefit-led title rule for the features list, and carries a
+handful of good/bad anchor examples drawn from `group-clustering-examples/`, revised 2026-09-17).
 
 - **Machinery mirrors clustering** (`pipeline/themes.py`): one structured-output call per
-  list on the grouping model, index-based membership so the model never rewrites a cluster,
+  list on the grouping model at a fixed `high` reasoning effort (`themes.REASONING`, not a
+  setting: measured 2026-09-17, `medium` grouped the same clusters differently on every run
+  while `high` was consistent; the Settings dropdown governs tag clustering only),
+  index-based membership so the model never rewrites a cluster,
   validation that every cluster lands in exactly one theme, orphans repaired into one-cluster
   themes and logged, prior theme titles reused across runs. `grouping._call`,
   `call_with_retries` and `prior_titles` were parametrised so both steps share them.

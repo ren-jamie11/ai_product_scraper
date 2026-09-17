@@ -155,9 +155,12 @@ AUTO_THEMES = os.getenv("AUTO_THEMES", "1") not in ("0", "false", "False")
 # Twelve or fewer clusters read fine as a flat grid, so they are left alone.
 THEME_MIN_CLUSTERS = int(os.getenv("THEME_MIN_CLUSTERS", "13"))
 
-# A ceiling for one theme call. A 57-cluster list returns ~9 themes with titles,
-# summaries and indices in well under 1,000 tokens.
-THEME_MAX_OUTPUT_TOKENS = int(os.getenv("THEME_MAX_OUTPUT_TOKENS", "4000"))
+# A ceiling for one theme call. The visible answer (~9 themes with titles, summaries
+# and indices) is well under 1,000 tokens, but the model's reasoning tokens count
+# against this limit too. Measured 2026-09-17 on a 35-cluster list: ~2,500-3,500
+# output tokens at `medium`, and `high` overran a 4,000 ceiling. 12,000 leaves room
+# for `high` without letting a runaway response bill forever.
+THEME_MAX_OUTPUT_TOKENS = int(os.getenv("THEME_MAX_OUTPUT_TOKENS", "12000"))
 
 # Rough output tokens per list, for the pre-theming cost estimate.
 THEME_EST_OUTPUT_TOKENS = int(os.getenv("THEME_EST_OUTPUT_TOKENS", "900"))

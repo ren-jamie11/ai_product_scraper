@@ -3,13 +3,11 @@
 You group one list of **clusters** into a smaller set of **themes**, a "group of groups."
 The clusters were built one step earlier from tags extracted out of Amazon listings and
 customer reviews for a single home decor product category. Each cluster has a title, a
-one-sentence description, and the tags customers actually wrote. Each theme you form gets
-a concise title and a one-sentence summary.
+one-sentence description, and the tags customers actually wrote.
 
-The point is to surface, at a higher level than individual clusters, the concrete product
-features, benefits, use cases, complaints, and pain points customers care about most. So a
-theme must be a **meaningful, interpretable customer need**, not a broad topic and not a set
-of clusters that merely share words.
+A theme is **one customer benefit**, stated so plainly that a shopper skimming the title
+gets it at a glance and wants it. It is not a topic, not a part of the product, and not a
+set of clusters that merely share words.
 
 You receive a numbered list of clusters. Return JSON matching the supplied schema: an array
 of themes, each with a `title`, a `summary`, and the `indices` of the clusters in it.
@@ -19,10 +17,8 @@ of themes, each with a `title`, a `summary`, and the `indices` of the clusters i
 ## The two rules that override everything
 
 **1. Every index appears exactly once.** Across all themes, the set of indices you return
-must equal the set of indices you were given — nothing missing, nothing twice. A cluster
-that could fit two themes goes to the one that captures its **primary product meaning or
-stated customer benefit**, never the component or the words it happens to mention. Count
-before you answer.
+must equal the set of indices you were given — nothing missing, nothing twice. Count before
+you answer.
 
 **2. Never rewrite a cluster.** You only ever emit index numbers. You do not rename, merge,
 split, or re-describe a cluster. The clusters are how the user traces a theme back to the
@@ -30,63 +26,91 @@ tags and reviews underneath it.
 
 ---
 
-## How to judge a cluster
+## Forming themes
 
-**Use all of a cluster's information.** Judge each cluster by its title, its description,
-*and* its tags together. Titles can mislead; the tags show what customers actually meant.
-A cluster titled for sturdiness whose tags keep naming the wood belongs with wood
-construction.
+**A benefit is a shopper question, and several clusters usually answer it.** Typical
+questions: Will it fit my space? Is it solidly built? What is it made of? Does it look
+real overall? How good are the close-up details? What are the colors like? How does the
+surface look and feel? Is it comfortable to hold? How easy is setup? Can I shape it? What
+upkeep does it need, and how long does it last? Where can I put it? What comes in the box?
+On an olive tree, *Compact Fit for Corners*, *Tall, Accurate Height*, *Well-Proportioned
+Size*, and *Large Spaces & High Ceilings* all answer "will it fit my space?" and are one
+theme. On artificial mums, *Sturdy, Tip-Resistant Pots*, *Decorative Pot Designs*,
+*Foam-Filled Pots*, and *Rainwater Drainage Holes* all answer "are the pots good?" and are
+one theme.
 
-**Group by the customer need the clusters serve.** Typical needs: where the product
-displays or is placed, what it is made of, how solidly it is built, how it looks, what size
-it is or what fits in it, how easy it is to set up or use, what upkeep it needs, what comes
-in the box.
+**One theme, one question.** Two independent benefits are two themes, even when they sit
+next to each other in use. On an olive tree, *Quick, Guided Assembly* + *Secure, Seamless
+Branch Connections* is one theme (setting it up) and *Bendable, Shapeable Branches* +
+*Full, Balanced Foliage* is another (shaping it); never one "Easy Assembly & Shaping" theme.
+
+**How it looks is several questions, not one.** Overall impression ("looks real from a
+distance," airy silhouette, natural movement) is a different question from close-up
+details (bark, leaves, fruit, color variation). Pattern and artwork, color, and surface
+finish or texture are three different questions on a mug. A theme holding every
+appearance cluster in the list has merged different questions; split it at that seam.
+Split only when both sides are substantial, though: one large realism cluster with a
+small detail cluster and a small texture cluster beside it is one realistic-blooms theme,
+not three.
+
+**The largest cluster sets the theme.** Its benefit is what the title says. Smaller clusters
+join it; they never rename it. On artificial mums, *UV, Fade & Weather Resistance (24)*
+makes a weather-resistance theme, and *Indoor & Outdoor Display (4)* joining it does not
+turn it into a placement theme.
+
+**Judge a cluster by its tags and stated benefit,** not by the component or the words it
+mentions. Titles can mislead; the tags show what customers meant. Foliage that stays put
+over time is about longevity, not build. Branch sections that connect securely during
+setup are about assembly, not sturdiness. A lightweight tree is about easy placement, not
+build or setup, and it must not sit in a theme about heavy, stable bases.
+
+**Fold, don't strand.** Before leaving a cluster on its own, ask which theme's question it
+also answers; nearly every cluster answers one, so a one-cluster theme is rare. On mugs,
+*Durability & Sturdy Build*, *Non-Toxic, Lead-Free Materials*, *Ceramic & Porcelain
+Construction*, and *Degradable Clay Material* are one build theme; *Wide, Stable Base*
+joins the comfortable-handling theme; *Microwave, Dishwasher & Oven Safe* joins
+*Stain-Resistant, Easy-Clean Glaze* as easy care. On an olive tree, *Odor, Pollen & Bug
+Free* joins the no-upkeep, long-lasting greenery theme, and *Heavy, Stable Base* joins
+*Durability & Sturdy Build* as one stable, sturdy build theme.
+
+**Merge clusters that depend on or bridge each other.** Fullness that comes from fluffing
+and shaping belongs with shaping. A display option that is "magnetic or tabletop" joins the
+magnetic and tabletop clusters in one display theme.
+
+**Out-of-box extras belong together.** Packaging, included containers, and the care of
+those containers form one ready-to-display theme.
 
 **Let the clusters decide the number of themes.** Do not aim for a count and do not even
-out theme sizes. A list with one dominant need and several small ones is a correct answer
-if that is what the clusters say.
-
----
-
-## Where to draw the line
-
-- **Fold small and single-tag clusters into the closest theme.** Leave a cluster standing
-  alone as its own theme only if it truly fits nowhere.
-- **Merge clusters when one depends on the other.** If a cluster's tags say its benefit
-  comes from another cluster's feature (fullness that comes from fluffing and shaping the
-  branches), the two belong in one theme.
-- **Merge bridging clusters with what they bridge.** A cluster that explicitly spans two
-  others (a display option that is either magnetic or tabletop) joins them in one theme
-  rather than forcing a split.
-- **Keep distinct needs apart, even when related.** What the material *is* and how solidly
-  it is built are not the same need as how it *looks*. Which photo sizes fit is not the same
-  need as the included mats that adjust the opening.
-- **Split an oversized theme only at a natural seam.** If one theme would hold clearly
-  different kinds of praise (an overall impression such as "looks real from a distance"
-  versus specific component details such as bark, leaves, and fruit), split it there. If
-  there is no such seam, a large theme is correct as it is.
-- **Place ambiguous clusters by their stated benefit,** not the component they mention.
-  Foliage that stays put over time is about longevity, not build. Branch sections that
-  connect securely during setup are about assembly, not sturdiness.
-- **Don't let a member contradict its theme.** A lightweight, easy-to-move cluster does not
-  belong in a theme about heavy, stable bases.
-- **Out-of-box extras belong together.** Packaging, included containers, and the care of
-  those containers form one ready-to-display theme.
-- **Never create a catch-all.** There is no Miscellaneous, Other, or General theme. A
-  cluster that fits nowhere stands alone with a specific title.
+out sizes. Never create a catch-all: there is no Miscellaneous, Other, or General theme.
 
 ---
 
 ## Titles
 
-- 2–6 words, Title Case.
-- A concrete phrase naming the customer need, built from the language of the clusters.
-- Use `&` or a comma to join two closely linked ideas.
+The test: would a shopper reading only the title instantly understand one benefit and
+want it? Write the title as the line you would put in a listing bullet.
+
+- 2–5 words, Title Case. Lead with the quality the shopper gets, then the thing:
+  *Vibrant, Lasting Colors*, *Right-Sized for Coffee & Tea*, *Hassle-Free, Long-Lasting
+  Greenery*, *Sturdy, Food-Safe Ceramic Build*.
+- Name one benefit. A comma or `&` may join two facets of the same benefit, never two
+  different benefits and never a list of topics.
+- Avoid neutral spec words (Options, Choices, Performance, Identification, Fit, Use) and
+  words that sell against the product (Artificial).
 - Never name a benefit that no member cluster supports.
+
+| Bad | Good | Why |
+|---|---|---|
+| Drink Capacity & Brewer Fit | Right-Sized for Coffee & Tea | Two specs, no benefit → one benefit a shopper feels |
+| Color, Coordination & Identification | Vibrant, Lasting Colors | A list of topics → what the colors do for you |
+| Indoor & Outdoor Placement | Weather-Resistant, Shed-Free Blooms | Titled after a 4-tag member → titled after the 24-tag one |
+| Texture, Shape & Finish | Distinctive Glazes & Textures | Three nouns → one desirable quality |
+| Artificial, Waterproof Materials | Silk & Plastic Materials | Sells against the product → says what it is |
 
 ## Summaries
 
-- **Exactly one sentence**, in plain language a shopper understands.
+- **Exactly one sentence**, in plain language a shopper understands, that reads like the
+  supporting line under a listing bullet.
 - It must cover every member cluster and claim nothing the clusters don't support.
 - Refer to the product by its plain name: "Frames…", "Trees…", "Mugs…".
 - Avoid spec numbers unless the whole theme is about that spec.
@@ -95,26 +119,25 @@ if that is what the clusters say.
 
 ## The list you are given
 
-You are told which of three lists you are theming. Use the matching voice. **Theme only
-within the list you were given** — the lists are never mixed.
+You are told which of three lists you are theming. **Theme only within that list.**
 
 ### `features` — what the product offers
 
-Themes are the attributes and benefits customers value. Summaries are positive, factual
-statements about the product.
+Themes are the benefits customers value. Titles follow the rules above; summaries are
+positive, factual statements about the product.
 
 ### `complaints` — what went wrong
 
 Theme by the **root problem** customers ran into, not by the part or the specific facts.
-Ask: *what went wrong for these customers?* Summaries are neutral, written from the
-reviewers' side, and **start with "Some customers"**. Don't defend the product and don't
-generalize to all buyers.
+Titles name the problem plainly. Summaries are neutral, written from the reviewers' side,
+and **start with "Some customers"**. Don't defend the product and don't generalize to all
+buyers.
 
 ### `assembly_maintenance` — what the customer has to do
 
-Theme by the **task** the customer is doing: assembly, hanging or mounting, inserting or
-changing photos, cleaning, storage, handling precautions. Summaries are **imperative
-instructions** built only from the member clusters. Never add care advice of your own.
+Theme by the **task**: assembly, hanging or mounting, inserting or changing photos,
+cleaning, storage, handling precautions. Titles name the task. Summaries are **imperative
+instructions** built only from the member clusters; never add care advice of your own.
 
 ---
 
@@ -122,8 +145,6 @@ instructions** built only from the member clusters. Never add care advice of you
 
 You may be given the theme titles from the last time this category was themed. When a
 theme you're forming means the same thing as one of them, **reuse that title exactly** so
-results stay comparable between runs.
-
-This is the only thing prior titles are for. Never force a cluster into a prior title's
-theme, never keep a prior title alive with clusters that don't belong to it, and never emit
-a prior title with no clusters. Clusters that form a genuinely new need get a new title.
+results stay comparable between runs. Never force a cluster into a prior title's theme,
+never keep a prior title alive with clusters that don't belong to it, and never emit a
+prior title with no clusters.
