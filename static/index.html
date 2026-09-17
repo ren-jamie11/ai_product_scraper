@@ -284,6 +284,25 @@ mark{background:#F2D06B;color:var(--ink);padding:0 1px;border-radius:2px}
 .sbar{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:12px;align-items:center;
   background:var(--glaze);border:1px solid var(--rule);padding:8px 14px;margin:-8px 0 22px;
   box-shadow:0 2px 8px rgba(19,26,42,.06)}
+.sbar .sq{position:relative;flex:1 1 200px;max-width:320px;min-width:150px}
+.sbar .sq input{width:100%;font-family:var(--sans);font-size:12.5px;padding:6px 26px 6px 9px;border:1px solid var(--rule);
+  border-radius:3px;background:var(--glaze);color:var(--ink)}
+.sbar .sq input:focus{outline:none;border-color:var(--cobalt)}
+.sbar .sq input::-webkit-search-cancel-button{-webkit-appearance:none}
+.sbar .sq .x{position:absolute;right:3px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--muted);
+  font-size:16px;line-height:1;cursor:pointer;padding:2px 6px}
+.sbar .sq .x:hover{color:var(--iron)}
+.jump{display:flex;gap:14px;font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase}
+.jump a{color:var(--muted);text-decoration:none;white-space:nowrap}
+.jump a:hover{color:var(--cobalt)}
+.jump a b{color:var(--ink);font-weight:600}
+.jump a.none{opacity:.45}
+section[id]{scroll-margin-top:72px}
+/* one mono line in place of the summary tiles */
+.slim{font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.03em;line-height:1.7;
+  background:var(--glaze);border:1px solid var(--rule);border-top:0;padding:8px 16px;margin-bottom:24px}
+.slim b{color:var(--ink);font-weight:600}
+.slim .bad{color:var(--iron)} .slim .good{color:var(--celadon)} .slim .warn{color:var(--amber)}
 .seg{display:inline-flex;border:1px solid var(--rule);border-radius:3px;overflow:hidden}
 .seg button{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;padding:6px 11px;border:0;
   border-right:1px solid var(--rule);background:var(--glaze);color:var(--muted);cursor:pointer}
@@ -306,6 +325,53 @@ mark{background:#F2D06B;color:var(--ink);padding:0 1px;border-radius:2px}
 .thm .mem{font-family:var(--mono);font-size:10.5px;color:var(--muted);line-height:1.6;margin-top:4px}
 .thm .caret{margin-left:auto;padding-top:2px}
 .thm .body{padding:2px 18px 18px}
+
+/* ---------- results: overview ----------
+   The first-glance picture: one column per list, one bar per theme (or per cluster
+   when a list has no themes), length = mentions in the current source. On "All"
+   the bar is split into the listing share (solid) and the review share (faded) in
+   the list's own colour. Nothing here is a new colour. */
+.ov{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:34px}
+.ovcol{background:var(--glaze);border:1px solid var(--rule);padding:14px 18px 12px;min-width:0}
+.ovcol .oh{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;padding-bottom:7px;border-bottom:1px solid var(--rule)}
+.ovcol .oh h2{font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:-.01em;margin:0}
+.ovcol .oh .note{font-family:var(--mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-left:auto;white-space:nowrap}
+.ovcol .lg{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:flex;gap:14px;margin-bottom:8px}
+.ovcol .lg i{display:inline-block;width:9px;height:9px;border-radius:2px;vertical-align:-1px;margin-right:5px}
+.ovcol .blank{padding:22px 16px;margin:6px 0 4px}
+.ovcol .blank h3{font-size:15px}
+.ovcol .blank p{font-size:12px;margin-bottom:0}
+.ovrow{display:grid;grid-template-columns:14px minmax(0,1fr) minmax(100px,1.3fr) 36px;gap:8px;align-items:center;
+  padding:4px;margin:0 -4px;border-radius:3px;cursor:pointer;font-size:12.5px;line-height:1.3}
+.ovrow:hover{background:var(--porcelain)}
+.ovrow:hover .lb{color:var(--cobalt)}
+.ovrow .car{font-size:11px;color:var(--muted);text-align:center;user-select:none}
+.ovrow .lb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ovrow .trk{height:10px;background:var(--rule-soft);border-radius:2px;display:flex;overflow:hidden}
+.ovrow .trk i{display:block;height:100%;flex:0 0 auto}
+.ovrow .val{font-family:var(--mono);font-size:10.5px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+.ovrow.kid{font-size:12px;color:#2A3240}
+.ovrow.kid .lb{padding-left:14px}
+.ovrow.kid .trk{height:6px}
+.ovcol.feat .trk i{background:var(--celadon)}
+.ovcol.comp .trk i{background:var(--iron)}
+.ovcol.feat .lg .r,.ovcol.feat .trk i.r{background:var(--celadon);opacity:.45}
+.ovcol.comp .lg .r,.ovcol.comp .trk i.r{background:var(--iron);opacity:.45}
+.ovcol.feat .lg .l{background:var(--celadon)} .ovcol.comp .lg .l{background:var(--iron)}
+.ovcol .more{margin:6px 0 0 22px}
+/* ---------- results: insight helpers ---------- */
+.rk{font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.6;margin-top:2px}
+.rk b{color:var(--ink);font-weight:600}
+.cov{display:inline-flex;align-items:center;gap:2px;vertical-align:middle}
+.cov i{width:6px;height:6px;border-radius:50%;background:var(--rule);display:inline-block}
+.cov i.on{background:var(--cobalt)}
+.cov b{margin-left:5px}
+.pill.gap{vertical-align:middle;margin-left:6px;font-weight:500;letter-spacing:.04em}
+.ovrow .gapdot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--amber);margin-left:6px;vertical-align:middle}
+/* a bar click lands its theme or cluster just under the sticky bar and flashes it */
+.thm,.cl{scroll-margin-top:72px}
+.flash{outline:2px solid var(--cobalt);outline-offset:3px;animation:flash 1.3s ease-out forwards}
+@keyframes flash{70%{outline-color:var(--cobalt)}to{outline-color:transparent}}
 
 /* ---------- results: hover card ---------- */
 #tip{position:fixed;pointer-events:none;z-index:80;background:var(--ink);color:#fff;padding:10px 12px;border-radius:3px;
@@ -350,7 +416,7 @@ mark{background:#F2D06B;color:var(--ink);padding:0 1px;border-radius:2px}
 @media (max-width:640px){
   .wrap{padding:0 14px 70px}
   .masthead{padding-top:30px}
-  .pgrid,.cgrid{grid-template-columns:1fr}
+  .pgrid,.cgrid,.ov{grid-template-columns:1fr}
   #panel{padding:18px 16px 40px}
 }
 @media (prefers-reduced-motion:reduce){#panel{transition:none}}
@@ -506,17 +572,22 @@ mark{background:#F2D06B;color:var(--ink);padding:0 1px;border-radius:2px}
     <a class="btn ghost" id="res-back" href="#/">Back to run</a>
   </div>
 
-  <div class="sumstrip" id="res-sum" hidden></div>
+  <div class="slim" id="res-sum" hidden></div>
 
-  <!-- Sticky bar: source filter, expand all, and the manual themes action. Built
-       to grow — search and other filters land here later. -->
+  <!-- Sticky bar: search, source filter, jump links, expand all, and the manual
+       themes action. -->
   <div class="sbar" id="res-bar" hidden>
-    <span class="dt">Show</span>
+    <div class="sq">
+      <input type="search" id="res-q" placeholder="Filter&hellip; e.g. handle, pot, appearance"
+             autocomplete="off" spellcheck="false" aria-label="Filter themes, clusters and tags">
+      <button type="button" class="x" id="res-qx" title="Clear (Esc)" hidden>&times;</button>
+    </div>
     <div class="seg" id="res-src" role="group" aria-label="Tag source">
       <button type="button" data-src="all" aria-pressed="true">All</button>
       <button type="button" data-src="listing" aria-pressed="false">Listings</button>
       <button type="button" data-src="review" aria-pressed="false">Reviews</button>
     </div>
+    <nav class="jump" id="res-jump" aria-label="Lists"></nav>
     <button class="btn ghost" id="res-expand" hidden>Expand all</button>
     <button class="btn ghost" id="res-theme" hidden>Group into themes</button>
     <div class="prog" id="res-prog" hidden>
@@ -527,12 +598,9 @@ mark{background:#F2D06B;color:var(--ink);padding:0 1px;border-radius:2px}
     <span class="err" id="res-err" hidden></span>
   </div>
 
-  <p class="lede" id="res-lede" hidden>Clusters are ranked by mentions, and a list with many
-     clusters is grouped into <b>themes</b>: open a theme to see its clusters, click a list's
-     heading to collapse it. Open a cluster to see every tag, listings and reviews apart.
-     <b>Hover</b> a tag for the sentence it came from; <b>click</b> it for the full source.
-     A dotted tag is one where no single sentence could be pinned down, so you get the whole
-     text instead.</p>
+  <!-- Overview: bars per theme for Features and Complaints. Built by overviewHtml(). -->
+  <div class="ov" id="res-ov" hidden></div>
+
   <div id="res-body"></div>
 </div>
 
@@ -2001,7 +2069,9 @@ async function renderResults(slug, runId, parseId) {
   $("res-sum").hidden = true;
   $("res-bar").hidden = true;
   $("res-err").hidden = true;
-  $("res-lede").hidden = true;
+  $("res-ov").hidden = true;
+  $("res-q").value = "";
+  $("res-qx").hidden = true;
   $("res-sel-wrap").hidden = true;
   $("res-model").textContent = "";
   $("res-body").innerHTML = "";
@@ -2066,7 +2136,8 @@ async function renderResults(slug, runId, parseId) {
   // collapsed and which source is shown are session-only: every visit starts
   // with all lists open and every source showing.
   resultsState = { slug, runId, parseId, data, byBodyTag, expanded: new Set(expanded),
-                   source: "all", listsClosed: new Set(), views: new Map() };
+                   source: "all", query: "", terms: [], listsClosed: new Set(), views: new Map(),
+                   ovOpen: new Set(), ovAll: new Set() };
   $("res-model").textContent = [data.model, data.reasoning].filter(Boolean).join(" · ");
   renderResultsBody();
 }
@@ -2074,6 +2145,56 @@ async function renderResults(slug, runId, parseId) {
 /* Chips are coloured by the list they came from — and nothing else is. */
 const LIST_TONE = { features: "feat", complaints: "comp", assembly_maintenance: "care" };
 const SOURCE_NAME = { listing: "listings", review: "reviews" };
+const SHORT_NAME = { features: "feature", complaints: "complaint", assembly_maintenance: "care" };
+const JUMP_NAME = { features: "Features", complaints: "Complaints", assembly_maintenance: "Care" };
+
+/* Gap badges, features only.
+   Under-advertised: customers weigh it — its share of the list's review mentions
+   is at least GAP_RATIO times its share of the listing mentions (shares, so the
+   review-heavy volume doesn't bias the call) — and sellers rank it at least
+   GAP_RANK_GAP places lower than customers do, or never claim it at all.
+   Unconfirmed: listings claim it (GAP_MIN_LISTINGS or more mentions) and reviews
+   barely mention it (GAP_MAX_REVIEWS or fewer).
+   Tuned on olive trees, wood frames and mugs (2026-09-17): a 2× ratio alone
+   flagged a third of every list, including top-3 listing features. */
+const GAP_RATIO = 3, GAP_RANK_GAP = 3, GAP_MIN_REVIEWS = 5, GAP_MIN_LISTINGS = 3, GAP_MAX_REVIEWS = 2;
+const GAP_TEXT = {
+  under: ["under-advertised", "Customers mention this far more than listings claim it — a benefit worth advertising."],
+  unconfirmed: ["unconfirmed", "Listings claim this but customers barely mention it — reviews don't back it up yet."],
+};
+/* Coverage as dots: one per product in the run, filled when the item appears in it. */
+const COV_MAX_DOTS = 20;
+
+function covHtml(n, total) {
+  const text = `in ${n} of ${total} ${total === 1 ? "product" : "products"}`;
+  if (total > COV_MAX_DOTS || total < 1) return esc(text);
+  return `<span class="cov" title="${esc(text)}">${"<i class=\"on\"></i>".repeat(n)}${
+    "<i></i>".repeat(Math.max(0, total - n))}<b>${n}/${total}</b></span>`;
+}
+function rankHtml(rank) {
+  const one = (k, name) => rank[k] ? `${name} <b>#${rank[k]}</b>` : `not in ${name}`;
+  return `<div class="rk">${one("listing", "listings")} &middot; ${one("review", "reviews")}</div>`;
+}
+function gapPill(v) {
+  if (!v.gap) return "";
+  const [label, why] = GAP_TEXT[v.gap];
+  const at = k => v.rank[k] ? `#${v.rank[k]}` : "unranked";
+  const why2 = `${why} Reviews rank it ${at("review")}, listings ${at("listing")}.`;
+  return ` <span class="pill ${v.gap === "under" ? "warn" : "na"} gap" title="${esc(why2)}">${label}</span>`;
+}
+
+/* Escape text and wrap every hit of the current filter terms in <mark>. */
+function hilite(text, terms) {
+  const s = String(text ?? "");
+  if (!terms || !terms.length) return esc(s);
+  const re = new RegExp(terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"), "gi");
+  let out = "", pos = 0;
+  for (const m of s.matchAll(re)) {
+    out += esc(s.slice(pos, m.index)) + `<mark>${esc(m[0])}</mark>`;
+    pos = m.index + m[0].length;
+  }
+  return out + esc(s.slice(pos));
+}
 
 function themeKey(s, t) { return `theme:${s.key}:${t.theme_id}`; }
 
@@ -2090,54 +2211,201 @@ function allThemesOpen() {
   return keys.length > 0 && keys.every(k => resultsState.expanded.has(k));
 }
 
-/* What one cluster looks like under the current source filter. On "All" it is
-   the server's own numbers; on Listings or Reviews the mentions, products and
-   preview are recomputed from that source's chips, and a cluster with nothing
-   from that source is hidden. Order never changes. */
-function clusterView(s, c) {
-  const key = `${s.key}:${c.cluster_id}`;
-  const cached = resultsState.views.get(key);
-  if (cached) return cached;
+/* ---------- view model ----------
+   Built once per render from the server's results and the current source, and
+   every renderer reads from it, so the sections, their counts and the overview
+   all agree on which clusters show, in what order, and under what number.
 
+   Each cluster and theme carries its mentions and products per source, and its
+   rank per source — all three sources every time, because the rank-shift line
+   compares them regardless of which one is showing. The current view is then
+   the items with something from that source, sorted by it, ties broken by the
+   server's order; on "All" that is exactly the server's order. Numbers are the
+   rank in the current view, so 01 is always the top of what you are looking at. */
+const SOURCES = ["all", "listing", "review"];
+
+function buildViews() {
+  const d = resultsState.data;
   const src = resultsState.source;
-  let v;
-  if (src === "all") {
-    v = { listing: c.listing_tags, review: c.review_tags, mentions: c.total_tags,
-          distinct: c.distinct_tags, listings: c.unique_listings, reviews: c.unique_reviews,
-          asins: c.unique_asins, asinSet: null, preview: c.preview, visible: true };
-  } else {
-    const tags = src === "listing" ? c.listing_tags : c.review_tags;   // already sorted
-    const occ = resultsState.data.occurrences;
-    const asinSet = new Set();
-    let mentions = 0;
-    for (const t of tags) {
-      mentions += t.count;
-      for (const ref of t.occ_ids) { const o = occ[ref]; if (o) asinSet.add(o.asin); }
+  const occ = d.occurrences;
+  const byCurrent = (a, b) => b.mentions[src] - a.mentions[src] || a.index - b.index;
+  const present = v => v.mentions[src] > 0;
+
+  // The filter: every term must appear somewhere in the item's own text. A
+  // cluster's text is its title, description and the tags showing in this
+  // source; a theme's is its title and summary. A theme that matches on its own
+  // text keeps all its clusters; otherwise it keeps only the matching ones.
+  const terms = resultsState.query.toLowerCase().split(/\s+/).filter(Boolean);
+  resultsState.terms = terms;
+  const hit = text => terms.every(t => text.includes(t));
+  const visible = v => present(v) && v.match;
+  const rankAll = items => {
+    for (const k of SOURCES) {
+      const ranked = items.filter(v => v.mentions[k] > 0)
+        .sort((a, b) => b.mentions[k] - a.mentions[k] || a.index - b.index);
+      ranked.forEach((v, i) => { v.rank[k] = i + 1; });
     }
-    v = { listing: src === "listing" ? tags : [], review: src === "review" ? tags : [],
-          mentions, distinct: tags.length,
-          listings: src === "listing" ? c.unique_listings : 0,
-          reviews: src === "review" ? c.unique_reviews : 0,
-          asins: asinSet.size, asinSet, preview: tags.slice(0, 3), visible: mentions > 0 };
+  };
+
+  const sections = new Map();
+  for (const s of d.sections) {
+    const clusters = new Map();
+    s.clusters.forEach((c, index) => {
+      const mentions = { all: c.total_tags, listing: 0, review: 0 };
+      const asins = { all: new Set(), listing: new Set(), review: new Set() };
+      for (const [type, tags] of [["listing", c.listing_tags], ["review", c.review_tags]]) {
+        for (const t of tags) {
+          mentions[type] += t.count;
+          for (const ref of t.occ_ids) {
+            const o = occ[ref];
+            if (o) { asins[type].add(o.asin); asins.all.add(o.asin); }
+          }
+        }
+      }
+      const tags = { listing: src === "review" ? [] : c.listing_tags,
+                     review: src === "listing" ? [] : c.review_tags };
+      const own = src === "listing" ? c.listing_tags : c.review_tags;
+      let preview = src === "all" ? c.preview : own.slice(0, 3);
+      let match = true;
+      if (terms.length) {
+        const pool = src === "all" ? tags.listing.concat(tags.review) : own;
+        match = hit([c.title, c.description, ...pool.map(t => t.display)].join(" ").toLowerCase());
+        if (match) {
+          // Matching chips first, so a collapsed card shows why it is here.
+          const seen = new Set();
+          const uniq = t => !seen.has(t.display) && seen.add(t.display);
+          const hits = (src === "all" ? c.preview.concat(pool) : own)
+            .filter(t => hit(t.display.toLowerCase())).filter(uniq);
+          preview = hits.concat(preview.filter(uniq)).slice(0, 3);
+        }
+      }
+      clusters.set(c.cluster_id, {
+        c, key: `${s.key}:${c.cluster_id}`, index, mentions, asins,
+        rank: { all: null, listing: null, review: null },
+        tags, match, preview,
+        distinct: src === "all" ? c.distinct_tags : own.length,
+      });
+    });
+    rankAll([...clusters.values()]);
+
+    // Gap badges: only where both sources exist to compare (features).
+    if (s.key === "features") {
+      let secL = 0, secR = 0;
+      for (const v of clusters.values()) { secL += v.mentions.listing; secR += v.mentions.review; }
+      for (const v of clusters.values()) {
+        v.gap = null;
+        if (!secL || !secR) continue;
+        const ls = v.mentions.listing / secL, rs = v.mentions.review / secR;
+        const rankGap = !v.rank.listing || v.rank.listing - v.rank.review >= GAP_RANK_GAP;
+        if (v.mentions.review >= GAP_MIN_REVIEWS && rs >= GAP_RATIO * ls && rankGap) v.gap = "under";
+        else if (v.mentions.listing >= GAP_MIN_LISTINGS && v.mentions.review <= GAP_MAX_REVIEWS) v.gap = "unconfirmed";
+      }
+    }
+
+    const themes = new Map();
+    (s.themes || []).forEach((t, index) => {
+      const members = t.cluster_ids.map(id => clusters.get(id)).filter(Boolean);
+      const mentions = { all: 0, listing: 0, review: 0 };
+      const asins = { all: new Set(), listing: new Set(), review: new Set() };
+      for (const m of members) {
+        for (const k of SOURCES) {
+          mentions[k] += m.mentions[k];
+          m.asins[k].forEach(a => asins[k].add(a));
+        }
+      }
+      const self = terms.length > 0 && hit(`${t.title} ${t.summary || ""}`.toLowerCase());
+      themes.set(t.theme_id, {
+        t, key: themeKey(s, t), index, members, mentions, asins, self,
+        rank: { all: null, listing: null, review: null },
+        order: members.filter(m => present(m) && (self || m.match)).sort(byCurrent),
+      });
+    });
+    rankAll([...themes.values()]);
+
+    // The number is the rank in the unfiltered list, so a cluster that shows
+    // only because its theme matched still reads as, say, 17 of 35.
+    for (const v of clusters.values()) v.number = v.rank[src];
+    for (const v of themes.values()) v.number = v.rank[src];
+    const order = [...clusters.values()].filter(visible).sort(byCurrent);
+    const themeOrder = [...themes.values()].filter(v => present(v) && v.order.length).sort(byCurrent);
+
+    const themed = themes.size > 0;
+    const shown = themed ? themeOrder.flatMap(v => v.order) : order;
+    sections.set(s.key, {
+      s, clusters, themes, order, themeOrder, themed,
+      count: shown.length,
+      total: [...clusters.values()].filter(present).length,
+      mentions: shown.reduce((n, v) => n + v.mentions[src], 0),
+    });
   }
-  resultsState.views.set(key, v);
-  return v;
+  resultsState.views = sections;
 }
+
+/* ---------- search wiring ---------- */
+function setQuery(q) {
+  if (!resultsState) return;
+  q = q.trim();
+  if (q === resultsState.query) return;
+  resultsState.query = q;
+  renderResultsBody();
+}
+function clearQuery() { $("res-q").value = ""; setQuery(""); }
+
+let queryTimer = null;
+$("res-q").addEventListener("input", () => {
+  clearTimeout(queryTimer);
+  queryTimer = setTimeout(() => setQuery($("res-q").value), 120);
+});
+$("res-q").addEventListener("keydown", e => {
+  if (e.key === "Escape") { clearQuery(); $("res-q").blur(); }
+});
+$("res-qx").onclick = () => { clearQuery(); $("res-q").focus(); };
+document.addEventListener("keydown", e => {
+  if (e.key !== "/" || !resultsState || $("view-results").hidden || !$("panel").hidden) return;
+  if (e.target.closest("input, textarea, select, [contenteditable]")) return;
+  e.preventDefault();
+  $("res-q").focus();
+});
+
+/* Jump links scroll rather than navigate: a hash change would re-route. */
+$("res-jump").addEventListener("click", e => {
+  const a = e.target.closest("a[data-sec]");
+  if (!a || !resultsState) return;
+  e.preventDefault();
+  if (resultsState.listsClosed.delete(a.dataset.sec)) renderResultsBody();
+  const el = document.getElementById("sec-" + a.dataset.sec);
+  if (!el) return;
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  el.scrollIntoView({ block: "start", behavior: reduced ? "auto" : "smooth" });
+});
+
+function sectionView(s) { return resultsState.views.get(s.key); }
 
 function renderResultsBody() {
   const d = resultsState.data;
   const pct = d.mentions ? Math.round(100 * d.attributed / d.mentions) : 0;
-  resultsState.views = new Map();
+  buildViews();
 
   $("res-sum").hidden = false;
   $("res-sum").innerHTML =
-    d.sections.map(s => stat(s.title, s.clusters.length,
-      s.status === "failed" ? "failed" : plural(s.mentions, "mention", "mentions"),
-      s.status === "failed" ? "bad" : "")).join("") +
-    stat("Traced to a sentence", `${pct}%`, `${d.attributed} of ${d.mentions} mentions`,
-         pct >= 90 ? "good" : "warn") +
-    stat("Products", d.products_total, "in this run");
-  $("res-lede").hidden = false;
+    d.sections.map(s => s.status === "failed"
+      ? `<span class="bad">${esc(SHORT_NAME[s.key] || s.title.toLowerCase())} clusters failed</span>`
+      : `<b>${s.clusters.length}</b> ${esc(SHORT_NAME[s.key] || s.title.toLowerCase())} ${
+          s.clusters.length === 1 ? "cluster" : "clusters"} (${plural(s.mentions, "mention", "mentions")})`)
+    .concat([
+      `<b>${d.products_total}</b> ${d.products_total === 1 ? "product" : "products"}`,
+      `<b class="${pct >= 90 ? "good" : "warn"}">${pct}%</b> of mentions traced to a sentence`,
+    ]).join(" &nbsp;&middot;&nbsp; ");
+
+  // Jump links follow the current source and, while filtering, read "4 of 35".
+  $("res-jump").innerHTML = d.sections.map(s => {
+    const sv = sectionView(s);
+    const label = JUMP_NAME[s.key] || s.title;
+    const n = s.status === "failed" ? "&mdash;" :
+      resultsState.terms.length ? `${sv.count} of ${sv.total}` : String(sv.count);
+    return `<a href="#" data-sec="${esc(s.key)}" class="${sv.count ? "" : "none"}">${esc(label)} <b>${n}</b></a>`;
+  }).join("");
+  $("res-qx").hidden = !resultsState.query;
 
   // The sticky bar. "Group into themes" only appears when a list is long enough
   // to theme and no valid themes exist for these exact clusters.
@@ -2161,32 +2429,146 @@ function renderResultsBody() {
       "cluster", "clusters")} or more).</span></div>`;
   }
 
+  $("res-ov").hidden = false;
+  $("res-ov").innerHTML = OVERVIEW_LISTS.map(overviewHtml).join("");
   $("res-body").innerHTML = banner + d.sections.map(sectionHtml).join("");
 }
+
+/* ---------- overview ----------
+   Features and Complaints only: care instructions are the list a seller reads
+   last. Themed lists get a bar per theme, with a caret that unfolds the theme's
+   clusters as thinner bars on the same scale; unthemed lists get the top ten
+   clusters and a "show all". Both open states are session-only. Clicking a
+   label or bar reveals that theme or cluster in the sections below. */
+const OVERVIEW_LISTS = ["features", "complaints"];
+const OVERVIEW_TOP = 10;
+
+function overviewHtml(key) {
+  const d = resultsState.data;
+  const src = resultsState.source;
+  const s = d.sections.find(x => x.key === key);
+  const tone = LIST_TONE[key] || "";
+  const title = s ? s.title : key;
+  const blank = (h, p) => `<div class="ovcol ${tone}"><div class="oh"><h2>${esc(title)}</h2></div>
+    <div class="blank"><h3>${h}</h3><p>${p}</p></div></div>`;
+
+  if (!s || s.status === "failed") return blank("Nothing to show", esc(s && s.error || "This list was not grouped."));
+  const sv = sectionView(s);
+  if (!s.clusters.length) return blank("Nothing here", `No ${esc(title.toLowerCase())} tags came out of this parse.`);
+  if (!sv.count) {
+    return `<div class="ovcol ${tone}"><div class="oh"><h2>${esc(title)}</h2></div>${nothingHtml(s, sv)}</div>`;
+  }
+
+  const top = sv.themed ? sv.themeOrder : sv.order;
+  const terms = resultsState.terms;
+  const max = Math.max(1, ...top.map(v => v.mentions[src]));
+  const total = d.products_total;
+
+  const bar = v => {
+    const seg = (n, cls) => n > 0 ? `<i class="${cls}" style="width:${(100 * n / max).toFixed(2)}%"></i>` : "";
+    return `<div class="trk">${src === "all"
+      ? seg(v.mentions.listing, "l") + seg(v.mentions.review, "r")
+      : seg(v.mentions[src], "l")}</div>`;
+  };
+  const tip = v => {
+    const bits = [plural(v.mentions[src], "mention", "mentions")];
+    if (src === "all") bits.push(`${v.mentions.listing} from listings`, `${v.mentions.review} from reviews`);
+    bits.push(`in ${v.asins[src].size} of ${total} ${total === 1 ? "product" : "products"}`);
+    return bits.join(" · ");
+  };
+  const row = (v, label, opts) => `
+    <div class="ovrow${opts.kid ? " kid" : ""}" data-list="${esc(key)}" data-k="${esc(v.key)}"${
+      opts.parent ? ` data-parent="${esc(opts.parent)}"` : ""} title="${esc(tip(v))}">
+      <span class="car${opts.caret ? " tg" : ""}">${opts.caret ? (opts.open ? "&#9662;" : "&#9656;") : ""}</span>
+      <span class="lb">${hilite(label, terms)}${v.gap === "under"
+        ? `<i class="gapdot" title="${esc(GAP_TEXT.under[1])}"></i>` : ""}</span>${bar(v)}<span class="val">${v.mentions[src]}</span>
+    </div>`;
+
+  let rows = "";
+  if (sv.themed) {
+    for (const tv of sv.themeOrder) {
+      // Filtering unfolds every theme with a match, like the sections below.
+      const open = terms.length > 0 || resultsState.ovOpen.has(tv.key);
+      rows += row(tv, tv.t.title, { caret: true, open });
+      if (open) for (const v of tv.order) rows += row(v, v.c.title, { kid: true, parent: tv.key });
+    }
+  } else {
+    const all = terms.length > 0 || resultsState.ovAll.has(key);
+    const shown = all ? sv.order : sv.order.slice(0, OVERVIEW_TOP);
+    for (const v of shown) rows += row(v, v.c.title, {});
+    if (!terms.length && sv.order.length > OVERVIEW_TOP) {
+      rows += `<button class="lnk more" data-all="${esc(key)}">${
+        all ? `Show top ${OVERVIEW_TOP}` : `Show all ${sv.order.length}`}</button>`;
+    }
+  }
+
+  const note = `${plural(top.length, sv.themed ? "theme" : "cluster", sv.themed ? "themes" : "clusters")} &middot; ${
+    plural(sv.mentions, "mention", "mentions")}`;
+  const legend = src === "all"
+    ? `<div class="lg"><span><i class="l"></i>from listings</span><span><i class="r"></i>from reviews</span></div>` : "";
+  return `<div class="ovcol ${tone}"><div class="oh"><h2>${esc(title)}</h2><span class="note">${note}</span></div>${legend}${rows}</div>`;
+}
+
+/* Open the theme (and cluster) a bar stands for, then bring it into view. */
+function revealItem(listKey, key, parent) {
+  resultsState.listsClosed.delete(listKey);
+  if (parent) resultsState.expanded.add(parent);
+  resultsState.expanded.add(key);
+  persistExpanded();
+  renderResultsBody();
+  const el = $("res-body").querySelector(`[data-k="${CSS.escape(key)}"]`);
+  if (!el) return;
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  el.scrollIntoView({ block: "start", behavior: reduced ? "auto" : "smooth" });
+  el.classList.add("flash");
+  setTimeout(() => el.classList.remove("flash"), 1400);
+}
+
+$("res-ov").addEventListener("click", e => {
+  if (!resultsState) return;
+  if (e.target.closest("[data-clearq]")) { clearQuery(); return; }
+  const more = e.target.closest("button[data-all]");
+  if (more) {
+    const set = resultsState.ovAll;
+    if (set.has(more.dataset.all)) set.delete(more.dataset.all); else set.add(more.dataset.all);
+    renderResultsBody();
+    return;
+  }
+  const rowEl = e.target.closest(".ovrow");
+  if (!rowEl) return;
+  if (e.target.closest(".car.tg")) {
+    const set = resultsState.ovOpen;
+    if (set.has(rowEl.dataset.k)) set.delete(rowEl.dataset.k); else set.add(rowEl.dataset.k);
+    renderResultsBody();
+    return;
+  }
+  revealItem(rowEl.dataset.list, rowEl.dataset.k, rowEl.dataset.parent || null);
+});
 
 function sectionHtml(s) {
   const closed = resultsState.listsClosed.has(s.key);
   const src = resultsState.source;
-  const views = s.clusters.map(c => clusterView(s, c));
-  const shown = s.clusters.filter((c, i) => views[i].visible);
-  const mentions = views.reduce((n, v) => n + (v.visible ? v.mentions : 0), 0);
-  const themed = !!(s.themes && s.themes.length);
+  const sv = sectionView(s);
+  const shown = sv.order;
+  const themed = sv.themed;
+  const q = resultsState.query;
+  const open = `<section id="sec-${esc(s.key)}">`;
 
   const note = s.status === "failed" ? "failed" :
-    `${plural(shown.length, "cluster", "clusters")} &middot; ${
-      plural(mentions, "mention", "mentions")}${
-      themed ? ` &middot; ${plural(s.themes.length, "theme", "themes")}` : ""}`;
+    `${q ? `${sv.count} of ${sv.total} clusters` : plural(sv.count, "cluster", "clusters")} &middot; ${
+      plural(sv.mentions, "mention", "mentions")}${
+      themed ? ` &middot; ${plural(sv.themeOrder.length, "theme", "themes")}` : ""}`;
   const head = `<div class="shead clk" data-list="${esc(s.key)}" role="button" aria-expanded="${!closed}">
     <span class="caret">${closed ? "&#9656;" : "&#9662;"}</span>
     <h2>${esc(s.title)}</h2><span class="note">${note}</span></div>`;
 
-  if (closed) return `<section>${head}</section>`;
+  if (closed) return `${open}${head}</section>`;
   if (s.status === "failed") {
-    return `<section>${head}<div class="note-line"><span class="ic">Failed</span>
+    return `${open}${head}<div class="note-line"><span class="ic">Failed</span>
       <span>${esc(s.error || "This list could not be grouped.")}</span></div></section>`;
   }
   if (!s.clusters.length) {
-    return `<section>${head}<div class="blank"><h3>Nothing here</h3>
+    return `${open}${head}<div class="blank"><h3>Nothing here</h3>
       <p>No ${esc(s.title.toLowerCase())} tags came out of this parse.</p></div></section>`;
   }
 
@@ -2194,93 +2576,98 @@ function sectionHtml(s) {
     ? `<div class="note-line"><span class="ic">Themes</span>
        <span>This list could not be grouped into themes: ${esc(s.theme_error)}</span></div>` : "";
 
-  if (!shown.length) {
-    return `<section>${head}${themeNote}<div class="blank"><h3>Nothing from ${esc(SOURCE_NAME[src])}</h3>
-      <p>No ${esc(s.title.toLowerCase())} tags in this list came from ${esc(SOURCE_NAME[src])}.</p></div></section>`;
+  if (!sv.count) {
+    return `${open}${head}${themeNote}${nothingHtml(s, sv)}</section>`;
   }
 
   const body = themed
-    ? s.themes.map(t => themeHtml(s, t)).join("")
-    : `<div class="cgrid">${shown.map(c => clusterHtml(s, c)).join("")}</div>`;
-  return `<section>${head}${themeNote}${body}</section>`;
+    ? sv.themeOrder.map(v => themeHtml(s, v)).join("")
+    : `<div class="cgrid">${shown.map(v => clusterHtml(s, v)).join("")}</div>`;
+  return `${open}${head}${themeNote}${body}</section>`;
 }
+
+/* The empty state for a list under the current source and filter. */
+function nothingHtml(s, sv) {
+  const src = resultsState.source;
+  const q = resultsState.query;
+  if (q && sv.total) {
+    return `<div class="blank"><h3>Nothing matches &ldquo;${esc(q)}&rdquo;</h3>
+      <p>No ${esc(s.title.toLowerCase())} theme, cluster or tag${src === "all" ? "" :
+        ` from ${esc(SOURCE_NAME[src])}`} contains it.</p>
+      <button class="lnk" data-clearq>Clear the filter</button></div>`;
+  }
+  return `<div class="blank"><h3>Nothing from ${esc(SOURCE_NAME[src])}</h3>
+    <p>No ${esc(s.title.toLowerCase())} tags in this list came from ${esc(SOURCE_NAME[src])}.</p></div>`;
+}
+
+function num(n) { return esc(String(n).padStart(2, "0")); }
 
 /* A theme is a full-width accordion row. Collapsed, it reads as the big picture:
    title, summary, counts and the names of its clusters. Open, the same cluster
-   cards as a flat list render underneath it. */
-function themeHtml(s, t) {
-  const byId = new Map(s.clusters.map(c => [c.cluster_id, c]));
-  const members = t.cluster_ids.map(id => byId.get(id)).filter(Boolean);
-  const shown = members.filter(c => clusterView(s, c).visible);
+   cards as a flat list render underneath it. `tv` is the theme's view. */
+function themeHtml(s, tv) {
+  const t = tv.t;
+  const shown = tv.order;
   if (!shown.length) return "";
 
-  const key = themeKey(s, t);
-  const open = resultsState.expanded.has(key);
+  const src = resultsState.source;
+  const terms = resultsState.terms;
+  // While filtering, a theme with matches is open so the matches are in view.
+  const open = terms.length > 0 || resultsState.expanded.has(tv.key);
   const total = resultsState.data.products_total;
-
-  let mentions, asins;
-  if (resultsState.source === "all") {
-    mentions = t.total_tags;
-    asins = t.unique_asins;
-  } else {
-    const union = new Set();
-    mentions = 0;
-    for (const c of shown) {
-      const v = clusterView(s, c);
-      mentions += v.mentions;
-      for (const a of v.asinSet) union.add(a);
-    }
-    asins = union.size;
-  }
+  const asins = tv.asins[src].size;
 
   const counts =
-    `<b>${plural(shown.length, "cluster", "clusters")}</b> &middot; ` +
-    `${plural(mentions, "mention", "mentions")} &middot; ` +
-    `in ${asins} of ${total} ${total === 1 ? "product" : "products"}`;
-  const mem = shown.map(c => esc(c.title)).join(" &middot; ");
+    `<b>${terms.length ? `${shown.length} of ${tv.members.filter(m => m.mentions[src] > 0).length} clusters`
+                       : plural(shown.length, "cluster", "clusters")}</b> &middot; ` +
+    `${plural(tv.mentions[src], "mention", "mentions")} &middot; ` +
+    covHtml(asins, total);
+  const mem = shown.map(v => hilite(v.c.title, terms)).join(" &middot; ");
 
   return `
-  <div class="thm" data-k="${esc(key)}">
+  <div class="thm" data-k="${esc(tv.key)}">
     <div class="hd" role="button" aria-expanded="${open}">
-      <span class="num">${esc(String(t.number).padStart(2, "0"))}</span>
+      <span class="num">${num(tv.number)}</span>
       <div style="min-width:0;flex:1 1 auto">
-        <h3>${esc(t.title)}</h3>
-        ${t.summary ? `<p class="sum">${esc(t.summary)}</p>` : ""}
+        <h3>${hilite(t.title, terms)}</h3>
+        ${t.summary ? `<p class="sum">${hilite(t.summary, terms)}</p>` : ""}
         <div class="cnt">${counts}</div>
+        ${rankHtml(tv.rank)}
         ${open ? "" : `<div class="mem">${mem}</div>`}
       </div>
       <span class="caret">${open ? "&#9662;" : "&#9656;"}</span>
     </div>
     ${open ? `<div class="body"><div class="cgrid">${
-      shown.map(c => clusterHtml(s, c)).join("")}</div></div>` : ""}
+      shown.map(v => clusterHtml(s, v)).join("")}</div></div>` : ""}
   </div>`;
 }
 
-function clusterHtml(s, c) {
-  const key = `${s.key}:${c.cluster_id}`;
-  const open = resultsState.expanded.has(key);
+/* `v` is the cluster's view: the server's cluster under `v.c`, plus mentions,
+   products and rank per source. */
+function clusterHtml(s, v) {
+  const c = v.c;
+  const open = resultsState.expanded.has(v.key);
   const total = resultsState.data.products_total;
-  const v = clusterView(s, c);
   const src = resultsState.source;
 
   const parts = [
-    `<b>${plural(v.mentions, "mention", "mentions")}</b>`,
+    `<b>${plural(v.mentions[src], "mention", "mentions")}</b>`,
     plural(v.distinct, "distinct tag", "distinct tags"),
   ];
-  if (src !== "review") parts.push(plural(v.listings, "listing", "listings"));
-  if (src !== "listing") parts.push(plural(v.reviews, "review", "reviews"));
-  parts.push(`in ${v.asins} of ${total} ${total === 1 ? "product" : "products"}`);
+  if (src !== "review") parts.push(plural(c.unique_listings, "listing", "listings"));
+  if (src !== "listing") parts.push(plural(c.unique_reviews, "review", "reviews"));
+  parts.push(covHtml(v.asins[src].size, total));
   const counts = parts.join(" &middot; ");
 
   let body;
   if (open) {
     body =
-      (v.listing.length
-        ? `<h4>From listings (${v.listing.length})</h4>
-           <div class="bubs">${v.listing.map(t => chipHtml(t, c.title, s.key)).join("")}</div>` : "") +
-      (v.review.length
-        ? `<h4>From reviews (${v.review.length})</h4>
-           <div class="bubs">${v.review.map(t => chipHtml(t, c.title, s.key)).join("")}</div>` : "");
+      (v.tags.listing.length
+        ? `<h4>From listings (${v.tags.listing.length})</h4>
+           <div class="bubs">${v.tags.listing.map(t => chipHtml(t, c.title, s.key)).join("")}</div>` : "") +
+      (v.tags.review.length
+        ? `<h4>From reviews (${v.tags.review.length})</h4>
+           <div class="bubs">${v.tags.review.map(t => chipHtml(t, c.title, s.key)).join("")}</div>` : "");
   } else {
     const more = v.distinct - v.preview.length;
     body = `<div class="bubs">${v.preview.map(t => chipHtml(t, c.title, s.key)).join("")}${
@@ -2288,13 +2675,14 @@ function clusterHtml(s, c) {
   }
 
   return `
-  <div class="card cl" data-k="${esc(key)}">
+  <div class="card cl" data-k="${esc(v.key)}">
     <div class="ch" role="button" aria-expanded="${open}">
-      <span class="num">${esc(String(c.number).padStart(2, "0"))}</span>
+      <span class="num">${num(v.number)}</span>
       <div style="min-width:0;flex:1 1 auto">
-        <h3>${esc(c.title)}</h3>
-        ${c.description ? `<p class="desc">${esc(c.description)}</p>` : ""}
+        <h3>${hilite(c.title, resultsState.terms)}${gapPill(v)}</h3>
+        ${c.description ? `<p class="desc">${hilite(c.description, resultsState.terms)}</p>` : ""}
         <div class="cnt">${counts}</div>
+        ${rankHtml(v.rank)}
       </div>
       <span class="caret">${open ? "&#9662;" : "&#9656;"}</span>
     </div>
@@ -2309,7 +2697,7 @@ function chipHtml(t, clusterTitle, listKey) {
   const soft = !(first && first.match.confident);
   const tone = LIST_TONE[listKey] ? ` ${LIST_TONE[listKey]}` : "";
   return `<button class="bub${tone}${soft ? " soft" : ""}" data-occs="${esc(t.occ_ids.join(" "))}"
-            data-cluster="${esc(clusterTitle)}">${esc(t.display)}${
+            data-cluster="${esc(clusterTitle)}">${hilite(t.display, resultsState.terms)}${
             t.count > 1 ? `<i>&times;${t.count}</i>` : ""}</button>`;
 }
 
@@ -2334,6 +2722,7 @@ function toggleList(key) {
 }
 
 $("res-body").addEventListener("click", e => {
+  if (e.target.closest("[data-clearq]")) { clearQuery(); return; }
   const listHead = e.target.closest(".shead.clk");
   if (listHead) { toggleList(listHead.dataset.list); return; }
   const themeHead = e.target.closest(".thm > .hd");
@@ -2360,8 +2749,9 @@ $("res-expand").onclick = () => {
   const keys = allThemeKeys();
   if (allThemesOpen()) {
     keys.forEach(k => resultsState.expanded.delete(k));
+    resultsState.ovOpen.clear();
   } else {
-    keys.forEach(k => resultsState.expanded.add(k));
+    keys.forEach(k => { resultsState.expanded.add(k); resultsState.ovOpen.add(k); });
     resultsState.listsClosed.clear();
   }
   persistExpanded();

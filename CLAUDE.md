@@ -378,6 +378,21 @@ handful of good/bad anchor examples drawn from `group-clustering-examples/`, rev
   Complaints and care themes have no hand-made example yet; review the first outputs and
   turn the good ones into examples. Renaming themes or moving clusters is out of scope.
 
+### Phase 8 — Results view at a glance (built 2026-09-17)
+
+The results view was reworked for first-glance reading; the full spec, scoping decisions and
+per-phase "settled" notes live in `UI-DESIGN-IMPROVEMENT.md`. In short: the source toggle
+now re-ranks and re-numbers themes and clusters natively per source (a client-side view model,
+`buildViews`, computes mentions, products and rank per source for every item); an overview
+panel of segmented listing/review bars per theme (Features and Complaints) sits under the
+sticky bar and clicking a bar reveals the item; the sticky bar holds a search that filters
+themes, clusters and tag chips with marked hits, jump links with counts, and Expand all; the
+summary tiles and lede became one mono line; cluster cards carry a rank-shift line, coverage
+dots and, for features, an under-advertised / unconfirmed badge. No backend change. It was
+verified by extracting the page script and running `buildViews` / `renderResultsBody` in Node
+with DOM stubs against `pipeline.results.build(...)` output for several groups, plus Playwright
+screenshots at 1280 px and 600 px; the plan doc's verification section lists what to check.
+
 ### Phase 6 — Deferred refinements (flagged, not built yet)
 
 - **Search terms and usage keywords.** Flat frequency lists (spaces / placements /
