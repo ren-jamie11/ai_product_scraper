@@ -92,6 +92,7 @@ pruning*, *microwave and dishwasher safe*.
 | Listing-fidelity claims | exactly as described, as pictured, better than the photos |
 | Specific SKU values | gold, blue, 5x7, set of 4 — the *value*, not the attribute; see below |
 | Reviewer framing with no product attribute | "I like candid shots in smaller frames" describes the shopper, not the frame |
+| Instructions for assembling, using, or caring for the product | hand wash only, do not microwave, fluff the branches on arrival — these go to `assembly_maintenance`, not to `avoided` |
 
 When the shopper's situation *does* reveal a capability, keep the capability:
 "I don't have the largest space to do my Pilates but this mat works just fine in
@@ -173,8 +174,9 @@ label; split independent benefits apart.
 Two labels about the **same component** where one explains or restates the other
 are one label. Two labels a reader could act on independently are two.
 
-A bullet that states a constraint — "indoor use only", "hand wash only" — is a
-**feature**, not a complaint. It is the listing describing the product.
+A bullet that states a constraint — "indoor use only", "hand wash only" — is never
+a **complaint**. It is the listing telling the buyer how to use the product, so it
+belongs in `assembly_maintenance`.
 
 ---
 
@@ -210,6 +212,71 @@ Listings essentially never produce complaints. Reviews are where these live.
 
 ---
 
+## assembly_maintenance
+
+Instructions that teach the buyer how to assemble, use, care for, or store the
+product. Same wording rules as `features`, stated as the directive.
+
+### The test: how is it phrased?
+
+The split from `features` is **phrasing, not subject matter**. Ask what the
+sentence is doing.
+
+- **Promoting** the product — a benefit, a selling point → `features`
+- **Instructing** the buyer — a step, a rule, a routine → `assembly_maintenance`
+
+The same subject lands in either key depending on how the source frames it:
+
+| Source | Key | Label |
+|---|---|---|
+| "It is easy to fluff and change the fullness" | `features` | *easy to fluff and adjust fullness* |
+| "To achieve full shape please take 5-10min to fluff" | `assembly_maintenance` | *take 5-10min to fluff leaves to achieve full shape* |
+
+**One span, one key.** An instruction produces an `assembly_maintenance` tag and
+**nothing else**. Do not also mirror it into `features` as the benefit it implies.
+"Please take 5-10min to fluff" does not say the product is *easy* to fluff, and
+inventing that judgment is the upgrade `Faithfulness` forbids.
+
+### Directive versus capability
+
+An affirmative capability — something the product *can* do, which widens what the
+buyer may do with it — is a feature. A directive telling the buyer what to do, or
+not do, is maintenance.
+
+| Source | Key |
+|---|---|
+| "microwave and dishwasher safe" | `features` — a capability |
+| "no watering or pruning required" | `features` — a capability |
+| "hand wash only", "do not microwave" | `assembly_maintenance` — a directive |
+| "indoor use only" | `assembly_maintenance` — a directive |
+
+### In scope
+
+Assembly and setup steps, fluffing and shaping routines, cleaning and washing
+directives, storage and handling rules, what not to do with it, and styling the
+listing tells the buyer to perform.
+
+- "Please do not put them in the dishwasher, microwave, freezer or oven" →
+  *do not put in dishwasher, microwave, freezer, or oven*
+- "Care Instructions - Keep away from heat and sunlight; store in a well-ventilated
+  place" → *keep away from heat and sunlight*, *store in a well-ventilated place*
+  — two independent directives, so two labels, by the same grouping rule `features`
+  uses
+- "For a more elevated look, pair it with a larger decorative planter" →
+  *pair with a larger decorative planter for an elevated look*
+
+### Reviews
+
+Reviews produce these too, under the same test. A reviewer passing on a tip —
+"shake it out and let it sit a day before displaying" → *shake out and let sit a
+day before displaying* — is instructing.
+
+A reviewer complaining about the effort is still a `complaint`: "took me 40 minutes
+to fluff before it looked decent" → `complaints` *requires lengthy fluffing to look
+full*. Reporting a problem is not giving an instruction.
+
+---
+
 ## usage_keywords
 
 1–2 words each.
@@ -237,7 +304,8 @@ Rules for all four:
 - Also fine: singular/plural, dropping filler ("Our", "We provide"), collapsing
   repetition.
 - Read every line and capture everything that qualifies. There is no limit on
-  `features`, `complaints`, `search_terms`, or `usage_keywords` — a dense listing
+  `features`, `complaints`, `assembly_maintenance`, `search_terms`, or
+  `usage_keywords` — a dense listing
   legitimately yields many, and a thin review legitimately yields none.
 - Deduplicate **within this body**: one entry per distinct benefit, even when the
   source phrases it twice. Do not worry about other bodies; that is handled
@@ -301,6 +369,7 @@ HD Plastic Cover, Wall Mount and Tabletop Display, Family Friends Wedding Gift
 - HD plastic cover: The picture frames are safe and durable. The HD plastic cover can clearly display your cherished photos (No worrying about injury for broken glass).
 - Wall Mounting & Tabletop Display - Decorative photo frames have an easel kickstand and hanging hooks on the back, which adds sophistication to the décor of your room.
 - Nice Present Idea - Our vintage frame is a nice present for Valentines Day, Christmas, Mother's Day, Anniversary, Birthday etc.
+- Care: wipe the cover with a dry soft cloth only. Do not use alcohol or abrasive cleaners.
 ```
 
 **Output**
@@ -310,6 +379,7 @@ HD Plastic Cover, Wall Mount and Tabletop Display, Family Friends Wedding Gift
   "search_terms": ["5x7 picture frames", "picture frames set of 4", "retro photo frame", "vintage PS picture frame", "decorative photo frame"],
   "features": ["environmental protection PS material", "wood grain design", "abrasion-resistant and moisture-proof frame", "safe and durable", "HD plastic cover displays photos clearly", "shatter-resistant plastic cover", "easel kickstand and hanging hooks on back", "wall mounting and tabletop display"],
   "complaints": [],
+  "assembly_maintenance": ["wipe the cover with a dry soft cloth only", "do not use alcohol or abrasive cleaners"],
   "usage_keywords": {
     "spaces": [],
     "placements": [],
@@ -328,7 +398,9 @@ HD Plastic Cover, Wall Mount and Tabletop Display, Family Friends Wedding Gift
 ```
 
 Note *shatter-resistant plastic cover* — "No worrying about injury for broken
-glass" is indirect, so it is paraphrased into the plain benefit.
+glass" is indirect, so it is paraphrased into the plain benefit. The care bullet
+gives two directives and no feature: it tells the buyer what to do, and never
+claims the cover is easy to clean.
 
 ### 2 — Review with a complaint
 
@@ -351,6 +423,7 @@ A very nice quality frame. Heavy. The glass is glued to the frame so it stays in
   "search_terms": ["gold picture frame"],
   "features": ["heavy frame", "glass glued in place", "paper template inside for trimming photos"],
   "complaints": ["4x6 photos need trimming to fit"],
+  "assembly_maintenance": [],
   "usage_keywords": {"spaces": [], "placements": [], "occasions": [], "used_for": ["photos"]},
   "avoided": [
     {"phrase": "A very nice quality frame", "reason": "vague"},
@@ -388,6 +461,7 @@ Really pretty but didn't work for my needs.
   "search_terms": [],
   "features": [],
   "complaints": [],
+  "assembly_maintenance": [],
   "usage_keywords": {"spaces": [], "placements": [], "occasions": [], "used_for": []},
   "avoided": [
     {"phrase": "Really pretty", "reason": "vague"},

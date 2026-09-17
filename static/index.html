@@ -117,6 +117,10 @@ td.nm b{font-family:var(--sans);font-weight:600;font-size:13.5px}
 .modal h3{font-family:var(--disp);font-weight:700;font-size:20px;margin:0 0 4px;letter-spacing:-.015em}
 .modal .sd{color:var(--muted);font-size:12.5px;margin:0 0 18px}
 .mbar{display:flex;gap:9px;justify-content:flex-end;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--rule)}
+/* model and effort belong together, so they sit on one line and wrap as a pair */
+.spair{display:flex;gap:14px}
+.spair .fld{flex:1 1 0;min-width:0}
+@media (max-width:520px){.spair{display:block}}
 
 /* ---------- unparsed lines ---------- */
 .badlines{margin-top:14px;border:1px solid var(--iron);background:var(--iron-wash);padding:11px 13px;border-radius:3px}
@@ -238,11 +242,118 @@ tbody tr.r:hover .x,tbody tr.r .x:focus-visible{opacity:1}
 .plan .asins{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:8px;
   padding-top:8px;border-top:1px solid var(--rule);word-break:break-all}
 
+/* ---------- results: cluster cards ---------- */
+a.pill{text-decoration:none}
+a.pill:hover{text-decoration:underline}
+.ctl{display:flex;align-items:center;gap:8px}
+.ctl select{font-family:var(--sans);font-size:12.5px;padding:5px 8px;border:1px solid var(--rule);
+  background:var(--glaze);border-radius:3px;color:var(--ink)}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.cl{padding:0;display:flex;flex-direction:column}
+.cl .ch{padding:16px 18px 12px;cursor:pointer;display:flex;gap:10px;align-items:flex-start;user-select:none}
+.cl .ch:hover{background:#FBFCFD}
+.cl .num{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--muted);padding-top:4px;min-width:20px}
+.cl h3{font-family:var(--disp);font-weight:700;font-size:16px;letter-spacing:-.012em;margin:0 0 4px;line-height:1.25}
+.cl .desc{color:var(--muted);font-size:12.5px;line-height:1.45;margin:0 0 8px}
+.cl .cnt{font-family:var(--mono);font-size:10.5px;color:var(--muted);line-height:1.6}
+.cl .cnt b{color:var(--ink);font-weight:600}
+.cl .caret{margin-left:auto;padding-top:2px}
+.cl .cb{padding:0 18px 16px}
+.cl .cb h4{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  font-weight:500;margin:12px 0 7px}
+.bubs{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.bub{display:inline-flex;align-items:center;gap:6px;background:var(--cobalt-wash);color:var(--cobalt);border-radius:11px;
+  padding:3px 10px;font-family:var(--sans);font-size:12px;line-height:1.35;cursor:pointer;border:1px solid transparent;text-align:left}
+.bub:hover,.bub:focus-visible{border-color:var(--cobalt)}
+.bub i{font-style:normal;font-family:var(--mono);font-size:10px;opacity:.7}
+.bub.soft{text-decoration:underline dotted;text-underline-offset:3px}
+.bub.plain{cursor:default;background:var(--rule-soft);color:var(--muted)}
+.bub.plain:hover{border-color:transparent}
+mark{background:#F2D06B;color:var(--ink);padding:0 1px;border-radius:2px}
+
+/* ---------- results: chips coloured by list ----------
+   Only the tag bubbles change colour; every other element keeps its styling. */
+.bub.feat{background:var(--celadon-wash);color:var(--celadon)}
+.bub.feat:hover,.bub.feat:focus-visible{border-color:var(--celadon)}
+.bub.comp{background:var(--iron-wash);color:var(--iron)}
+.bub.comp:hover,.bub.comp:focus-visible{border-color:var(--iron)}
+.bub.care{background:var(--amber-wash);color:var(--amber)}
+.bub.care:hover,.bub.care:focus-visible{border-color:var(--amber)}
+
+/* ---------- results: sticky bar ---------- */
+.sbar{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:12px;align-items:center;
+  background:var(--glaze);border:1px solid var(--rule);padding:8px 14px;margin:-8px 0 22px;
+  box-shadow:0 2px 8px rgba(19,26,42,.06)}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:3px;overflow:hidden}
+.seg button{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;padding:6px 11px;border:0;
+  border-right:1px solid var(--rule);background:var(--glaze);color:var(--muted);cursor:pointer}
+.seg button:last-child{border-right:0}
+.seg button:hover{color:var(--cobalt)}
+.seg button[aria-pressed=true]{color:var(--cobalt);background:var(--cobalt-wash);box-shadow:inset 0 -2px 0 var(--cobalt)}
+
+/* ---------- results: collapsible lists and theme rows ---------- */
+.shead.clk{cursor:pointer;user-select:none}
+.shead.clk:hover h2{color:var(--cobalt)}
+.shead .caret{font-size:13px;color:var(--muted)}
+.thm{background:var(--glaze);border:1px solid var(--rule);margin-bottom:12px}
+.thm .hd{display:flex;gap:12px;padding:14px 18px;cursor:pointer;user-select:none;align-items:flex-start}
+.thm .hd:hover{background:#FBFCFD}
+.thm .num{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--muted);padding-top:4px;min-width:20px}
+.thm h3{font-family:var(--disp);font-weight:700;font-size:17px;letter-spacing:-.012em;margin:0 0 4px;line-height:1.25}
+.thm .sum{color:var(--muted);font-size:12.5px;line-height:1.45;margin:0 0 8px}
+.thm .cnt{font-family:var(--mono);font-size:10.5px;color:var(--muted);line-height:1.6}
+.thm .cnt b{color:var(--ink);font-weight:600}
+.thm .mem{font-family:var(--mono);font-size:10.5px;color:var(--muted);line-height:1.6;margin-top:4px}
+.thm .caret{margin-left:auto;padding-top:2px}
+.thm .body{padding:2px 18px 18px}
+
+/* ---------- results: hover card ---------- */
+#tip{position:fixed;pointer-events:none;z-index:80;background:var(--ink);color:#fff;padding:10px 12px;border-radius:3px;
+  font-family:var(--sans);font-size:12px;line-height:1.5;opacity:0;transition:opacity .1s;max-width:min(420px,calc(100vw - 24px));
+  box-shadow:0 4px 14px rgba(19,26,42,.22)}
+#tip.on{opacity:1}
+#tip .tt{font-family:var(--mono);color:#9FB8E8;letter-spacing:.06em;text-transform:uppercase;font-size:9.5px}
+#tip .tr{font-size:12px;font-weight:600;margin:2px 0 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#tip .th{display:flex;gap:10px;margin-bottom:8px}
+#tip .th img,#tip .th .noimg{width:56px;height:56px;flex:0 0 auto;object-fit:contain;background:#fff;border-radius:3px}
+.noimg{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center}
+#tip .sent{color:#E6E9F0}
+#tip .foot{font-family:var(--mono);font-size:9.5px;color:#9FB8E8;margin-top:7px}
+
+/* ---------- results: source panel ---------- */
+.pveil{position:fixed;inset:0;background:rgba(19,26,42,.22);z-index:84}
+#panel{position:fixed;top:0;right:0;height:100%;width:min(560px,100%);background:var(--glaze);border-left:1px solid var(--rule);
+  z-index:85;overflow:auto;padding:22px 24px 40px;transform:translateX(100%);transition:transform .16s ease}
+#panel.on{transform:none}
+.ph{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px}
+.ph .eyebrow{margin:0 0 4px}
+.ph h3{font-family:var(--disp);font-weight:700;font-size:20px;margin:0;letter-spacing:-.015em;line-height:1.2}
+.ph .x{margin-left:auto;font-size:18px;flex:0 0 auto}
+.pager{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-bottom:14px}
+.pager button{font-family:var(--mono);font-size:12px;padding:2px 9px;border:1px solid var(--rule);background:var(--glaze);
+  color:var(--ink);cursor:pointer;border-radius:3px}
+.pager button:hover:not(:disabled){border-color:var(--cobalt);color:var(--cobalt)}
+.pager button:disabled{opacity:.35;cursor:not-allowed}
+.psrc{display:flex;gap:14px;padding:14px;border:1px solid var(--rule);background:var(--porcelain);margin-bottom:14px}
+.psrc img,.psrc .noimg{width:96px;height:96px;flex:0 0 auto;object-fit:contain;background:var(--glaze);border:1px solid var(--rule-soft);border-radius:3px}
+.psrc .meta{min-width:0;flex:1 1 auto}
+.psrc .ttl{font-weight:600;font-size:13px;line-height:1.36;margin:0 0 5px}
+.psrc .ids{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px}
+.psrc .ids a{color:var(--cobalt);text-decoration:none}
+.psrc .ids a:hover{text-decoration:underline}
+.psrc .facts{display:flex;gap:6px;flex-wrap:wrap}
+.ptext{font-size:13px;line-height:1.65;white-space:pre-wrap;color:#2A3240;overflow-wrap:anywhere}
+.ptext .hit{background:var(--amber-wash);box-shadow:0 0 0 3px var(--amber-wash);border-radius:2px}
+.pother h4{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  font-weight:500;margin:20px 0 8px}
+
 @media (max-width:640px){
   .wrap{padding:0 14px 70px}
   .masthead{padding-top:30px}
-  .pgrid{grid-template-columns:1fr}
+  .pgrid,.cgrid{grid-template-columns:1fr}
+  #panel{padding:18px 16px 40px}
 }
+@media (prefers-reduced-motion:reduce){#panel{transition:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -255,6 +366,8 @@ tbody tr.r:hover .x,tbody tr.r .x:focus-visible{opacity:1}
     <p class="eyebrow" id="eyebrow">Amazon competitor research &middot; feature extraction</p>
     <h1 id="title">What customers<br>actually care about.</h1>
   </div>
+  <button class="btn ghost" id="opensettings"
+          title="Which model and how much reasoning to spend">Settings</button>
 </header>
 
 <div class="err" id="globalerr" hidden style="margin-top:16px"></div>
@@ -355,6 +468,8 @@ tbody tr.r:hover .x,tbody tr.r .x:focus-visible{opacity:1}
       <div class="lb" id="r-proglb"></div>
     </div>
     <button class="btn ghost" id="r-reload">Reload</button>
+    <button class="btn ghost" id="group" hidden>Group tags</button>
+    <button class="btn" id="results" hidden>View results</button>
     <button class="btn" id="parse">Parse results</button>
   </div>
 
@@ -377,7 +492,56 @@ tbody tr.r:hover .x,tbody tr.r .x:focus-visible{opacity:1}
   </section>
 </div>
 
+<!-- ==================== RESULTS VIEW ==================== -->
+<div id="view-results" hidden>
+  <div class="drop">
+    <span class="dt">Results</span>
+    <span class="df" id="res-id"></span>
+    <div class="ctl" id="res-sel-wrap" hidden>
+      <label class="dt" for="res-sel">Parse</label>
+      <select id="res-sel"></select>
+    </div>
+    <div class="spacer"></div>
+    <span class="hint" id="res-model"></span>
+    <a class="btn ghost" id="res-back" href="#/">Back to run</a>
+  </div>
+
+  <div class="sumstrip" id="res-sum" hidden></div>
+
+  <!-- Sticky bar: source filter, expand all, and the manual themes action. Built
+       to grow — search and other filters land here later. -->
+  <div class="sbar" id="res-bar" hidden>
+    <span class="dt">Show</span>
+    <div class="seg" id="res-src" role="group" aria-label="Tag source">
+      <button type="button" data-src="all" aria-pressed="true">All</button>
+      <button type="button" data-src="listing" aria-pressed="false">Listings</button>
+      <button type="button" data-src="review" aria-pressed="false">Reviews</button>
+    </div>
+    <button class="btn ghost" id="res-expand" hidden>Expand all</button>
+    <button class="btn ghost" id="res-theme" hidden>Group into themes</button>
+    <div class="prog" id="res-prog" hidden>
+      <div class="bar"><i id="res-progbar"></i></div>
+      <div class="lb" id="res-proglb"></div>
+    </div>
+    <div class="spacer"></div>
+    <span class="err" id="res-err" hidden></span>
+  </div>
+
+  <p class="lede" id="res-lede" hidden>Clusters are ranked by mentions, and a list with many
+     clusters is grouped into <b>themes</b>: open a theme to see its clusters, click a list's
+     heading to collapse it. Open a cluster to see every tag, listings and reviews apart.
+     <b>Hover</b> a tag for the sentence it came from; <b>click</b> it for the full source.
+     A dotted tag is one where no single sentence could be pinned down, so you get the whole
+     text instead.</p>
+  <div id="res-body"></div>
+</div>
+
 </div><!-- /wrap -->
+
+<!-- ==================== HOVER CARD + SOURCE PANEL ==================== -->
+<div id="tip" aria-hidden="true"></div>
+<div class="pveil" id="pveil" hidden></div>
+<aside id="panel" hidden aria-label="Tag source"></aside>
 
 <!-- ==================== NEW GROUP MODAL ==================== -->
 <div class="veil" id="veil" hidden>
@@ -408,6 +572,50 @@ tbody tr.r:hover .x,tbody tr.r .x:focus-visible{opacity:1}
       <div class="spacer"></div>
       <button class="btn ghost" id="cno">Cancel</button>
       <button class="btn" id="cyes">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SETTINGS MODAL ==================== -->
+<div class="veil" id="sveil" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="stitle">
+    <h3 id="stitle">Models &amp; reasoning</h3>
+    <p class="sd">Tagging makes one call per text body, so it runs on a cheaper model.
+       Grouping makes one call per tag list and is pure judgement, so it's worth more.
+       Changes apply to the next run, never to one already in flight.</p>
+
+    <div class="spair">
+      <div class="fld">
+        <label for="s-tag-model">Tagging model</label>
+        <select id="s-tag-model"></select>
+      </div>
+      <div class="fld">
+        <label for="s-tag-reasoning">Tagging reasoning</label>
+        <select id="s-tag-reasoning"></select>
+      </div>
+    </div>
+    <div class="spair">
+      <div class="fld">
+        <label for="s-group-model">Grouping model</label>
+        <select id="s-group-model"></select>
+      </div>
+      <div class="fld">
+        <label for="s-group-reasoning">Grouping reasoning</label>
+        <select id="s-group-reasoning"></select>
+      </div>
+    </div>
+    <label class="chk" for="s-auto-themes" style="margin-top:4px;margin-bottom:16px">
+      <input type="checkbox" id="s-auto-themes">
+      <span>Automatically group clusters into themes
+        <em>Runs right after tag clustering, on the grouping model above. When off, use
+            &ldquo;Group into themes&rdquo; on the results view.</em></span>
+    </label>
+
+    <div class="err" id="serr" hidden></div>
+    <div class="mbar">
+      <div class="spacer"></div>
+      <button class="btn ghost" id="scancel">Cancel</button>
+      <button class="btn" id="ssave">Save</button>
     </div>
   </div>
 </div>
@@ -553,6 +761,9 @@ function editable(el, { value, multiline, placeholder, onSave, onCancel }) {
 function route() {
   showError("");
   const hash = location.hash || "#/";
+  const res = hash.match(/^#\/g\/([^/]+)\/r\/([^/]+)\/p\/([^/]+)$/);
+  if (res) return renderResults(decodeURIComponent(res[1]), decodeURIComponent(res[2]),
+                                decodeURIComponent(res[3]));
   const run = hash.match(/^#\/g\/([^/]+)\/r\/([^/]+)$/);
   if (run) return renderRun(decodeURIComponent(run[1]), decodeURIComponent(run[2]));
   const grp = hash.match(/^#\/g\/([^/]+)$/);
@@ -580,6 +791,26 @@ function showView(which) {
   $("view-groups").hidden = which !== "groups";
   $("view-group").hidden = which !== "group";
   $("view-run").hidden = which !== "run";
+  $("view-results").hidden = which !== "results";
+  // The hover card and source panel belong to the results view only.
+  tipOff();
+  closePanel();
+}
+
+function resultsHref(slug, runId, parseId) {
+  return `#/g/${encodeURIComponent(slug)}/r/${encodeURIComponent(runId)}` +
+         `/p/${encodeURIComponent(parseId)}`;
+}
+
+/* A parse pill: a link when the parse has been grouped, a plain marker otherwise.
+   Tags alone are an intermediate step, so only a grouped parse opens anywhere. */
+function parsePill(slug, runId, p, newest) {
+  if (p.grouped) {
+    return `<a class="pill ok" href="${resultsHref(slug, runId, p.id)}"
+              title="Open results">${esc(p.id)}</a>`;
+  }
+  return `<span class="pill ${newest ? "warn" : "na"}" title="Tagged but not grouped yet">${
+    esc(p.id)} &middot; not grouped</span>`;
 }
 
 /* ---------- groups view ---------- */
@@ -691,13 +922,14 @@ async function renderGroup(slug) {
             <td>${r.asins_ok != null ? esc(r.asins_ok + " / " + r.asins_total) : "—"}</td>
             <td>${r.reviews_total != null ? esc(r.reviews_total) : "—"}</td>
             <td class="l">${r.parses && r.parses.length
-                ? r.parses.map(p => `<span class="pill ok">${esc(p)}</span>`).join(" ")
+                ? r.parses.map((p, i) => parsePill(slug, r.run_id, p, i === 0)).join(" ")
                 : `<span class="pill na">not parsed</span>`}</td>
             <td class="act"><button class="x" title="Delete this run">&times;</button></td>
           </tr>`).join("") + `</tbody></table></div>`;
 
     $("runs-wrap").querySelectorAll("tr.r").forEach(tr => {
-      tr.onclick = () => {
+      tr.onclick = event => {
+        if (event.target.closest("a")) return;   // a parse pill goes to its results
         location.hash = `#/g/${encodeURIComponent(slug)}/r/${encodeURIComponent(tr.dataset.run)}`;
       };
       tr.querySelector(".x").onclick = event => {
@@ -1414,6 +1646,11 @@ async function renderRun(slug, runId) {
   renderParses();
   $("r-reload").onclick = () => renderRun(slug, runId);
   $("parse").onclick = startParse;
+  $("group").onclick = startGroup;
+  $("results").onclick = () => {
+    const newest = (runState.parses || [])[0];
+    if (newest && newest.grouped) location.hash = resultsHref(slug, runId, newest.id);
+  };
 }
 
 /* ---------- step 2: tagging ----------
@@ -1424,6 +1661,8 @@ let parsing = false;
 
 async function renderParses() {
   const list = runState.parses || [];
+  $("group").hidden = !list.length;
+  $("results").hidden = !(list[0] && list[0].grouped);
   if (!list.length) {
     $("r-parses").innerHTML = "";
     return;
@@ -1431,13 +1670,14 @@ async function renderParses() {
 
   // Only the newest parse's log is worth loading — it's the one the summary
   // describes, and each fetch reads a file off disk.
-  let log = {};
+  let log = {}, clusterLog = {};
   try {
-    log = (await api(runPath(`/parses/${encodeURIComponent(list[0])}`))).log || {};
+    const result = await api(runPath(`/parses/${encodeURIComponent(list[0].id)}`));
+    log = result.log || {};
+    clusterLog = result.cluster_log || {};
   } catch (e) { /* a half-written parse folder: show the pills, skip the stats */ }
 
-  const pills = list.map((p, i) =>
-    `<span class="pill ${i === 0 ? "ok" : "na"}">${esc(p)}</span>`).join(" ");
+  const pills = list.map((p, i) => parsePill(runState.slug, runState.runId, p, i === 0)).join(" ");
 
   const stats = log.bodies_total ? `
     <div class="sumstrip" style="margin-top:10px">
@@ -1446,6 +1686,7 @@ async function renderParses() {
              log.failed ? "bad" : "good")}
       ${stat("Features", log.features_total, "concrete benefits")}
       ${stat("Complaints", log.complaints_total, "from reviews")}
+      ${stat("Assembly & care", log.assembly_maintenance_total ?? "—", "instructions")}
       ${stat("Search terms", log.search_terms_total, null)}
       ${stat("Usage keywords", log.usage_keywords_total, null)}
       ${stat("Skipped", log.skipped, `under ${log.min_tag_chars} chars`,
@@ -1457,6 +1698,48 @@ async function renderParses() {
                : `est. $${log.estimated_cost_usd.toFixed(4)} · ${log.elapsed_seconds}s`)}
     </div>` : "";
 
+  // Step 3's own strip, shown only once a grouping has run. Phase 5 renders the
+  // clusters themselves; this is just enough to see that it worked and what it cost.
+  const clusters = (clusterLog.lists || []).map(l =>
+    stat(l.title, l.clusters, `from ${l.unique_tags} tags`,
+         l.status === "failed" ? "bad" : "")).join("");
+
+  // The theme step's outcome when it ran inside this grouping. An older log has
+  // no `themes` block at all, and shows nothing.
+  let themeStat = "";
+  if (clusterLog.themes) {
+    const th = clusterLog.themes;
+    const count = (th.lists || []).reduce((n, l) => n + (l.themes || 0), 0);
+    if (th.status === "failed") {
+      themeStat = stat("Themes", "failed", th.error ? "see the results view" : "one list failed", "bad");
+    } else if (th.status === "skipped") {
+      themeStat = stat("Themes", "—", "auto themes is off");
+    } else if (!count) {
+      themeStat = stat("Themes", "—", "no list long enough");
+    } else {
+      themeStat = stat("Themes", count, `across ${plural(th.lists.length, "list", "lists")}`, "good");
+    }
+  }
+
+  const clusterStrip = clusterLog.lists ? `
+    <div class="strip" style="margin-top:14px">
+      <div class="sh">
+        <span>Clusters &middot; <span class="pill ok">${esc(clusterLog.parse_id || "")}</span></span>
+        <span class="hint">${esc(clusterLog.model || "")}${
+          clusterLog.reasoning ? ` &middot; ${esc(clusterLog.reasoning)}` : ""}${
+          clusterLog.prompt_sha ? ` &middot; prompt ${esc(clusterLog.prompt_sha)}` : ""}</span>
+      </div>
+    </div>
+    <div class="sumstrip" style="margin-top:10px">
+      ${clusters}
+      ${stat("Repairs", clusterLog.repairs ?? 0,
+             clusterLog.repairs ? "see cluster_log.json" : "every tag placed once",
+             clusterLog.repairs ? "warn" : "good")}
+      ${themeStat}
+      ${stat("Cost", clusterLog.cost_usd == null ? "—" : `$${clusterLog.cost_usd.toFixed(4)}`,
+             `${clusterLog.elapsed_seconds}s`)}
+    </div>` : "";
+
   $("r-parses").innerHTML = `
     <div class="strip">
       <div class="sh">
@@ -1464,7 +1747,7 @@ async function renderParses() {
         <span class="hint">${esc(log.model || "")}${
           log.prompt_sha ? ` &middot; prompt ${esc(log.prompt_sha)}` : ""}</span>
       </div>
-    </div>${stats}`;
+    </div>${stats}${clusterStrip}`;
 }
 
 async function startParse() {
@@ -1516,7 +1799,8 @@ async function startParse() {
     title: "Parse this run?",
     confirmLabel: "Parse",
     body: `<p class="sd">One call per text body to <b>${esc(est.model)}</b>, extracting search
-             terms, features, complaints and usage keywords.</p>${plan}`,
+             terms, features, complaints, assembly &amp; care instructions and usage
+             keywords.</p>${plan}`,
   });
   if (!ok) return;
 
@@ -1580,6 +1864,905 @@ function endParse(slug, runId, error) {
   renderRun(slug, runId);
 }
 
+/* ---------- step 3: grouping ----------
+   Separate from parsing on purpose. Re-tagging costs about four times what
+   re-grouping does, so keeping them apart means the clustering prompt can be
+   tuned against a parse you already paid for. Writes clusters.json, clusters.md
+   and cluster_log.json into the same parse-<ts>/ folder the tags came from. */
+let grouping = false;
+
+async function startGroup() {
+  if (grouping || parsing) return;
+  const { slug, runId } = runState;
+  const parseId = ((runState.parses || [])[0] || {}).id;
+  if (!parseId) return;
+  $("r-err").hidden = true;
+
+  const path = runPath(`/parses/${encodeURIComponent(parseId)}/group`);
+
+  let info;
+  try {
+    info = await api(path + "-estimate");
+  } catch (e) {
+    $("r-err").textContent = e.message;
+    $("r-err").hidden = false;
+    return;
+  }
+
+  const est = info.estimate;
+  if (!est.to_group) {
+    $("r-err").textContent =
+      "This parse found no features, complaints or care instructions, so there is " +
+      "nothing to group. Parse again, or add more reviews first.";
+    $("r-err").hidden = false;
+    return;
+  }
+
+  const line = (n, text, tone) =>
+    `<div class="ln ${tone || ""}"><b>${esc(n)}</b><span>${text}</span></div>`;
+
+  let plan = `<div class="plan">` +
+    est.lists.map(l => line(l.unique_tags,
+      `${esc(l.title.toLowerCase())} <span class="d">&mdash; from
+       ${plural(l.occurrences, "mention", "mentions")}</span>`)).join("") +
+    (est.cost_known
+      ? line(`$${est.cost_usd.toFixed(3)}`, `estimated <span class="d">&mdash; the real figure is
+          written to cluster_log.json</span>`)
+      : line("?", `cost unknown <span class="d">&mdash; no pricing set for
+          ${esc(est.model)} in config.py</span>`, "warn"));
+
+  if (info.already_grouped) {
+    plan += `<div class="asins">Grouped before &mdash; this replaces
+      <code>clusters.json</code> for this parse.</div>`;
+  }
+  if (info.auto_themes) {
+    plan += `<div class="asins">Then clusters are grouped into themes automatically for any
+      list with ${esc(info.theme_min_clusters)} or more clusters &mdash; change this in Settings.</div>`;
+  }
+  plan += `</div>`;
+
+  const ok = await confirmModal({
+    title: "Group this parse's tags?",
+    confirmLabel: "Group tags",
+    body: `<p class="sd">One call per list to <b>${esc(est.model)}</b> at
+             <b>${esc(est.reasoning)}</b> reasoning, sorting every tag into exactly one
+             semantic cluster with a title and a one-line description.</p>${plan}`,
+  });
+  if (!ok) return;
+
+  grouping = true;
+  $("group").disabled = true;
+
+  let job;
+  try {
+    job = await api(path, { method: "POST" });
+  } catch (err) {
+    $("r-err").textContent = err.message;
+    $("r-err").hidden = false;
+    grouping = false;
+    $("group").disabled = false;
+    return;
+  }
+
+  setParseProgress(0, `Starting — ${plural(job.to_group, "list", "lists")} to group`);
+  pollGroup(job.job_id, slug, runId);
+}
+
+async function pollGroup(jobId, slug, runId) {
+  let snap;
+  try {
+    snap = await api("/api/jobs/" + encodeURIComponent(jobId));
+  } catch (e) {
+    return endGroup(slug, runId, e.message);
+  }
+
+  setParseProgress(snap.pct, snap.total ? `${snap.label} (${snap.done}/${snap.total})`
+                                        : snap.label);
+
+  if (snap.state === "running") {
+    setTimeout(() => pollGroup(jobId, slug, runId), 700);
+    return;
+  }
+  if (snap.state === "error") {
+    return endGroup(slug, runId, snap.error || "The grouping failed.");
+  }
+
+  setParseProgress(100, "Done");
+  setTimeout(() => endGroup(slug, runId, null), 500);
+}
+
+function endGroup(slug, runId, error) {
+  grouping = false;
+  $("group").disabled = false;
+  $("r-prog").hidden = true;
+  $("r-progbar").style.width = "0%";
+  if (error) {
+    $("r-err").textContent = error;
+    $("r-err").hidden = false;
+    return;
+  }
+  renderRun(slug, runId);
+}
+
+/* ---------- step 4: results ----------
+   One request returns everything the view needs — clusters with their tags split
+   by source, every mention already attributed to a sentence, and the bodies and
+   products they point at, keyed by id. Hover and click never touch the network. */
+let resultsState = null;
+
+async function renderResults(slug, runId, parseId) {
+  showView("results");
+  currentSlug = slug;
+  resultsState = null;
+
+  const runHref = `#/g/${encodeURIComponent(slug)}/r/${encodeURIComponent(runId)}`;
+  $("res-id").textContent = `data/${slug}/${runId}/${parseId}`;
+  $("res-back").setAttribute("href", runHref);
+  $("res-sum").hidden = true;
+  $("res-bar").hidden = true;
+  $("res-err").hidden = true;
+  $("res-lede").hidden = true;
+  $("res-sel-wrap").hidden = true;
+  $("res-model").textContent = "";
+  $("res-body").innerHTML = "";
+
+  // The run answers two things before results are fetched: what the group is
+  // called, and whether this parse has been grouped at all.
+  let runData;
+  try {
+    runData = await api(`/api/runs/${encodeURIComponent(slug)}/${encodeURIComponent(runId)}`);
+  } catch (e) {
+    setHeader({ eyebrow: "Results", title: "Not found", back: true, backHref: runHref });
+    showError(e.message);
+    return;
+  }
+  const groupName = runData.group.name;
+  setHeader({ eyebrow: `${groupName} · results`, title: esc(groupName),
+              back: true, backHref: runHref });
+
+  const parses = runData.parses || [];
+  const grouped = parses.filter(p => p.grouped);
+  if (grouped.length > 1) {
+    $("res-sel-wrap").hidden = false;
+    $("res-sel").innerHTML = grouped.map(p =>
+      `<option value="${esc(p.id)}">${esc(p.id)}</option>`).join("");
+    $("res-sel").value = parseId;
+    $("res-sel").onchange = () => { location.hash = resultsHref(slug, runId, $("res-sel").value); };
+  }
+
+  const here = parses.find(p => p.id === parseId);
+  if (!here || !here.grouped) {
+    $("res-body").innerHTML = `
+      <div class="blank">
+        <h3>${here ? "This parse hasn't been grouped yet" : "That parse doesn't exist"}</h3>
+        <p>${here
+          ? "Tags on their own are only half the picture. Group them into clusters first, then come back here."
+          : "It may have been deleted, or the address is wrong."}</p>
+        <a class="btn" href="${runHref}">${here ? "Back to the run to group tags" : "Back to the run"}</a>
+      </div>`;
+    return;
+  }
+
+  let data;
+  try {
+    data = await api(`/api/runs/${encodeURIComponent(slug)}/${encodeURIComponent(runId)}` +
+                     `/parses/${encodeURIComponent(parseId)}/results`);
+  } catch (e) { showError(e.message); return; }
+
+  // Every tag in a body is an occurrence somewhere; this lets the panel's
+  // "other tags from this source" chips behave exactly like cluster chips.
+  const byBodyTag = new Map();
+  for (const [ref, o] of Object.entries(data.occurrences)) {
+    const key = o.body_id + " " + o.text;
+    if (!byBodyTag.has(key)) byBodyTag.set(key, ref);
+  }
+
+  let expanded = [];
+  try { expanded = JSON.parse(localStorage.getItem(`results:${slug}:${parseId}`) || "[]"); }
+  catch (e) { expanded = []; }
+
+  // `expanded` holds both cluster keys ("features:g_01") and theme keys
+  // ("theme:features:t_01") and is remembered per parse. Which lists are
+  // collapsed and which source is shown are session-only: every visit starts
+  // with all lists open and every source showing.
+  resultsState = { slug, runId, parseId, data, byBodyTag, expanded: new Set(expanded),
+                   source: "all", listsClosed: new Set(), views: new Map() };
+  $("res-model").textContent = [data.model, data.reasoning].filter(Boolean).join(" · ");
+  renderResultsBody();
+}
+
+/* Chips are coloured by the list they came from — and nothing else is. */
+const LIST_TONE = { features: "feat", complaints: "comp", assembly_maintenance: "care" };
+const SOURCE_NAME = { listing: "listings", review: "reviews" };
+
+function themeKey(s, t) { return `theme:${s.key}:${t.theme_id}`; }
+
+function allThemeKeys() {
+  const keys = [];
+  for (const s of resultsState.data.sections) {
+    for (const t of s.themes || []) keys.push(themeKey(s, t));
+  }
+  return keys;
+}
+
+function allThemesOpen() {
+  const keys = allThemeKeys();
+  return keys.length > 0 && keys.every(k => resultsState.expanded.has(k));
+}
+
+/* What one cluster looks like under the current source filter. On "All" it is
+   the server's own numbers; on Listings or Reviews the mentions, products and
+   preview are recomputed from that source's chips, and a cluster with nothing
+   from that source is hidden. Order never changes. */
+function clusterView(s, c) {
+  const key = `${s.key}:${c.cluster_id}`;
+  const cached = resultsState.views.get(key);
+  if (cached) return cached;
+
+  const src = resultsState.source;
+  let v;
+  if (src === "all") {
+    v = { listing: c.listing_tags, review: c.review_tags, mentions: c.total_tags,
+          distinct: c.distinct_tags, listings: c.unique_listings, reviews: c.unique_reviews,
+          asins: c.unique_asins, asinSet: null, preview: c.preview, visible: true };
+  } else {
+    const tags = src === "listing" ? c.listing_tags : c.review_tags;   // already sorted
+    const occ = resultsState.data.occurrences;
+    const asinSet = new Set();
+    let mentions = 0;
+    for (const t of tags) {
+      mentions += t.count;
+      for (const ref of t.occ_ids) { const o = occ[ref]; if (o) asinSet.add(o.asin); }
+    }
+    v = { listing: src === "listing" ? tags : [], review: src === "review" ? tags : [],
+          mentions, distinct: tags.length,
+          listings: src === "listing" ? c.unique_listings : 0,
+          reviews: src === "review" ? c.unique_reviews : 0,
+          asins: asinSet.size, asinSet, preview: tags.slice(0, 3), visible: mentions > 0 };
+  }
+  resultsState.views.set(key, v);
+  return v;
+}
+
+function renderResultsBody() {
+  const d = resultsState.data;
+  const pct = d.mentions ? Math.round(100 * d.attributed / d.mentions) : 0;
+  resultsState.views = new Map();
+
+  $("res-sum").hidden = false;
+  $("res-sum").innerHTML =
+    d.sections.map(s => stat(s.title, s.clusters.length,
+      s.status === "failed" ? "failed" : plural(s.mentions, "mention", "mentions"),
+      s.status === "failed" ? "bad" : "")).join("") +
+    stat("Traced to a sentence", `${pct}%`, `${d.attributed} of ${d.mentions} mentions`,
+         pct >= 90 ? "good" : "warn") +
+    stat("Products", d.products_total, "in this run");
+  $("res-lede").hidden = false;
+
+  // The sticky bar. "Group into themes" only appears when a list is long enough
+  // to theme and no valid themes exist for these exact clusters.
+  const themes = d.themes || { status: "missing", eligible: [] };
+  const hasThemes = d.sections.some(s => s.themes && s.themes.length);
+  const needThemes = themes.status === "missing" && themes.eligible.length > 0;
+  $("res-bar").hidden = false;
+  $("res-src").querySelectorAll("button").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.src === resultsState.source)));
+  $("res-expand").hidden = !hasThemes;
+  $("res-expand").textContent = allThemesOpen() ? "Collapse all" : "Expand all";
+  $("res-theme").hidden = !needThemes;
+
+  let banner = "";
+  if (needThemes) {
+    const names = d.sections.filter(s => themes.eligible.includes(s.key))
+      .map(s => s.title.toLowerCase());
+    banner = `<div class="note-line info" style="margin-bottom:22px"><span class="ic">Themes</span>
+      <span>Clusters are not grouped into themes yet. Press <b>Group into themes</b> above to
+      build them for ${esc(names.join(" and "))} (${plural(themes.min_clusters || 13,
+      "cluster", "clusters")} or more).</span></div>`;
+  }
+
+  $("res-body").innerHTML = banner + d.sections.map(sectionHtml).join("");
+}
+
+function sectionHtml(s) {
+  const closed = resultsState.listsClosed.has(s.key);
+  const src = resultsState.source;
+  const views = s.clusters.map(c => clusterView(s, c));
+  const shown = s.clusters.filter((c, i) => views[i].visible);
+  const mentions = views.reduce((n, v) => n + (v.visible ? v.mentions : 0), 0);
+  const themed = !!(s.themes && s.themes.length);
+
+  const note = s.status === "failed" ? "failed" :
+    `${plural(shown.length, "cluster", "clusters")} &middot; ${
+      plural(mentions, "mention", "mentions")}${
+      themed ? ` &middot; ${plural(s.themes.length, "theme", "themes")}` : ""}`;
+  const head = `<div class="shead clk" data-list="${esc(s.key)}" role="button" aria-expanded="${!closed}">
+    <span class="caret">${closed ? "&#9656;" : "&#9662;"}</span>
+    <h2>${esc(s.title)}</h2><span class="note">${note}</span></div>`;
+
+  if (closed) return `<section>${head}</section>`;
+  if (s.status === "failed") {
+    return `<section>${head}<div class="note-line"><span class="ic">Failed</span>
+      <span>${esc(s.error || "This list could not be grouped.")}</span></div></section>`;
+  }
+  if (!s.clusters.length) {
+    return `<section>${head}<div class="blank"><h3>Nothing here</h3>
+      <p>No ${esc(s.title.toLowerCase())} tags came out of this parse.</p></div></section>`;
+  }
+
+  const themeNote = s.theme_error
+    ? `<div class="note-line"><span class="ic">Themes</span>
+       <span>This list could not be grouped into themes: ${esc(s.theme_error)}</span></div>` : "";
+
+  if (!shown.length) {
+    return `<section>${head}${themeNote}<div class="blank"><h3>Nothing from ${esc(SOURCE_NAME[src])}</h3>
+      <p>No ${esc(s.title.toLowerCase())} tags in this list came from ${esc(SOURCE_NAME[src])}.</p></div></section>`;
+  }
+
+  const body = themed
+    ? s.themes.map(t => themeHtml(s, t)).join("")
+    : `<div class="cgrid">${shown.map(c => clusterHtml(s, c)).join("")}</div>`;
+  return `<section>${head}${themeNote}${body}</section>`;
+}
+
+/* A theme is a full-width accordion row. Collapsed, it reads as the big picture:
+   title, summary, counts and the names of its clusters. Open, the same cluster
+   cards as a flat list render underneath it. */
+function themeHtml(s, t) {
+  const byId = new Map(s.clusters.map(c => [c.cluster_id, c]));
+  const members = t.cluster_ids.map(id => byId.get(id)).filter(Boolean);
+  const shown = members.filter(c => clusterView(s, c).visible);
+  if (!shown.length) return "";
+
+  const key = themeKey(s, t);
+  const open = resultsState.expanded.has(key);
+  const total = resultsState.data.products_total;
+
+  let mentions, asins;
+  if (resultsState.source === "all") {
+    mentions = t.total_tags;
+    asins = t.unique_asins;
+  } else {
+    const union = new Set();
+    mentions = 0;
+    for (const c of shown) {
+      const v = clusterView(s, c);
+      mentions += v.mentions;
+      for (const a of v.asinSet) union.add(a);
+    }
+    asins = union.size;
+  }
+
+  const counts =
+    `<b>${plural(shown.length, "cluster", "clusters")}</b> &middot; ` +
+    `${plural(mentions, "mention", "mentions")} &middot; ` +
+    `in ${asins} of ${total} ${total === 1 ? "product" : "products"}`;
+  const mem = shown.map(c => esc(c.title)).join(" &middot; ");
+
+  return `
+  <div class="thm" data-k="${esc(key)}">
+    <div class="hd" role="button" aria-expanded="${open}">
+      <span class="num">${esc(String(t.number).padStart(2, "0"))}</span>
+      <div style="min-width:0;flex:1 1 auto">
+        <h3>${esc(t.title)}</h3>
+        ${t.summary ? `<p class="sum">${esc(t.summary)}</p>` : ""}
+        <div class="cnt">${counts}</div>
+        ${open ? "" : `<div class="mem">${mem}</div>`}
+      </div>
+      <span class="caret">${open ? "&#9662;" : "&#9656;"}</span>
+    </div>
+    ${open ? `<div class="body"><div class="cgrid">${
+      shown.map(c => clusterHtml(s, c)).join("")}</div></div>` : ""}
+  </div>`;
+}
+
+function clusterHtml(s, c) {
+  const key = `${s.key}:${c.cluster_id}`;
+  const open = resultsState.expanded.has(key);
+  const total = resultsState.data.products_total;
+  const v = clusterView(s, c);
+  const src = resultsState.source;
+
+  const parts = [
+    `<b>${plural(v.mentions, "mention", "mentions")}</b>`,
+    plural(v.distinct, "distinct tag", "distinct tags"),
+  ];
+  if (src !== "review") parts.push(plural(v.listings, "listing", "listings"));
+  if (src !== "listing") parts.push(plural(v.reviews, "review", "reviews"));
+  parts.push(`in ${v.asins} of ${total} ${total === 1 ? "product" : "products"}`);
+  const counts = parts.join(" &middot; ");
+
+  let body;
+  if (open) {
+    body =
+      (v.listing.length
+        ? `<h4>From listings (${v.listing.length})</h4>
+           <div class="bubs">${v.listing.map(t => chipHtml(t, c.title, s.key)).join("")}</div>` : "") +
+      (v.review.length
+        ? `<h4>From reviews (${v.review.length})</h4>
+           <div class="bubs">${v.review.map(t => chipHtml(t, c.title, s.key)).join("")}</div>` : "");
+  } else {
+    const more = v.distinct - v.preview.length;
+    body = `<div class="bubs">${v.preview.map(t => chipHtml(t, c.title, s.key)).join("")}${
+      more > 0 ? `<button class="lnk more">+${more} more</button>` : ""}</div>`;
+  }
+
+  return `
+  <div class="card cl" data-k="${esc(key)}">
+    <div class="ch" role="button" aria-expanded="${open}">
+      <span class="num">${esc(String(c.number).padStart(2, "0"))}</span>
+      <div style="min-width:0;flex:1 1 auto">
+        <h3>${esc(c.title)}</h3>
+        ${c.description ? `<p class="desc">${esc(c.description)}</p>` : ""}
+        <div class="cnt">${counts}</div>
+      </div>
+      <span class="caret">${open ? "&#9662;" : "&#9656;"}</span>
+    </div>
+    <div class="cb">${body}</div>
+  </div>`;
+}
+
+/* A chip carries the ids of every mention it stands for. Dotted means the first
+   one has no confident sentence — you get the whole text instead of a guess. */
+function chipHtml(t, clusterTitle, listKey) {
+  const first = resultsState.data.occurrences[t.occ_ids[0]];
+  const soft = !(first && first.match.confident);
+  const tone = LIST_TONE[listKey] ? ` ${LIST_TONE[listKey]}` : "";
+  return `<button class="bub${tone}${soft ? " soft" : ""}" data-occs="${esc(t.occ_ids.join(" "))}"
+            data-cluster="${esc(clusterTitle)}">${esc(t.display)}${
+            t.count > 1 ? `<i>&times;${t.count}</i>` : ""}</button>`;
+}
+
+function persistExpanded() {
+  try {
+    localStorage.setItem(`results:${resultsState.slug}:${resultsState.parseId}`,
+                         JSON.stringify([...resultsState.expanded]));
+  } catch (e) { /* preference only */ }
+}
+
+function toggleKey(key) {
+  const set = resultsState.expanded;
+  if (set.has(key)) set.delete(key); else set.add(key);
+  persistExpanded();
+  renderResultsBody();
+}
+
+function toggleList(key) {
+  const set = resultsState.listsClosed;
+  if (set.has(key)) set.delete(key); else set.add(key);
+  renderResultsBody();
+}
+
+$("res-body").addEventListener("click", e => {
+  const listHead = e.target.closest(".shead.clk");
+  if (listHead) { toggleList(listHead.dataset.list); return; }
+  const themeHead = e.target.closest(".thm > .hd");
+  if (themeHead) { toggleKey(themeHead.parentElement.dataset.k); return; }
+  const more = e.target.closest(".more");
+  const head = e.target.closest(".ch");
+  const card = e.target.closest(".cl");
+  if (!card) return;
+  if (more || head) toggleKey(card.dataset.k);
+});
+
+$("res-src").addEventListener("click", e => {
+  const btn = e.target.closest("button[data-src]");
+  if (!btn || !resultsState || btn.dataset.src === resultsState.source) return;
+  resultsState.source = btn.dataset.src;
+  renderResultsBody();
+});
+
+/* Expand all opens every theme and any list that was collapsed, so the effect is
+   visible; Collapse all closes the themes and leaves the lists alone. Cluster
+   cards are never touched either way. */
+$("res-expand").onclick = () => {
+  if (!resultsState) return;
+  const keys = allThemeKeys();
+  if (allThemesOpen()) {
+    keys.forEach(k => resultsState.expanded.delete(k));
+  } else {
+    keys.forEach(k => resultsState.expanded.add(k));
+    resultsState.listsClosed.clear();
+  }
+  persistExpanded();
+  renderResultsBody();
+};
+
+/* ---------- step 3b: themes, the manual path ----------
+   With "auto themes" off in Settings, this is how clusters get grouped into
+   themes: the same confirm-then-poll shape as Group tags, run from the results
+   view because that is where the clusters are. Writes themes.json, themes.md and
+   themes_log.json next to clusters.json. */
+let theming = false;
+
+function setThemeProgress(pct, label) {
+  $("res-prog").hidden = false;
+  $("res-progbar").style.width = Math.max(2, pct) + "%";
+  $("res-proglb").textContent = label;
+}
+
+async function startThemes() {
+  if (theming || !resultsState) return;
+  const { slug, runId, parseId } = resultsState;
+  $("res-err").hidden = true;
+
+  const path = `/api/runs/${encodeURIComponent(slug)}/${encodeURIComponent(runId)}` +
+               `/parses/${encodeURIComponent(parseId)}/theme`;
+
+  let info;
+  try {
+    info = await api(path + "-estimate");
+  } catch (e) {
+    $("res-err").textContent = e.message;
+    $("res-err").hidden = false;
+    return;
+  }
+
+  const est = info.estimate;
+  if (!est.to_theme) {
+    $("res-err").textContent =
+      `No list has ${est.min_clusters} or more clusters, so there is nothing to group into themes.`;
+    $("res-err").hidden = false;
+    return;
+  }
+
+  const line = (n, text, tone) =>
+    `<div class="ln ${tone || ""}"><b>${esc(n)}</b><span>${text}</span></div>`;
+
+  let plan = `<div class="plan">` +
+    est.lists.map(l => line(l.clusters,
+      `${esc(l.title.toLowerCase())} <span class="d">&mdash; clusters to group into themes</span>`)).join("") +
+    est.skipped.map(l => line(l.clusters,
+      `${esc(l.title.toLowerCase())} <span class="d">&mdash; stays a flat list (fewer than
+       ${est.min_clusters} clusters)</span>`)).join("") +
+    (est.cost_known
+      ? line(`$${est.cost_usd.toFixed(3)}`, `estimated <span class="d">&mdash; the real figure is
+          written to themes_log.json</span>`)
+      : line("?", `cost unknown <span class="d">&mdash; no pricing set for
+          ${esc(est.model)} in config.py</span>`, "warn"));
+
+  if (info.already_themed) {
+    plan += `<div class="asins">Themed before &mdash; this replaces
+      <code>themes.json</code> for this parse.</div>`;
+  }
+  plan += `</div>`;
+
+  const ok = await confirmModal({
+    title: "Group clusters into themes?",
+    confirmLabel: "Group into themes",
+    body: `<p class="sd">One call per list to <b>${esc(est.model)}</b> at
+             <b>${esc(est.reasoning)}</b> reasoning, folding related clusters into themes that
+             each get a title and a one-sentence summary. Every cluster lands in exactly one
+             theme.</p>${plan}`,
+  });
+  if (!ok) return;
+
+  theming = true;
+  $("res-theme").disabled = true;
+
+  let job;
+  try {
+    job = await api(path, { method: "POST" });
+  } catch (err) {
+    $("res-err").textContent = err.message;
+    $("res-err").hidden = false;
+    theming = false;
+    $("res-theme").disabled = false;
+    return;
+  }
+
+  setThemeProgress(0, `Starting — ${plural(job.to_theme, "list", "lists")} to group`);
+  pollThemes(job.job_id, slug, runId, parseId);
+}
+
+async function pollThemes(jobId, slug, runId, parseId) {
+  let snap;
+  try {
+    snap = await api("/api/jobs/" + encodeURIComponent(jobId));
+  } catch (e) {
+    return endThemes(slug, runId, parseId, e.message);
+  }
+
+  setThemeProgress(snap.pct, snap.total ? `${snap.label} (${snap.done}/${snap.total})`
+                                        : snap.label);
+
+  if (snap.state === "running") {
+    setTimeout(() => pollThemes(jobId, slug, runId, parseId), 700);
+    return;
+  }
+  if (snap.state === "error") {
+    return endThemes(slug, runId, parseId, snap.error || "The theme grouping failed.");
+  }
+
+  setThemeProgress(100, "Done");
+  setTimeout(() => endThemes(slug, runId, parseId, null), 500);
+}
+
+function endThemes(slug, runId, parseId, error) {
+  theming = false;
+  $("res-theme").disabled = false;
+  $("res-prog").hidden = true;
+  $("res-progbar").style.width = "0%";
+  if (error) {
+    $("res-err").textContent = error;
+    $("res-err").hidden = false;
+    return;
+  }
+  // Still on the same parse? Reload it so the themes appear. Otherwise the user
+  // has navigated on and the next visit will pick them up from disk.
+  if (resultsState && resultsState.slug === slug && resultsState.parseId === parseId) {
+    renderResults(slug, runId, parseId);
+  }
+}
+
+$("res-theme").onclick = startThemes;
+
+/* ---------- highlighting ----------
+   Spans are character offsets into the body text, straight from the server.
+   Text is escaped segment by segment, so a review containing "<b>" can never
+   become markup. */
+function markRange(text, a, b, spans) {
+  let out = "", pos = a;
+  for (const [s, e] of spans) {
+    if (s < pos || e > b) continue;
+    out += esc(text.slice(pos, s)) + `<mark>${esc(text.slice(s, e))}</mark>`;
+    pos = e;
+  }
+  return out + esc(text.slice(pos, b));
+}
+
+function markedSentence(text, m) {
+  return markRange(text, m.unit[0], m.unit[1], m.spans);
+}
+
+function markedBody(text, m) {
+  if (!m.confident) return esc(text);
+  const [a, b] = m.unit;
+  return esc(text.slice(0, a)) +
+    `<span class="hit">${markRange(text, a, b, m.spans)}</span>` +
+    esc(text.slice(b));
+}
+
+function thumbHtml(src, cls) {
+  return src
+    ? `<img class="${cls || ""}" src="${esc(src)}" alt="" loading="lazy"
+         onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'noimg ${cls || ""}',textContent:'no image'}))">`
+    : `<div class="noimg ${cls || ""}">no image</div>`;
+}
+
+function sourceLabel(o, b) {
+  if (o.body_type !== "review") return "listing";
+  const r = b.review;
+  return "review" + (r && r.rating != null ? ` · ${stars(r.rating)}` : "") +
+         (r && r.date ? ` · ${r.date}` : "");
+}
+
+/* ---------- hover card ---------- */
+function tipHtml(occs) {
+  const d = resultsState.data;
+  const o = d.occurrences[occs[0]];
+  if (!o) return "";
+  const b = d.bodies[o.body_id];
+  const p = d.products[o.asin] || {};
+  const m = o.match;
+
+  const sentence = m.confident
+    ? markedSentence(b.text, m)
+    : esc(b.text.replace(/\s+/g, " ").slice(0, 200)) + (b.text.length > 200 ? "&hellip;" : "");
+
+  return `
+    <div class="th">${thumbHtml(p.main_image)}
+      <div style="min-width:0">
+        <div class="tt">${esc(o.asin)} &middot; ${esc(sourceLabel(o, b))}</div>
+        <div class="tr">${esc(p.title || "(no title)")}</div>
+      </div>
+    </div>
+    <div class="sent">${sentence}</div>
+    ${m.confident ? "" : `<div class="foot">No exact sentence found &mdash; click for the full text</div>`}
+    ${occs.length > 1 ? `<div class="foot">1 of ${occs.length} sources &middot; click to see all</div>` : ""}`;
+}
+
+function tipShow(ev, html) {
+  const t = $("tip");
+  t.innerHTML = html;
+  t.classList.add("on");
+  tipMove(ev);
+}
+
+function tipMove(ev) {
+  const t = $("tip");
+  const r = t.getBoundingClientRect();
+  let x = ev.clientX + 14, y = ev.clientY - r.height - 12;
+  if (x + r.width > innerWidth - 8) x = Math.max(8, ev.clientX - r.width - 14);
+  if (y < 8) y = ev.clientY + 18;
+  if (y + r.height > innerHeight - 8) y = Math.max(8, innerHeight - r.height - 8);
+  t.style.left = x + "px";
+  t.style.top = y + "px";
+}
+
+function tipOff() {
+  const t = $("tip");
+  if (t) t.classList.remove("on");
+}
+
+/* Chips live in cluster cards and in the panel, so the wiring is document-wide. */
+document.addEventListener("mouseover", e => {
+  const bub = e.target.closest(".bub[data-occs]");
+  if (!bub || !resultsState) return;
+  tipShow(e, tipHtml(bub.dataset.occs.split(" ")));
+});
+document.addEventListener("mousemove", e => {
+  if (!$("tip").classList.contains("on")) return;
+  if (!e.target.closest(".bub[data-occs]")) { tipOff(); return; }
+  tipMove(e);
+});
+document.addEventListener("mouseout", e => {
+  if (e.target.closest && e.target.closest(".bub[data-occs]") &&
+      !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest(".bub[data-occs]"))) {
+    tipOff();
+  }
+});
+document.addEventListener("click", e => {
+  const bub = e.target.closest(".bub[data-occs]");
+  if (!bub || !resultsState) return;
+  e.stopPropagation();
+  openPanel(bub.dataset.occs.split(" "), bub.dataset.cluster || "");
+});
+
+/* ---------- source panel ---------- */
+let panelState = null;
+
+function openPanel(occs, clusterTitle) {
+  panelState = { occs, at: 0, cluster: clusterTitle };
+  tipOff();
+  $("pveil").hidden = false;
+  $("panel").hidden = false;
+  renderPanel();
+  requestAnimationFrame(() => $("panel").classList.add("on"));
+}
+
+function closePanel() {
+  const panel = $("panel");
+  if (!panel || panel.hidden) return;
+  panel.classList.remove("on");
+  panel.hidden = true;
+  $("pveil").hidden = true;
+  panelState = null;
+}
+
+function renderPanel() {
+  const { occs, at, cluster } = panelState;
+  const d = resultsState.data;
+  const o = d.occurrences[occs[at]];
+  const b = d.bodies[o.body_id];
+  const p = d.products[o.asin] || {};
+  const m = o.match;
+  const link = p.link;
+
+  const facts = [];
+  if (p.price) facts.push(`<span class="pill na">${esc(p.price)}</span>`);
+  if (p.rating) facts.push(`<span class="pill ok">${esc(p.rating)}&#9733; &middot; ${
+    esc((p.ratings_total || 0).toLocaleString())}</span>`);
+  if (p.brand) facts.push(`<span class="pill na">${esc(p.brand)}</span>`);
+  if (p.deleted) facts.push(`<span class="pill warn">removed from run</span>`);
+
+  const review = o.body_type === "review" ? (b.review
+    ? `<div class="rv" style="border:0;padding:0;margin:0 0 10px">
+         <div class="rh">
+           <span class="stars">${esc(stars(b.review.rating))}</span>
+           <span class="rt">${esc(b.review.title || "(untitled)")}</span>
+           <span class="rd">${esc(b.review.date || "")}${b.review.verified_purchase ? " &middot; verified" : ""}${
+             b.review.source === "manual" ? " &middot; pasted" : ""}</span>
+         </div>
+       </div>`
+    : `<div class="note-line info" style="margin-bottom:10px"><span class="ic">Note</span>
+         <span>This review was removed from the run after it was tagged; its text is still here.</span></div>`)
+    : "";
+
+  const others = [];
+  for (const [key, label] of [["features", "Features"], ["complaints", "Complaints"],
+                              ["assembly_maintenance", "Assembly &amp; care"]]) {
+    const tags = (b.tags[key] || []).filter(t => t !== o.text);
+    if (!tags.length) continue;
+    const tone = LIST_TONE[key] ? ` ${LIST_TONE[key]}` : "";
+    others.push(`<h4>${label} from this source (${tags.length})</h4><div class="bubs">${
+      tags.map(t => {
+        const ref = resultsState.byBodyTag.get(o.body_id + " " + t);
+        if (!ref) return `<span class="bub plain">${esc(t)}</span>`;
+        const soft = !d.occurrences[ref].match.confident;
+        return `<button class="bub${tone}${soft ? " soft" : ""}" data-occs="${esc(ref)}"
+                  data-cluster="">${esc(t)}</button>`;
+      }).join("")}</div>`);
+  }
+
+  $("panel").innerHTML = `
+    <div class="ph">
+      <div style="min-width:0">
+        ${cluster ? `<p class="eyebrow">${esc(cluster)}</p>` : ""}
+        <h3>${esc(o.text)}</h3>
+      </div>
+      <button class="x" id="pclose" title="Close (Esc)">&times;</button>
+    </div>
+    ${occs.length > 1 ? `
+      <div class="pager">
+        <button id="pprev" ${at === 0 ? "disabled" : ""}>&lsaquo;</button>
+        <span>Source ${at + 1} of ${occs.length}</span>
+        <button id="pnext" ${at === occs.length - 1 ? "disabled" : ""}>&rsaquo;</button>
+      </div>` : ""}
+    <div class="psrc">
+      ${thumbHtml(p.main_image)}
+      <div class="meta">
+        <p class="ttl">${esc(p.title || "(no title returned)")}</p>
+        <div class="ids">${link
+          ? `<a href="${esc(link)}" target="_blank" rel="noopener">${esc(o.asin)}</a>`
+          : esc(o.asin)} &middot; ${esc(o.body_type)}</div>
+        <div class="facts">${facts.join("")}</div>
+      </div>
+    </div>
+    ${review}
+    ${m.confident ? "" : `<div class="note-line info" style="margin-bottom:10px"><span class="ic">Note</span>
+      <span>No single sentence could be pinned down for this tag, so here is the whole text.</span></div>`}
+    <div class="ptext">${markedBody(b.text, m)}</div>
+    <div class="pother">${others.join("")}</div>`;
+
+  $("pclose").onclick = closePanel;
+  const prev = $("pprev"), next = $("pnext");
+  if (prev) prev.onclick = () => { panelState.at -= 1; renderPanel(); $("panel").scrollTop = 0; };
+  if (next) next.onclick = () => { panelState.at += 1; renderPanel(); $("panel").scrollTop = 0; };
+}
+
+$("pveil").addEventListener("click", closePanel);
+
+/* ---------- settings ---------- */
+const SETTING_FIELDS = {
+  "s-tag-model": ["tag_model", "models"],
+  "s-tag-reasoning": ["tag_reasoning", "efforts"],
+  "s-group-model": ["group_model", "models"],
+  "s-group-reasoning": ["group_reasoning", "efforts"],
+};
+
+async function openSettings() {
+  $("serr").hidden = true;
+  $("sveil").hidden = false;
+
+  let data;
+  try {
+    data = await api("/api/settings");
+  } catch (e) {
+    $("serr").textContent = e.message;
+    $("serr").hidden = false;
+    return;
+  }
+
+  for (const [id, [key, listName]] of Object.entries(SETTING_FIELDS)) {
+    $(id).innerHTML = data.options[listName]
+      .map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
+    $(id).value = data.settings[key];
+  }
+  $("s-auto-themes").checked = data.settings.auto_themes !== false;
+  $("s-tag-model").focus();
+}
+
+async function saveSettings() {
+  const patch = {};
+  for (const [id, [key]] of Object.entries(SETTING_FIELDS)) patch[key] = $(id).value;
+  patch.auto_themes = $("s-auto-themes").checked;
+
+  $("ssave").disabled = true;
+  try {
+    await api("/api/settings", { method: "PUT", body: JSON.stringify(patch) });
+    $("sveil").hidden = true;
+    // The parse and group confirm dialogs quote the model, so anything on screen
+    // showing the old one has to be redrawn.
+    if (runState.slug) renderParses();
+  } catch (e) {
+    $("serr").textContent = e.message;
+    $("serr").hidden = false;
+  } finally {
+    $("ssave").disabled = false;
+  }
+}
+
 /* ---------- new group modal ---------- */
 function openModal() {
   $("veil").hidden = false;
@@ -1631,10 +2814,19 @@ $("cyes").onclick = () => closeConfirm(true);
 $("cno").onclick = () => closeConfirm(false);
 $("cveil").addEventListener("click", e => { if (e.target === $("cveil")) closeConfirm(false); });
 
+$("opensettings").onclick = openSettings;
+$("scancel").onclick = () => { $("sveil").hidden = true; };
+$("ssave").onclick = saveSettings;
+$("sveil").addEventListener("click", e => {
+  if (e.target === $("sveil")) $("sveil").hidden = true;
+});
+
 document.addEventListener("keydown", e => {
   if (e.key !== "Escape") return;
   if (!$("cveil").hidden) closeConfirm(false);
+  else if (!$("sveil").hidden) $("sveil").hidden = true;
   else if (!$("veil").hidden) closeModal();
+  else if (!$("panel").hidden) closePanel();
 });
 
 window.addEventListener("hashchange", route);

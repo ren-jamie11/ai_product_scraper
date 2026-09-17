@@ -23,7 +23,7 @@ Everything is local, single-user, file-backed. No database, no auth, no build st
 | Review filter | Tag all reviews; drop only empty bodies. Negative reviews are signal. |
 | Extra fields | specifications, material, color, model_number, categories_flat, bestsellers_rank_flat. |
 | Editable | title, bullets, review titles/bodies, price, rating + add/delete reviews. Raw payload never mutated. |
-| Tag schema | Full skill coverage plus `complaints`: `search_terms`, `features`, `complaints`, `usage_keywords{spaces, placements, occasions, used_for}`, `avoided`. |
+| Tag schema | Full skill coverage plus `complaints` and `assembly_maintenance`: `search_terms`, `features`, `complaints`, `assembly_maintenance`, `usage_keywords{spaces, placements, occasions, used_for}`, `avoided`. |
 | Tagging | One OpenAI call per body, `gpt-5.6-terra`, reasoning `low`, ~8 concurrent, strict JSON schema, 2 retries w/ backoff. |
 | Grouping | `features` only. Normalize → chunk → LLM → merge, on `gpt-5.6`. |
 | Scale target | 10–20 ASINs per group (~1,200–3,200 raw tags). |
@@ -153,6 +153,7 @@ Price comes from `product.buybox_winner.price` (confirmed in the sample payload)
       "search_terms": ["5x7 picture frames"],
       "features": ["shatter-resistant plastic cover"],
       "complaints": [],
+      "assembly_maintenance": ["wipe with a dry soft cloth only"],
       "usage_keywords": {"spaces": ["office"], "placements": ["mantel"],
                          "occasions": ["wedding"], "used_for": ["family photos"]},
       "avoided": [{"phrase": "adds sophistication", "reason": "vague"}]
@@ -301,9 +302,87 @@ word order and merge boundaries rather than better extraction — so `low` stays
 
 **Verify:** open a parsed run → boxes sorted correctly → expand each subheading → hover shows the right ASIN → click shows the full review → counts on the box match the expanded lists.
 
+**Settled in Phase 5 (built 2026-09-16).** Sentence highlighting moved up from Phase 6
+to the centre of this phase, and the secondary search-terms / usage-keywords section
+moved out to a later one. What was decided and measured:
+
+- **Attribution is deterministic and lives in `pipeline/attribution.py`.** Each body is
+  split into sentence-like units (newlines, `.!?;`, bullet headers before a colon, and
+  the `out.The` no-space breaks reviews are full of). Words are Porter-stemmed with a
+  short irregular map (leaf/leaves, big/large, picture/photo). Every tag word is weighted
+  by rarity across the parse (log IDF over units), with the scaffolding the tagger
+  injects — completion nouns like *build*, *finish*, and normalised approval like *nice*,
+  *suitable* — at a quarter weight. The best unit wins when ≥40% of the tag's weight is
+  present **and** at least one matched word is distinctive (top 60% of rarity), or when
+  every tag word is present. Highlights are the matched words, merged when adjacent.
+- **Measured over 2,512 mentions across all seven parsed groups:** 92.0% confident
+  overall · listings 99.9% · reviews 89.0% · English text only 94.1% · complaints 85.4%,
+  with ≈97% of confident matches hand-verified as the right sentence. Of the 8% left,
+  28% are non-English reviews (the tagger translates; nothing lexical can reach them),
+  the rest are true paraphrases. Both show the whole body instead — a wrong sentence is
+  worse than none. `python -m pipeline.attribution <slug> <run>` prints this table for
+  one parse; run it before and after touching the word lists or thresholds.
+- **Results are a render-ready model** from `GET …/parses/<parse>/results`
+  (`pipeline/results.py`): clusters with tags split into listing and review chips,
+  every mention attributed, and the bodies and products they point at, keyed by id.
+  Computed on request (≈100 ms), nothing written to disk.
+- **UI decisions from scoping.** Clusters rank by mentions (occurrences), and the card
+  shows both mentions and distinct tags plus listings, reviews and "in N of M products".
+  One chip per distinct tag per source, with a `×N` count; hover shows the first source,
+  click pages through all. Collapsed cards preview the top three tags. A dotted chip
+  means no confident sentence: hover shows the first 200 characters, the panel the full
+  text unmarked. Results are their own view (`#/g/<slug>/r/<run>/p/<parse>`).
+- **Tagged-but-ungrouped parses are never rendered.** Only a grouped parse is a link on
+  the run and group views; the results URL for one that isn't shows an empty state with
+  a link back to the run, where Group tags already lives.
+
+### Phase 7 — Themes: a "group of groups" (built 2026-09-16)
+
+One more level above clusters. A **theme** is a set of related clusters with a title and a
+one-sentence summary; a **cluster** is unchanged. "Group" is never used for either, since it
+already means a competitor category and the clustering step. Rules come from the
+`review-cluster-grouping` skill (`pipeline/prompts/group_themes.md` restates its core rules
+with no theme-count target, adds a benefit-led title rule for the features list, and carries a
+handful of good/bad anchor examples drawn from `group-clustering-examples/`, revised 2026-09-17).
+
+- **Machinery mirrors clustering** (`pipeline/themes.py`): one structured-output call per
+  list on the grouping model at a fixed `high` reasoning effort (`themes.REASONING`, not a
+  setting: measured 2026-09-17, `medium` grouped the same clusters differently on every run
+  while `high` was consistent; the Settings dropdown governs tag clustering only),
+  index-based membership so the model never rewrites a cluster,
+  validation that every cluster lands in exactly one theme, orphans repaired into one-cluster
+  themes and logged, prior theme titles reused across runs. `grouping._call`,
+  `call_with_retries` and `prior_titles` were parametrised so both steps share them.
+- **Only long lists are themed.** `THEME_MIN_CLUSTERS = 13`: a list with 12 or fewer clusters
+  stays a flat grid. Themes and their members are ordered by mentions, the same ranking the
+  cluster cards use.
+- **Themes are bound to one exact set of clusters.** `themes.json` carries a fingerprint of
+  the clusters it was built from; `results.py` treats a mismatch as "no themes", and
+  `run_grouping` deletes `themes.json` / `themes.md` / `themes_log.json` before writing new
+  clusters. Old parses that were never themed render exactly as before.
+- **Auto by default.** The `auto_themes` setting (first boolean in `settings.py`) runs the
+  theme step inside the clustering job. A theme failure there is a job note, never a job
+  failure: clusters are kept and the results view offers "Group into themes" (confirm dialog
+  with cost, `theme-estimate` + `theme` endpoints) as the manual path.
+- **Results view.** Theme rows are full-width accordions (title, summary,
+  `clusters · mentions · in N of M products`, member cluster titles when collapsed; the usual
+  cluster cards when open). Each list header collapses on click. A sticky bar holds an
+  All / Listings / Reviews source filter (recomputes chips, counts and product coverage,
+  hides clusters and themes with nothing from that source, keeps order; session-only) and
+  one Expand all / Collapse all (opens every theme and any collapsed list; collapse closes
+  themes only; cluster cards untouched). Theme expansion is remembered per parse with the
+  cluster keys; list collapse is not. Chips are coloured by list — celadon features, iron
+  complaints, amber care — and nothing else changes colour.
+- **Verified on olive trees** (35 features, 17 complaints, 7 care): 9 + 9 themes, no
+  repairs, `check_grouping.py` passes on `themes.md` against `clusters.md`, care stays flat.
+  Complaints and care themes have no hand-made example yet; review the first outputs and
+  turn the good ones into examples. Renaming themes or moving clusters is out of scope.
+
 ### Phase 6 — Deferred refinements (flagged, not built yet)
 
-- **Deterministic sentence highlighting.** In the source panel, bold the sentence a tag came from. Approach: split the body into sentences, score each against the tag by content-word overlap (stopword-stripped, stemmed), highlight the best match above a threshold, highlight nothing when confidence is low. Paraphrased tags will sometimes miss — that's expected and acceptable, and silence beats a wrong highlight.
+- **Search terms and usage keywords.** Flat frequency lists (spaces / placements /
+  occasions / used_for), each chip opening the same source panel. The data is in
+  `tagged.json` already; only the section is missing.
 - **Deeper grouping rules.** The four rules above are a starting point. Once you've seen real output, we tighten them — likely around component-vs-attribute boundaries and how aggressively near-synonyms merge.
 
 ---

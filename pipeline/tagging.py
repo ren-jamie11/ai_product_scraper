@@ -24,7 +24,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import config
-from pipeline import normalize, storage
+from pipeline import normalize, settings, storage
 
 PROMPT_PATH = Path(__file__).parent / "prompts" / "tag_body.md"
 
@@ -65,6 +65,7 @@ SCHEMA = {
         "search_terms": dict(_STRINGS),
         "features": dict(_STRINGS),
         "complaints": dict(_STRINGS),
+        "assembly_maintenance": dict(_STRINGS),
         "usage_keywords": _usage_keywords(),
         "avoided": {
             "type": "array",
@@ -79,7 +80,10 @@ SCHEMA = {
             },
         },
     },
-    "required": ["search_terms", "features", "complaints", "usage_keywords", "avoided"],
+    "required": [
+        "search_terms", "features", "complaints", "assembly_maintenance",
+        "usage_keywords", "avoided",
+    ],
     "additionalProperties": False,
 }
 
@@ -87,6 +91,7 @@ EMPTY_TAGS = {
     "search_terms": [],
     "features": [],
     "complaints": [],
+    "assembly_maintenance": [],
     "usage_keywords": {"spaces": [], "placements": [], "occasions": [], "used_for": []},
     "avoided": [],
 }
@@ -113,6 +118,15 @@ def load_prompt() -> tuple[str, str]:
             f"The tagging instructions are missing. Expected them at {PROMPT_PATH}."
         ) from None
     return text, hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
+
+
+def tag_choice() -> dict:
+    """The model and effort in force, resolved once so a run stays internally
+    consistent even if Settings is saved while it's in flight."""
+    return {
+        "model": settings.resolve("tag_model"),
+        "reasoning": settings.resolve("tag_reasoning"),
+    }
 
 
 _CLIENT = None
@@ -185,23 +199,28 @@ def _status(exc) -> int | None:
     return value if isinstance(value, int) else None
 
 
-def _fatal(exc) -> str | None:
+def _fatal(exc, model: str | None = None, what: str = "tagged") -> str | None:
     """A plain-language message if this error means the run cannot continue.
 
     Retrying a bad key 400 times helps nobody, so authentication and permission
     failures stop everything immediately with something you can act on.
+
+    `model` and `what` are parameters because grouping raises the same errors on a
+    different model and a different noun, and two copies of this table would
+    inevitably drift apart.
     """
+    model = model or settings.resolve("tag_model")
     code = _status(exc)
     name = exc.__class__.__name__
     if code in (401, 403) or name in ("AuthenticationError", "PermissionDeniedError"):
         return ("OpenAI rejected the API key. Check OPENAI_API_KEY in config.py.")
     if code == 404 or name == "NotFoundError":
         return (
-            f'OpenAI does not recognise the model "{config.OPENAI_TAG_MODEL}". '
-            f"Check OPENAI_TAG_MODEL in config.py."
+            f'OpenAI does not recognise the model "{model}". '
+            f"Pick a different one in Settings."
         )
     if code == 402 or "insufficient_quota" in str(exc):
-        return "This OpenAI account is out of credit, so nothing could be tagged."
+        return f"This OpenAI account is out of credit, so nothing could be {what}."
     return None
 
 
@@ -215,12 +234,17 @@ def _retryable(exc) -> bool:
     )
 
 
-def _call(prompt: str, user_input: str) -> tuple[dict, dict]:
-    """One request. Returns (tags, usage) or raises."""
+def _call(prompt: str, user_input: str, choice: dict) -> tuple[dict, dict]:
+    """One request. Returns (tags, usage) or raises.
+
+    `choice` is the model and effort resolved once at the top of the run, not read
+    here — a settings save mid-run should not change which model half the bodies
+    were tagged with, and resolve() touches the disk every time it's called.
+    """
     global _SUPPORTS_REASONING
 
     kwargs = {
-        "model": config.OPENAI_TAG_MODEL,
+        "model": choice["model"],
         "input": [
             {"role": "system", "content": prompt},
             {"role": "user", "content": user_input},
@@ -235,8 +259,8 @@ def _call(prompt: str, user_input: str) -> tuple[dict, dict]:
         },
         "max_output_tokens": config.TAG_MAX_OUTPUT_TOKENS,
     }
-    if _SUPPORTS_REASONING and config.OPENAI_TAG_REASONING:
-        kwargs["reasoning"] = {"effort": config.OPENAI_TAG_REASONING}
+    if _SUPPORTS_REASONING and choice["reasoning"]:
+        kwargs["reasoning"] = {"effort": choice["reasoning"]}
 
     try:
         response = client().responses.create(**kwargs)
@@ -314,6 +338,7 @@ def _clean(tags) -> dict:
         "search_terms": strings(tags.get("search_terms")),
         "features": strings(tags.get("features")),
         "complaints": strings(tags.get("complaints")),
+        "assembly_maintenance": strings(tags.get("assembly_maintenance")),
         "usage_keywords": {
             facet: strings(raw_usage.get(facet))
             for facet in ("spaces", "placements", "occasions", "used_for")
@@ -322,25 +347,27 @@ def _clean(tags) -> dict:
     }
 
 
-def tag_body(body: dict, product: dict | None, prompt: str) -> dict:
+def tag_body(body: dict, product: dict | None, prompt: str,
+             choice: dict | None = None) -> dict:
     """Tag one body, retrying the errors worth retrying.
 
     Never raises for a per-body problem — a failure becomes a record so the other
     399 bodies still land. Only a fatal account-level error propagates.
     """
+    choice = choice or tag_choice()
     user_input = build_input(body, product)
     attempts = max(1, config.OPENAI_MAX_RETRIES + 1)
     last = "unknown error"
 
     for attempt in range(attempts):
         try:
-            tags, usage = _call(prompt, user_input)
+            tags, usage = _call(prompt, user_input, choice)
             return {**body, "tags": tags, "status": "ok", "error": None, "usage": usage}
         except TaggingError as exc:
             last = str(exc)
             break                       # a bad answer, not a flaky connection
         except Exception as exc:
-            fatal = _fatal(exc)
+            fatal = _fatal(exc, choice["model"])
             if fatal:
                 raise TaggingError(fatal) from exc
             last = str(exc) or exc.__class__.__name__
@@ -379,6 +406,7 @@ def estimate(bodies: list[dict], prompt: str | None = None) -> dict:
     prompt_tokens = len(prompt) // 4
     input_tokens = sum(prompt_tokens + len(b["text"]) // 4 + 40 for b in taggable)
     output_tokens = len(taggable) * config.TAG_EST_OUTPUT_TOKENS
+    model = settings.resolve("tag_model")
 
     return {
         "bodies_total": len(bodies),
@@ -386,15 +414,15 @@ def estimate(bodies: list[dict], prompt: str | None = None) -> dict:
         "to_skip": len(skipped),
         "listings": sum(1 for b in taggable if b["type"] == "listing"),
         "reviews": sum(1 for b in taggable if b["type"] == "review"),
-        "model": config.OPENAI_TAG_MODEL,
+        "model": model,
         "input_tokens": input_tokens,
         "output_tokens": output_tokens,
-        **_price(input_tokens, output_tokens),
+        **_price(input_tokens, output_tokens, model),
     }
 
 
-def _price(input_tokens: int, output_tokens: int) -> dict:
-    rates = config.MODEL_PRICING.get(config.OPENAI_TAG_MODEL)
+def _price(input_tokens: int, output_tokens: int, model: str | None = None) -> dict:
+    rates = config.MODEL_PRICING.get(model or settings.resolve("tag_model"))
     if not rates:
         return {"cost_usd": None, "cost_known": False}
     cost = (input_tokens / 1e6) * rates["input"] + (output_tokens / 1e6) * rates["output"]
@@ -445,9 +473,9 @@ def run_tagging(job, slug: str, run_id: str) -> dict:
             f"concrete benefit. Their text is in parse_log.json."
         )
 
+    choice = tag_choice()
     job.set_total(len(taggable))
-    job.step(label=f"Tagging {len(taggable)} bodies with {config.OPENAI_TAG_MODEL}…",
-             count=0)
+    job.step(label=f"Tagging {len(taggable)} bodies with {choice['model']}…", count=0)
 
     results: list[dict] = []
     lock = threading.Lock()
@@ -457,7 +485,7 @@ def run_tagging(job, slug: str, run_id: str) -> dict:
         if fatal:                       # an account-level error already stopped us
             return
         try:
-            result = tag_body(body, by_asin.get(body["asin"]), prompt)
+            result = tag_body(body, by_asin.get(body["asin"]), prompt, choice)
         except TaggingError as exc:
             with lock:
                 if not fatal:
@@ -492,8 +520,8 @@ def run_tagging(job, slug: str, run_id: str) -> dict:
         "run_id": run_id,
         "slug": slug,
         "generated_at": storage.now_iso(),
-        "model": config.OPENAI_TAG_MODEL,
-        "reasoning": config.OPENAI_TAG_REASONING if _SUPPORTS_REASONING else None,
+        "model": choice["model"],
+        "reasoning": choice["reasoning"] if _SUPPORTS_REASONING else None,
         "prompt_sha": prompt_sha,
         "bodies": results,
         "skipped": [{"body_id": b["body_id"], "asin": b["asin"], "type": b["type"],
@@ -508,7 +536,7 @@ def run_tagging(job, slug: str, run_id: str) -> dict:
         "input_tokens": sum(r["usage"]["input_tokens"] for r in results),
         "output_tokens": sum(r["usage"]["output_tokens"] for r in results),
     }
-    actual = _price(usage["input_tokens"], usage["output_tokens"])
+    actual = _price(usage["input_tokens"], usage["output_tokens"], choice["model"])
 
     if failures:
         job.note(
@@ -535,8 +563,8 @@ def run_tagging(job, slug: str, run_id: str) -> dict:
     storage.write_json(directory / "parse_log.json", {
         **summary,
         "generated_at": storage.now_iso(),
-        "model": config.OPENAI_TAG_MODEL,
-        "reasoning": config.OPENAI_TAG_REASONING if _SUPPORTS_REASONING else None,
+        "model": choice["model"],
+        "reasoning": choice["reasoning"] if _SUPPORTS_REASONING else None,
         "prompt_sha": prompt_sha,
         "min_tag_chars": config.MIN_TAG_CHARS,
         "estimate": estimated,
@@ -553,6 +581,7 @@ def _any_tags(tags: dict) -> bool:
     usage = tags.get("usage_keywords") or {}
     return bool(
         tags.get("search_terms") or tags.get("features") or tags.get("complaints")
+        or tags.get("assembly_maintenance")
         or any(usage.get(f) for f in ("spaces", "placements", "occasions", "used_for"))
     )
 
@@ -571,6 +600,7 @@ def _counts(tagged: list[dict]) -> dict:
         "search_terms_total": total("search_terms"),
         "features_total": total("features"),
         "complaints_total": total("complaints"),
+        "assembly_maintenance_total": total("assembly_maintenance"),
         "usage_keywords_total": usage_total,
         "avoided_total": total("avoided"),
     }

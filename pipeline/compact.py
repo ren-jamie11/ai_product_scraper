@@ -302,7 +302,7 @@ def plan_compaction(slug: str) -> dict:
         "duplicates": sum(1 for k in kept if k["merged_from"] > 1),
         "reviews_total": sum(k["reviews"] for k in kept),
         "reviews_gained": sum(k["reviews_gained"] for k in kept),
-        "parses": sorted({p for r in runs for p in (r.get("parses") or [])}),
+        "parses": sorted({p["id"] for r in runs for p in (r.get("parses") or [])}),
     }
 
 

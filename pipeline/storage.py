@@ -188,7 +188,7 @@ def list_runs(slug: str, with_stats: bool = False) -> list[dict]:
             "asins_total": log.get("asins_total"),
             "reviews_total": log.get("reviews_total"),
             "compacted_from": log.get("compacted_from"),
-            "parses": [p.name for p in sorted(child.glob("parse-*"), reverse=True) if p.is_dir()],
+            "parses": list_parses(slug, child.name),
         }
         if with_stats:
             run.update(_live_stats(slug, child.name))
@@ -256,12 +256,20 @@ def claim_parse_dir(slug: str, run_id: str) -> tuple[str, Path]:
             suffix += 1
 
 
-def list_parses(slug: str, run_id: str) -> list[str]:
-    """Parse folder names for a run, newest first."""
+def list_parses(slug: str, run_id: str) -> list[dict]:
+    """Parses for a run, newest first: `{id, grouped}`.
+
+    `grouped` is whether clusters.json exists. Tags alone are an intermediate artifact —
+    only a grouped parse has results worth opening, so the UI needs to know which pills
+    are links without fetching every parse.
+    """
     directory = run_dir(slug, run_id)
     if not directory.is_dir():
         return []
-    return [p.name for p in sorted(directory.glob("parse-*"), reverse=True) if p.is_dir()]
+    return [
+        {"id": p.name, "grouped": (p / "clusters.json").is_file()}
+        for p in sorted(directory.glob("parse-*"), reverse=True) if p.is_dir()
+    ]
 
 
 def create_run(slug: str, inputs: list[dict]) -> str:

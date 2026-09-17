@@ -14,7 +14,8 @@ import webbrowser
 from flask import Flask, jsonify, request, send_from_directory
 
 import config
-from pipeline import asins, compact, extract, jobs, normalize, storage, tagging
+from pipeline import (asins, compact, extract, grouping, jobs, normalize, results,
+                      settings, storage, tagging, themes)
 
 app = Flask(__name__, static_folder="static", static_url_path="/static")
 
@@ -30,6 +31,21 @@ def handle_storage_error(exc: storage.StorageError):
 
 @app.errorhandler(tagging.TaggingError)
 def handle_tagging_error(exc: tagging.TaggingError):
+    return jsonify({"error": str(exc)}), 400
+
+
+@app.errorhandler(grouping.GroupingError)
+def handle_grouping_error(exc: grouping.GroupingError):
+    return jsonify({"error": str(exc)}), 400
+
+
+@app.errorhandler(themes.ThemeError)
+def handle_theme_error(exc: themes.ThemeError):
+    return jsonify({"error": str(exc)}), 400
+
+
+@app.errorhandler(settings.SettingsError)
+def handle_settings_error(exc: settings.SettingsError):
     return jsonify({"error": str(exc)}), 400
 
 
@@ -225,7 +241,12 @@ def api_list_parses(slug: str, run_id: str):
 
 @app.get("/api/runs/<slug>/<run_id>/parses/<parse_id>")
 def api_parse_result(slug: str, run_id: str, parse_id: str):
-    """One parse's tags and its log. Phase 5 renders these; Phase 3 verifies them."""
+    """One parse's tags, clusters and logs. Phase 5 renders these.
+
+    `tagged` and `clusters` come back together on purpose: a cluster holds uids,
+    and resolving those to the review text a tag came from needs both halves of
+    the join in one response.
+    """
     directory = storage.run_dir(slug, run_id) / parse_id
     if storage.is_hidden(parse_id) or not directory.is_dir():
         raise storage.StorageError("That parse no longer exists.")
@@ -237,6 +258,122 @@ def api_parse_result(slug: str, run_id: str, parse_id: str):
     return jsonify({
         "tagged": tagged,
         "log": storage.read_json(directory / "parse_log.json", {}) or {},
+        "clusters": storage.read_json(directory / "clusters.json"),
+        "cluster_log": storage.read_json(directory / "cluster_log.json", {}) or {},
+    })
+
+
+# ---------------------------------------------------------------------------
+# Step 4 — results
+# ---------------------------------------------------------------------------
+
+@app.get("/api/runs/<slug>/<run_id>/parses/<parse_id>/results")
+def api_results(slug: str, run_id: str, parse_id: str):
+    """Clusters with their tags split by source, every tag attributed to a sentence,
+    and the bodies and products they point at. Only a grouped parse has results;
+    an ungrouped one gets a plain 400 the UI shows as an empty state."""
+    return jsonify(results.build(slug, run_id, parse_id))
+
+
+# ---------------------------------------------------------------------------
+# Step 3 — grouping
+# ---------------------------------------------------------------------------
+
+@app.get("/api/runs/<slug>/<run_id>/parses/<parse_id>/group-estimate")
+def api_group_estimate(slug: str, run_id: str, parse_id: str):
+    """Tag counts per list and what grouping will cost. Spends nothing."""
+    tagged = grouping.load_tagged(slug, run_id, parse_id)
+    return jsonify({
+        "estimate": grouping.estimate(tagged),
+        "openai_key_set": bool(config.OPENAI_API_KEY),
+        "already_grouped": bool(
+            storage.read_json(storage.run_dir(slug, run_id) / parse_id / "clusters.json")
+        ),
+        "auto_themes": bool(settings.resolve("auto_themes")),
+        "theme_min_clusters": config.THEME_MIN_CLUSTERS,
+    })
+
+
+@app.post("/api/runs/<slug>/<run_id>/parses/<parse_id>/group")
+def api_group(slug: str, run_id: str, parse_id: str):
+    """Kick off clustering in the background and hand back a job id."""
+    if not config.OPENAI_API_KEY:
+        raise storage.StorageError("OPENAI_API_KEY is empty in config.py.")
+
+    tagged = grouping.load_tagged(slug, run_id, parse_id)
+    to_group = grouping.estimate(tagged)["to_group"]
+    if not to_group:
+        raise grouping.GroupingError(
+            "This parse produced no features, complaints or care instructions, so "
+            "there is nothing to group."
+        )
+
+    jobs.prune()
+    job = jobs.start(
+        f"Grouping {to_group} tag {'list' if to_group == 1 else 'lists'}…",
+        lambda j: grouping.run_grouping(j, slug, run_id, parse_id),
+        total=to_group,
+    )
+    return jsonify({"job_id": job.id, "parse_id": parse_id, "to_group": to_group}), 202
+
+
+# ---------------------------------------------------------------------------
+# Step 3b — themes
+#
+# Normally run inside the grouping job (the "auto themes" setting). These two
+# routes are the manual path: the "Group into themes" button on the results view.
+# ---------------------------------------------------------------------------
+
+@app.get("/api/runs/<slug>/<run_id>/parses/<parse_id>/theme-estimate")
+def api_theme_estimate(slug: str, run_id: str, parse_id: str):
+    """Which lists qualify and what theming will cost. Spends nothing."""
+    clusters = themes.load_clusters(slug, run_id, parse_id)
+    directory = storage.run_dir(slug, run_id) / parse_id
+    return jsonify({
+        "estimate": themes.estimate(clusters),
+        "openai_key_set": bool(config.OPENAI_API_KEY),
+        "already_themed": themes.read_themes(directory, clusters) is not None,
+    })
+
+
+@app.post("/api/runs/<slug>/<run_id>/parses/<parse_id>/theme")
+def api_theme(slug: str, run_id: str, parse_id: str):
+    """Kick off theming in the background and hand back a job id."""
+    if not config.OPENAI_API_KEY:
+        raise storage.StorageError("OPENAI_API_KEY is empty in config.py.")
+
+    clusters = themes.load_clusters(slug, run_id, parse_id)
+    to_theme = themes.estimate(clusters)["to_theme"]
+    if not to_theme:
+        raise themes.ThemeError(
+            f"No list has {config.THEME_MIN_CLUSTERS} or more clusters, so there is "
+            f"nothing to group into themes."
+        )
+
+    jobs.prune()
+    job = jobs.start(
+        f"Grouping {to_theme} {'list' if to_theme == 1 else 'lists'} into themes…",
+        lambda j: themes.run_themes(j, slug, run_id, parse_id),
+        total=to_theme,
+    )
+    return jsonify({"job_id": job.id, "parse_id": parse_id, "to_theme": to_theme}), 202
+
+
+# ---------------------------------------------------------------------------
+# Settings
+# ---------------------------------------------------------------------------
+
+@app.get("/api/settings")
+def api_get_settings():
+    return jsonify({"settings": settings.effective(), "options": settings.options()})
+
+
+@app.put("/api/settings")
+def api_put_settings():
+    patch = request.get_json(silent=True) or {}
+    return jsonify({
+        "settings": settings.write(patch),
+        "options": settings.options(),
     })
 
 
