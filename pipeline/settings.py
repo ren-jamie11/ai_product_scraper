@@ -1,9 +1,10 @@
 """
 Model and reasoning-effort choices, editable from the UI.
 
-`config.py` holds the defaults and is edited by hand; this module holds the four
+`config.py` holds the defaults and is edited by hand; this module holds the few
 knobs worth changing without reopening a file — which model and how much thinking
-to spend on tagging, and the same pair for grouping.
+to spend on tagging, the same pair for grouping, and whether clusters are grouped
+into themes automatically.
 
 Deliberately narrow. The API accepts reasoning efforts from `none` through `max`,
 and OpenAI sells more models than these, but a settings panel that offers every
@@ -32,11 +33,15 @@ EFFORTS = ("low", "medium", "high")
 
 # Each setting maps to the config attribute it overrides, and to the whitelist its
 # value must appear in. Adding a knob means adding a row here and nothing else.
+# A boolean setting lists (True, False) and is checked by type as well as value,
+# because `1 in (True, False)` is true in Python and a hand-edited 1 is not a
+# choice anyone made.
 KEYS = {
     "tag_model":       ("OPENAI_TAG_MODEL", MODELS),
     "tag_reasoning":   ("OPENAI_TAG_REASONING", EFFORTS),
     "group_model":     ("OPENAI_GROUP_MODEL", MODELS),
     "group_reasoning": ("OPENAI_GROUP_REASONING", EFFORTS),
+    "auto_themes":     ("AUTO_THEMES", (True, False)),
 }
 
 
@@ -46,6 +51,10 @@ class SettingsError(Exception):
 
 def _path():
     return storage.data_root() / "settings.json"
+
+
+def _valid(value, allowed) -> bool:
+    return type(value) is type(allowed[0]) and value in allowed
 
 
 def read() -> dict:
@@ -59,7 +68,7 @@ def read() -> dict:
     clean = {}
     for key, (_, allowed) in KEYS.items():
         value = saved.get(key)
-        if isinstance(value, str) and value in allowed:
+        if _valid(value, allowed):
             clean[key] = value
     return clean
 
@@ -67,7 +76,8 @@ def read() -> dict:
 def resolve(key: str):
     """The value in force for one setting: saved override, else config default."""
     attribute, _ = KEYS[key]
-    return read().get(key) or getattr(config, attribute)
+    saved = read()
+    return saved[key] if key in saved else getattr(config, attribute)
 
 
 def effective() -> dict:
@@ -88,7 +98,9 @@ def write(patch: dict) -> dict:
         if key not in KEYS:
             raise SettingsError(f'"{key}" is not a setting this app has.')
         allowed = KEYS[key][1]
-        if value not in allowed:
+        if not _valid(value, allowed):
+            if isinstance(allowed[0], bool):
+                raise SettingsError(f"{key} must be true or false.")
             raise SettingsError(
                 f'"{value}" is not a valid {key.replace("_", " ")}. '
                 f"Choose one of: {', '.join(allowed)}."

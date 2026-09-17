@@ -197,8 +197,19 @@ def build_input(key: str, uniques: list[dict], product: str,
     return "\n".join(lines)
 
 
-def _call(prompt: str, user_input: str, choice: dict) -> tuple[list[dict], dict]:
-    """One request. Returns (clusters, usage) or raises."""
+def _call(prompt: str, user_input: str, choice: dict, *,
+          schema: dict = SCHEMA, schema_name: str = "tag_clusters",
+          result_key: str = "clusters", max_output_tokens: int | None = None,
+          max_tokens_setting: str = "GROUP_MAX_OUTPUT_TOKENS",
+          error_cls: type[Exception] = GroupingError) -> tuple[list[dict], dict]:
+    """One request. Returns (items, usage) or raises.
+
+    Parametrised because the theme step (themes.py) makes the same kind of call
+    with a different schema and a different error class; the defaults keep this
+    module's own behaviour unchanged.
+    """
+    if max_output_tokens is None:
+        max_output_tokens = config.GROUP_MAX_OUTPUT_TOKENS
     kwargs = {
         "model": choice["model"],
         "input": [
@@ -208,12 +219,12 @@ def _call(prompt: str, user_input: str, choice: dict) -> tuple[list[dict], dict]
         "text": {
             "format": {
                 "type": "json_schema",
-                "name": "tag_clusters",
+                "name": schema_name,
                 "strict": True,
-                "schema": SCHEMA,
+                "schema": schema,
             }
         },
-        "max_output_tokens": config.GROUP_MAX_OUTPUT_TOKENS,
+        "max_output_tokens": max_output_tokens,
     }
     if choice["reasoning"]:
         kwargs["reasoning"] = {"effort": choice["reasoning"]}
@@ -231,26 +242,59 @@ def _call(prompt: str, user_input: str, choice: dict) -> tuple[list[dict], dict]
     if getattr(response, "status", None) == "incomplete":
         reason = getattr(getattr(response, "incomplete_details", None), "reason", None)
         if reason == "max_output_tokens":
-            raise GroupingError(
-                f"The answer was cut off at {config.GROUP_MAX_OUTPUT_TOKENS} tokens. "
-                f"Raise GROUP_MAX_OUTPUT_TOKENS in config.py."
+            raise error_cls(
+                f"The answer was cut off at {max_output_tokens} tokens. "
+                f"Raise {max_tokens_setting} in config.py."
             )
-        raise GroupingError(f"OpenAI returned an incomplete answer ({reason}).")
+        raise error_cls(f"OpenAI returned an incomplete answer ({reason}).")
 
     text = (getattr(response, "output_text", None) or "").strip()
     if not text:
-        raise GroupingError("OpenAI returned an empty answer.")
+        raise error_cls("OpenAI returned an empty answer.")
 
     try:
         payload = json.loads(text)
     except json.JSONDecodeError:
-        raise GroupingError("OpenAI returned something that wasn't valid JSON.") from None
+        raise error_cls("OpenAI returned something that wasn't valid JSON.") from None
 
     usage = getattr(response, "usage", None)
-    return payload.get("clusters") or [], {
+    return payload.get(result_key) or [], {
         "input_tokens": getattr(usage, "input_tokens", 0) or 0,
         "output_tokens": getattr(usage, "output_tokens", 0) or 0,
     }
+
+
+def call_with_retries(prompt: str, user_input: str, choice: dict, *, what: str = "grouped",
+                      error_cls: type[Exception] = GroupingError,
+                      **call_kwargs) -> tuple[list[dict] | None, dict, str]:
+    """`_call`, retrying the errors worth retrying.
+
+    Returns (items, usage, last_error). `items` is None when every attempt failed
+    with something that isn't fatal — a bad answer or a flaky connection — so the
+    caller can mark that one list as failed and keep going. Fatal problems (a
+    rejected key, an unknown model, no credit) are raised as `error_cls` because
+    retrying them for the next list helps nobody.
+    """
+    attempts = max(1, config.OPENAI_MAX_RETRIES + 1)
+    last = "unknown error"
+    usage = {"input_tokens": 0, "output_tokens": 0}
+
+    for attempt in range(attempts):
+        try:
+            raw, usage = _call(prompt, user_input, choice, error_cls=error_cls, **call_kwargs)
+            return raw, usage, ""
+        except error_cls as exc:
+            return None, usage, str(exc)      # a bad answer, not a flaky connection
+        except Exception as exc:
+            fatal = tagging._fatal(exc, choice["model"], what=what)
+            if fatal:
+                raise error_cls(fatal) from exc
+            last = str(exc) or exc.__class__.__name__
+            if not tagging._retryable(exc) or attempt == attempts - 1:
+                break
+            time.sleep((2 ** attempt) + random.uniform(0, 0.5))
+
+    return None, usage, last
 
 
 # ---------------------------------------------------------------------------
@@ -339,25 +383,7 @@ def group_list(key: str, uniques: list[dict], occurrences: list[dict], product: 
         }
 
     user_input = build_input(key, uniques, product, prior_titles)
-    attempts = max(1, config.OPENAI_MAX_RETRIES + 1)
-    last = "unknown error"
-    raw, usage = None, {"input_tokens": 0, "output_tokens": 0}
-
-    for attempt in range(attempts):
-        try:
-            raw, usage = _call(prompt, user_input, choice)
-            break
-        except GroupingError as exc:
-            last = str(exc)
-            break                       # a bad answer, not a flaky connection
-        except Exception as exc:
-            fatal = tagging._fatal(exc, choice["model"], what="grouped")
-            if fatal:
-                raise GroupingError(fatal) from exc
-            last = str(exc) or exc.__class__.__name__
-            if not tagging._retryable(exc) or attempt == attempts - 1:
-                break
-            time.sleep((2 ** attempt) + random.uniform(0, 0.5))
+    raw, usage, last = call_with_retries(prompt, user_input, choice)
 
     if raw is None:
         return {"key": key, "title": TITLES[key], "status": "failed", "error": last,
@@ -436,13 +462,16 @@ def estimate(tagged: dict, prompt: str | None = None) -> dict:
     }
 
 
-def prior_titles(slug: str) -> dict:
+def prior_titles(slug: str, filename: str = "clusters.json",
+                 item_key: str = "clusters") -> dict:
     """Cluster titles from the last time this category was grouped, whichever
     parse that was — including this one, if it has been grouped before.
 
     Cross-run comparability for the price of a few hundred prompt tokens: if the
-    same theme shows up again, it keeps the name it had last time. Re-grouping the
-    same parse counts, so running it twice doesn't rename stable themes.
+    same concept shows up again, it keeps the name it had last time. Re-grouping
+    the same parse counts, so running it twice doesn't rename stable clusters.
+
+    `filename` / `item_key` let themes.py ask the same question of themes.json.
     """
     found: dict[str, list[str]] = {}
     newest = None
@@ -457,7 +486,7 @@ def prior_titles(slug: str) -> dict:
         for parse_folder in run_folder.iterdir():
             if not parse_folder.is_dir() or not parse_folder.name.startswith("parse-"):
                 continue
-            path = parse_folder / "clusters.json"
+            path = parse_folder / filename
             if not path.is_file():
                 continue
             stamp = path.stat().st_mtime
@@ -469,7 +498,7 @@ def prior_titles(slug: str) -> dict:
 
     previous = storage.read_json(newest[1], {}) or {}
     for section in previous.get("sections") or []:
-        titles = [c.get("title") for c in section.get("clusters") or [] if c.get("title")]
+        titles = [c.get("title") for c in section.get(item_key) or [] if c.get("title")]
         if titles:
             found[section.get("key")] = titles
     return found
@@ -565,6 +594,31 @@ def run_grouping(job, slug: str, run_id: str, parse_id: str) -> dict:
     storage.write_json(directory / "clusters.json", document)
     (directory / "clusters.md").write_text(render_markdown(document), encoding="utf-8")
 
+    # Themes describe one exact set of clusters. New clusters make any old themes
+    # wrong, so they go before anything else can read them; results.py also checks
+    # a fingerprint, so a leftover file could never be shown anyway.
+    from pipeline import themes   # here, not at the top: themes imports this module
+    themes.remove_files(directory)
+
+    theme_outcome = {"status": "skipped", "lists": [], "error": None}
+    if settings.resolve("auto_themes"):
+        job.set_total(len(collected) + 1)
+        job.step(label="Grouping clusters into themes…", count=0)
+        try:
+            theme_summary = themes.run_themes(job, slug, run_id, parse_id,
+                                              clusters_doc=document, standalone=False)
+            theme_outcome = {
+                "status": "failed" if theme_summary["failed"] else "ok",
+                "lists": theme_summary["lists"],
+                "error": None,
+            }
+        except themes.ThemeError as exc:
+            # Clusters are done and saved. A theme problem is a note, not a failure.
+            theme_outcome = {"status": "failed", "lists": [], "error": str(exc)}
+            job.note(f"Themes could not be built: {exc} Use \"Group into themes\" on "
+                     f"the results view to try again.")
+        job.step(count=1)
+
     usage = {
         "input_tokens": sum(s["usage"]["input_tokens"] for s in sections),
         "output_tokens": sum(s["usage"]["output_tokens"] for s in sections),
@@ -603,6 +657,7 @@ def run_grouping(job, slug: str, run_id: str, parse_id: str) -> dict:
         "usage": usage,
         "cost_usd": actual["cost_usd"],
         "elapsed_seconds": round(time.perf_counter() - started, 1),
+        "themes": theme_outcome,
     }
 
     storage.write_json(directory / "cluster_log.json", {

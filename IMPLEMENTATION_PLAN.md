@@ -336,6 +336,44 @@ moved out to a later one. What was decided and measured:
   the run and group views; the results URL for one that isn't shows an empty state with
   a link back to the run, where Group tags already lives.
 
+### Phase 7 — Themes: a "group of groups" (built 2026-09-16)
+
+One more level above clusters. A **theme** is a set of related clusters with a title and a
+one-sentence summary; a **cluster** is unchanged. "Group" is never used for either, since it
+already means a competitor category and the clustering step. Rules come from the
+`review-cluster-grouping` skill (`pipeline/prompts/group_themes.md` restates its core rules,
+with no theme-count target and nothing quoted from `group-clustering-examples/`).
+
+- **Machinery mirrors clustering** (`pipeline/themes.py`): one structured-output call per
+  list on the grouping model, index-based membership so the model never rewrites a cluster,
+  validation that every cluster lands in exactly one theme, orphans repaired into one-cluster
+  themes and logged, prior theme titles reused across runs. `grouping._call`,
+  `call_with_retries` and `prior_titles` were parametrised so both steps share them.
+- **Only long lists are themed.** `THEME_MIN_CLUSTERS = 13`: a list with 12 or fewer clusters
+  stays a flat grid. Themes and their members are ordered by mentions, the same ranking the
+  cluster cards use.
+- **Themes are bound to one exact set of clusters.** `themes.json` carries a fingerprint of
+  the clusters it was built from; `results.py` treats a mismatch as "no themes", and
+  `run_grouping` deletes `themes.json` / `themes.md` / `themes_log.json` before writing new
+  clusters. Old parses that were never themed render exactly as before.
+- **Auto by default.** The `auto_themes` setting (first boolean in `settings.py`) runs the
+  theme step inside the clustering job. A theme failure there is a job note, never a job
+  failure: clusters are kept and the results view offers "Group into themes" (confirm dialog
+  with cost, `theme-estimate` + `theme` endpoints) as the manual path.
+- **Results view.** Theme rows are full-width accordions (title, summary,
+  `clusters · mentions · in N of M products`, member cluster titles when collapsed; the usual
+  cluster cards when open). Each list header collapses on click. A sticky bar holds an
+  All / Listings / Reviews source filter (recomputes chips, counts and product coverage,
+  hides clusters and themes with nothing from that source, keeps order; session-only) and
+  one Expand all / Collapse all (opens every theme and any collapsed list; collapse closes
+  themes only; cluster cards untouched). Theme expansion is remembered per parse with the
+  cluster keys; list collapse is not. Chips are coloured by list — celadon features, iron
+  complaints, amber care — and nothing else changes colour.
+- **Verified on olive trees** (35 features, 17 complaints, 7 care): 9 + 9 themes, no
+  repairs, `check_grouping.py` passes on `themes.md` against `clusters.md`, care stays flat.
+  Complaints and care themes have no hand-made example yet; review the first outputs and
+  turn the good ones into examples. Renaming themes or moving clusters is out of scope.
+
 ### Phase 6 — Deferred refinements (flagged, not built yet)
 
 - **Search terms and usage keywords.** Flat frequency lists (spaces / placements /

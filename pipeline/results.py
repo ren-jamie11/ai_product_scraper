@@ -15,7 +15,8 @@ from __future__ import annotations
 
 from collections import Counter
 
-from pipeline import attribution, storage
+import config
+from pipeline import attribution, storage, themes
 
 PREVIEW = 3
 
@@ -50,6 +51,12 @@ def build(slug: str, run_id: str, parse_id: str) -> dict:
     bodies: dict[str, dict] = {}
     used_products: dict[str, dict] = {}
     sections = []
+
+    # Themes only count if they were built from exactly these clusters. A parse
+    # that was never themed, or whose theme file predates a re-grouping, simply
+    # has none — the clusters render flat, as they always did.
+    themes_doc = themes.read_themes(directory, clusters)
+    themed = {s["key"]: s for s in (themes_doc or {}).get("sections") or []}
 
     for section in clusters.get("sections") or []:
         key = section.get("key")
@@ -112,6 +119,7 @@ def build(slug: str, run_id: str, parse_id: str) -> dict:
                 "preview": preview,
             })
 
+        theme_section = themed.get(key) or {}
         sections.append({
             "key": section.get("key"),
             "title": section.get("title"),
@@ -119,6 +127,11 @@ def build(slug: str, run_id: str, parse_id: str) -> dict:
             "error": section.get("error"),
             "mentions": len(section.get("occurrences") or []),
             "clusters": built,
+            "eligible": themes.eligible(section),
+            "themes": list(theme_section.get("themes") or [])
+                      if theme_section.get("status") == "ok" else [],
+            "theme_error": theme_section.get("error")
+                           if theme_section.get("status") == "failed" else None,
         })
 
     attributed = sum(1 for o in occurrences.values() if o["match"]["confident"])
@@ -136,6 +149,15 @@ def build(slug: str, run_id: str, parse_id: str) -> dict:
         "attributed": attributed,
         "mentions": len(occurrences),
         "sections": sections,
+        "themes": {
+            "status": "ok" if themes_doc else "missing",
+            "generated_at": (themes_doc or {}).get("generated_at"),
+            "model": (themes_doc or {}).get("model"),
+            "reasoning": (themes_doc or {}).get("reasoning"),
+            "min_clusters": (themes_doc or {}).get("min_clusters") or config.THEME_MIN_CLUSTERS,
+            "eligible": [s["key"] for s in sections if s["eligible"]],
+            "themed": [s["key"] for s in sections if s["themes"]],
+        },
         "occurrences": occurrences,
         "bodies": bodies,
         "products": used_products,

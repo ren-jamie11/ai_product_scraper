@@ -15,7 +15,7 @@ from flask import Flask, jsonify, request, send_from_directory
 
 import config
 from pipeline import (asins, compact, extract, grouping, jobs, normalize, results,
-                      settings, storage, tagging)
+                      settings, storage, tagging, themes)
 
 app = Flask(__name__, static_folder="static", static_url_path="/static")
 
@@ -36,6 +36,11 @@ def handle_tagging_error(exc: tagging.TaggingError):
 
 @app.errorhandler(grouping.GroupingError)
 def handle_grouping_error(exc: grouping.GroupingError):
+    return jsonify({"error": str(exc)}), 400
+
+
+@app.errorhandler(themes.ThemeError)
+def handle_theme_error(exc: themes.ThemeError):
     return jsonify({"error": str(exc)}), 400
 
 
@@ -284,6 +289,8 @@ def api_group_estimate(slug: str, run_id: str, parse_id: str):
         "already_grouped": bool(
             storage.read_json(storage.run_dir(slug, run_id) / parse_id / "clusters.json")
         ),
+        "auto_themes": bool(settings.resolve("auto_themes")),
+        "theme_min_clusters": config.THEME_MIN_CLUSTERS,
     })
 
 
@@ -308,6 +315,48 @@ def api_group(slug: str, run_id: str, parse_id: str):
         total=to_group,
     )
     return jsonify({"job_id": job.id, "parse_id": parse_id, "to_group": to_group}), 202
+
+
+# ---------------------------------------------------------------------------
+# Step 3b — themes
+#
+# Normally run inside the grouping job (the "auto themes" setting). These two
+# routes are the manual path: the "Group into themes" button on the results view.
+# ---------------------------------------------------------------------------
+
+@app.get("/api/runs/<slug>/<run_id>/parses/<parse_id>/theme-estimate")
+def api_theme_estimate(slug: str, run_id: str, parse_id: str):
+    """Which lists qualify and what theming will cost. Spends nothing."""
+    clusters = themes.load_clusters(slug, run_id, parse_id)
+    directory = storage.run_dir(slug, run_id) / parse_id
+    return jsonify({
+        "estimate": themes.estimate(clusters),
+        "openai_key_set": bool(config.OPENAI_API_KEY),
+        "already_themed": themes.read_themes(directory, clusters) is not None,
+    })
+
+
+@app.post("/api/runs/<slug>/<run_id>/parses/<parse_id>/theme")
+def api_theme(slug: str, run_id: str, parse_id: str):
+    """Kick off theming in the background and hand back a job id."""
+    if not config.OPENAI_API_KEY:
+        raise storage.StorageError("OPENAI_API_KEY is empty in config.py.")
+
+    clusters = themes.load_clusters(slug, run_id, parse_id)
+    to_theme = themes.estimate(clusters)["to_theme"]
+    if not to_theme:
+        raise themes.ThemeError(
+            f"No list has {config.THEME_MIN_CLUSTERS} or more clusters, so there is "
+            f"nothing to group into themes."
+        )
+
+    jobs.prune()
+    job = jobs.start(
+        f"Grouping {to_theme} {'list' if to_theme == 1 else 'lists'} into themes…",
+        lambda j: themes.run_themes(j, slug, run_id, parse_id),
+        total=to_theme,
+    )
+    return jsonify({"job_id": job.id, "parse_id": parse_id, "to_theme": to_theme}), 202
 
 
 # ---------------------------------------------------------------------------

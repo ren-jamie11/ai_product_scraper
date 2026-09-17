@@ -144,6 +144,26 @@ GROUP_EST_OUTPUT_TOKENS = int(os.getenv("GROUP_EST_OUTPUT_TOKENS", "2400"))
 
 
 # ---------------------------------------------------------------------------
+# Themes — a second, smaller call per list that groups clusters into themes
+# ---------------------------------------------------------------------------
+
+# Build themes right after tag clustering. Off means the user runs "Group into
+# themes" from the results view instead. Overridable from Settings.
+AUTO_THEMES = os.getenv("AUTO_THEMES", "1") not in ("0", "false", "False")
+
+# A list needs at least this many clusters before it is grouped into themes.
+# Twelve or fewer clusters read fine as a flat grid, so they are left alone.
+THEME_MIN_CLUSTERS = int(os.getenv("THEME_MIN_CLUSTERS", "13"))
+
+# A ceiling for one theme call. A 57-cluster list returns ~9 themes with titles,
+# summaries and indices in well under 1,000 tokens.
+THEME_MAX_OUTPUT_TOKENS = int(os.getenv("THEME_MAX_OUTPUT_TOKENS", "4000"))
+
+# Rough output tokens per list, for the pre-theming cost estimate.
+THEME_EST_OUTPUT_TOKENS = int(os.getenv("THEME_EST_OUTPUT_TOKENS", "900"))
+
+
+# ---------------------------------------------------------------------------
 # Server
 # ---------------------------------------------------------------------------
 

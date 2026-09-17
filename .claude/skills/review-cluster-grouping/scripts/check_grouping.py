@@ -13,7 +13,11 @@ import sys
 
 GROUP_RE = re.compile(r"^###\s+\d+\.\s+(.+?)\s*$")
 TAGS_RE = re.compile(r"^\*\*Tags \((\d+)\):\*\*")
-THEME_TOTAL_RE = re.compile(r"^\*\*Groups \((\d+)\)\s*·\s*Tags \((\d+)\):\*\*")
+# "Groups" in hand-made files; "Clusters" (with an optional mentions count) in the
+# themes.md the app writes. Both count members by distinct tags.
+THEME_TOTAL_RE = re.compile(
+    r"^\*\*(?:Groups|Clusters) \((\d+)\)\s*·\s*Tags \((\d+)\)(\s*·\s*Mentions \(\d+\))?:\*\*"
+)
 MEMBER_RE = re.compile(r"^-\s+(.+?)\s+\((\d+)\)\s*$")
 
 
@@ -52,7 +56,8 @@ def parse_output(lines):
             if m.group(1).strip() == "Grouping Notes":
                 theme = None
                 continue
-            theme = {"title": m.group(1), "g": None, "t": None, "members": []}
+            theme = {"title": m.group(1), "g": None, "t": None, "members": [],
+                     "by_mentions": False}
             themes.append(theme)
             continue
         if theme is None:
@@ -60,6 +65,9 @@ def parse_output(lines):
         m = THEME_TOTAL_RE.match(line)
         if m:
             theme["g"], theme["t"] = int(m.group(1)), int(m.group(2))
+            # The app orders by mentions, not distinct tags, so the tag-count
+            # ordering checks below don't apply to its files.
+            theme["by_mentions"] = bool(m.group(3))
             continue
         m = MEMBER_RE.match(line)
         if m:
@@ -80,7 +88,7 @@ def check(section, src_lines, out_lines):
         if th["t"] != total:
             problems.append(f"Theme '{th['title']}': states {th['t']} tags, members sum to {total}")
         counts = [n for _, n in members]
-        if counts != sorted(counts, reverse=True):
+        if not th["by_mentions"] and counts != sorted(counts, reverse=True):
             problems.append(f"Theme '{th['title']}': members not ordered largest to smallest")
         for name, n in members:
             seen.setdefault(name, []).append(th["title"])
@@ -95,7 +103,7 @@ def check(section, src_lines, out_lines):
         if name not in seen:
             problems.append(f"Group '{name}' is missing from the output")
     totals = [th["t"] or 0 for th in themes]
-    if totals != sorted(totals, reverse=True):
+    if not any(th["by_mentions"] for th in themes) and totals != sorted(totals, reverse=True):
         problems.append("Themes are not ordered largest to smallest by tag count")
 
     print(f"== {section} ==")
