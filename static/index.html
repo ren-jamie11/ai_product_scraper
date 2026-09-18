@@ -1939,6 +1939,13 @@ function endParse(slug, runId, error) {
    and cluster_log.json into the same parse-<ts>/ folder the tags came from. */
 let grouping = false;
 
+/* A list past the single-call size is clustered in parallel partitions and then
+   merged; the confirm dialog says so, since "one call per list" no longer holds. */
+function callsNote(l) {
+  if (l.mode !== "partitioned") return "";
+  return ` &mdash; about ${plural(l.partitions, "parallel call", "parallel calls")} + 1 merge`;
+}
+
 async function startGroup() {
   if (grouping || parsing) return;
   const { slug, runId } = runState;
@@ -1972,7 +1979,8 @@ async function startGroup() {
   let plan = `<div class="plan">` +
     est.lists.map(l => line(l.unique_tags,
       `${esc(l.title.toLowerCase())} <span class="d">&mdash; from
-       ${plural(l.occurrences, "mention", "mentions")}</span>`)).join("") +
+       ${plural(l.occurrences, "mention", "mentions")}${
+       l.seconds ? `, ${esc(about(l.seconds))}` : ""}${callsNote(l)}</span>`)).join("") +
     (est.cost_known
       ? line(`$${est.cost_usd.toFixed(3)}`, `estimated <span class="d">&mdash; the real figure is
           written to cluster_log.json</span>`)
@@ -2449,10 +2457,13 @@ function overviewHtml(key) {
   const s = d.sections.find(x => x.key === key);
   const tone = LIST_TONE[key] || "";
   const title = s ? s.title : key;
-  const blank = (h, p) => `<div class="ovcol ${tone}"><div class="oh"><h2>${esc(title)}</h2></div>
-    <div class="blank"><h3>${h}</h3><p>${p}</p></div></div>`;
+  const blank = (h, p, extra = "") => `<div class="ovcol ${tone}"><div class="oh"><h2>${esc(title)}</h2></div>
+    <div class="blank"><h3>${h}</h3><p>${p}</p>${extra}</div></div>`;
 
-  if (!s || s.status === "failed") return blank("Nothing to show", esc(s && s.error || "This list was not grouped."));
+  if (!s || s.status === "failed") {
+    return blank("Nothing to show", esc(s && s.error || "This list was not grouped."),
+                 s ? rerunButton(s.key) : "");
+  }
   const sv = sectionView(s);
   if (!s.clusters.length) return blank("Nothing here", `No ${esc(title.toLowerCase())} tags came out of this parse.`);
   if (!sv.count) {
@@ -2524,9 +2535,17 @@ function revealItem(listKey, key, parent) {
   setTimeout(() => el.classList.remove("flash"), 1400);
 }
 
+/* The button under a failed list, in the overview and in the section itself. */
+function rerunButton(key) {
+  const name = (JUMP_NAME[key] || key).toLowerCase();
+  return `<button type="button" class="btn ghost" data-rerun="${esc(key)}">Re-run ${esc(name)} clustering</button>`;
+}
+
 $("res-ov").addEventListener("click", e => {
   if (!resultsState) return;
   if (e.target.closest("[data-clearq]")) { clearQuery(); return; }
+  const rerun = e.target.closest("button[data-rerun]");
+  if (rerun) { startRerun(rerun.dataset.rerun); return; }
   const more = e.target.closest("button[data-all]");
   if (more) {
     const set = resultsState.ovAll;
@@ -2565,7 +2584,8 @@ function sectionHtml(s) {
   if (closed) return `${open}${head}</section>`;
   if (s.status === "failed") {
     return `${open}${head}<div class="note-line"><span class="ic">Failed</span>
-      <span>${esc(s.error || "This list could not be grouped.")}</span></div></section>`;
+      <span>${esc(s.error || "This list could not be grouped.")}</span></div>
+      <div style="margin:10px 0 22px">${rerunButton(s.key)}</div></section>`;
   }
   if (!s.clusters.length) {
     return `${open}${head}<div class="blank"><h3>Nothing here</h3>
@@ -2723,6 +2743,8 @@ function toggleList(key) {
 
 $("res-body").addEventListener("click", e => {
   if (e.target.closest("[data-clearq]")) { clearQuery(); return; }
+  const rerun = e.target.closest("button[data-rerun]");
+  if (rerun) { startRerun(rerun.dataset.rerun); return; }
   const listHead = e.target.closest(".shead.clk");
   if (listHead) { toggleList(listHead.dataset.list); return; }
   const themeHead = e.target.closest(".thm > .hd");
@@ -2763,7 +2785,12 @@ $("res-expand").onclick = () => {
    themes: the same confirm-then-poll shape as Group tags, run from the results
    view because that is where the clusters are. Writes themes.json, themes.md and
    themes_log.json next to clusters.json. */
-let theming = false;
+let resultsBusy = false;   // one background job at a time from this view
+
+function about(seconds) {
+  if (seconds < 90) return `about ${Math.max(10, Math.floor(seconds / 10) * 10)} s`;
+  return `about ${Math.round(seconds / 60)} min`;
+}
 
 function setThemeProgress(pct, label) {
   $("res-prog").hidden = false;
@@ -2772,7 +2799,7 @@ function setThemeProgress(pct, label) {
 }
 
 async function startThemes() {
-  if (theming || !resultsState) return;
+  if (resultsBusy || !resultsState) return;
   const { slug, runId, parseId } = resultsState;
   $("res-err").hidden = true;
 
@@ -2827,7 +2854,7 @@ async function startThemes() {
   });
   if (!ok) return;
 
-  theming = true;
+  resultsBusy = true;
   $("res-theme").disabled = true;
 
   let job;
@@ -2836,40 +2863,119 @@ async function startThemes() {
   } catch (err) {
     $("res-err").textContent = err.message;
     $("res-err").hidden = false;
-    theming = false;
+    resultsBusy = false;
     $("res-theme").disabled = false;
     return;
   }
 
   setThemeProgress(0, `Starting — ${plural(job.to_theme, "list", "lists")} to group`);
-  pollThemes(job.job_id, slug, runId, parseId);
+  pollResultsJob(job.job_id, slug, runId, parseId, "The theme grouping failed.");
 }
 
-async function pollThemes(jobId, slug, runId, parseId) {
+/* ---------- re-run one failed list ----------
+   A list that failed (cut off, rate limited) is re-grouped on its own from here.
+   The server splices the new section into clusters.json and carries the other
+   lists' themes over, so nothing that succeeded is paid for or disturbed. */
+async function startRerun(key) {
+  if (resultsBusy || !resultsState) return;
+  const { slug, runId, parseId } = resultsState;
+  const name = (JUMP_NAME[key] || key).toLowerCase();
+  $("res-err").hidden = true;
+
+  const path = `/api/runs/${encodeURIComponent(slug)}/${encodeURIComponent(runId)}` +
+               `/parses/${encodeURIComponent(parseId)}/group`;
+
+  let info;
+  try {
+    info = await api(`${path}-estimate?lists=${encodeURIComponent(key)}`);
+  } catch (e) {
+    $("res-err").textContent = e.message;
+    $("res-err").hidden = false;
+    return;
+  }
+
+  const est = info.estimate;
+  const l = est.lists[0];
+  if (!l) {
+    $("res-err").textContent = `This parse has no ${name} tags, so there is nothing to re-run.`;
+    $("res-err").hidden = false;
+    return;
+  }
+
+  const line = (n, text, tone) =>
+    `<div class="ln ${tone || ""}"><b>${esc(n)}</b><span>${text}</span></div>`;
+  const others = resultsState.data.sections
+    .filter(s => s.key !== key).map(s => s.title.toLowerCase());
+
+  let plan = `<div class="plan">` +
+    line(l.unique_tags, `${esc(l.title.toLowerCase())} <span class="d">&mdash; from
+      ${plural(l.occurrences, "mention", "mentions")}, ${esc(about(l.seconds))}${callsNote(l)}</span>`) +
+    (est.cost_known
+      ? line(`$${est.cost_usd.toFixed(3)}`, `estimated <span class="d">&mdash; the real figure is
+          written to cluster_log.json</span>`)
+      : line("?", `cost unknown <span class="d">&mdash; no pricing set for
+          ${esc(est.model)} in config.py</span>`, "warn"));
+  if (others.length) {
+    plan += `<div class="asins">${esc(others.join(" and "))} &mdash; and their themes &mdash;
+      are kept exactly as they are.</div>`;
+  }
+  if (info.auto_themes) {
+    plan += `<div class="asins">Then the new ${esc(name)} clusters are grouped into themes if
+      there are ${esc(info.theme_min_clusters)} or more.</div>`;
+  }
+  plan += `</div>`;
+
+  const ok = await confirmModal({
+    title: `Re-run ${name} clustering?`,
+    confirmLabel: "Re-run",
+    body: `<p class="sd">One call to <b>${esc(est.model)}</b> at <b>${esc(est.reasoning)}</b>
+             reasoning, sorting every ${esc(name)} tag into exactly one semantic cluster with a
+             title and a one-line description.</p>${plan}`,
+  });
+  if (!ok) return;
+
+  resultsBusy = true;
+  let job;
+  try {
+    job = await api(path, { method: "POST", body: JSON.stringify({ lists: [key] }) });
+  } catch (err) {
+    $("res-err").textContent = err.message;
+    $("res-err").hidden = false;
+    resultsBusy = false;
+    return;
+  }
+
+  setThemeProgress(0, `Starting — re-grouping ${name}`);
+  pollResultsJob(job.job_id, slug, runId, parseId, "The re-run failed.");
+}
+
+/* Shared by "Group into themes" and the per-list re-run: both write into this
+   parse's folder and end by reloading the results from disk. */
+async function pollResultsJob(jobId, slug, runId, parseId, failText) {
   let snap;
   try {
     snap = await api("/api/jobs/" + encodeURIComponent(jobId));
   } catch (e) {
-    return endThemes(slug, runId, parseId, e.message);
+    return endResultsJob(slug, runId, parseId, e.message);
   }
 
   setThemeProgress(snap.pct, snap.total ? `${snap.label} (${snap.done}/${snap.total})`
                                         : snap.label);
 
   if (snap.state === "running") {
-    setTimeout(() => pollThemes(jobId, slug, runId, parseId), 700);
+    setTimeout(() => pollResultsJob(jobId, slug, runId, parseId, failText), 700);
     return;
   }
   if (snap.state === "error") {
-    return endThemes(slug, runId, parseId, snap.error || "The theme grouping failed.");
+    return endResultsJob(slug, runId, parseId, snap.error || failText);
   }
 
   setThemeProgress(100, "Done");
-  setTimeout(() => endThemes(slug, runId, parseId, null), 500);
+  setTimeout(() => endResultsJob(slug, runId, parseId, null), 500);
 }
 
-function endThemes(slug, runId, parseId, error) {
-  theming = false;
+function endResultsJob(slug, runId, parseId, error) {
+  resultsBusy = false;
   $("res-theme").disabled = false;
   $("res-prog").hidden = true;
   $("res-progbar").style.width = "0%";
