@@ -9,6 +9,7 @@ defensive isinstance guards come from amazon_web_scrape.py.
 from __future__ import annotations
 
 import re
+from datetime import datetime
 
 import config
 
@@ -129,22 +130,218 @@ def normalize_review(raw: dict, source: str) -> dict | None:
     }
 
 
+# --- Reviews pasted straight from Amazon ------------------------------------
+#
+# Both the product page and the "all reviews" page paste as the same shape:
+#
+#     Reviewer Name
+#     5 out of 5 starsTitle            (review page: "5.0 out of 5 stars Title")
+#     Reviewed in the United States on September 7, 2026
+#     Color: BrownSize: 8.7" x 3.6"    (optional, may end in "Verified Purchase")
+#     Verified Purchase                (optional)
+#     Body, possibly several paragraphs
+#     Title                            (product page echoes it, sometimes twice)
+#     2 people found this helpful
+#     Helpful
+#     Report
+#
+# The rating line followed by a "Reviewed in" line is the anchor; everything
+# else is read relative to it.
+
+_RATING_LINE = re.compile(r"^(\d(?:\.\d)?) out of 5 stars\s*(.*)$", re.IGNORECASE)
+_REVIEWED_LINE = re.compile(r"^Reviewed in\b", re.IGNORECASE)
+_REVIEWED_DATE = re.compile(r"\bon\s+(.+?)\s*$")
+_HELPFUL = re.compile(r"^(One|\d[\d,]*) (?:person|people) found this helpful$", re.IGNORECASE)
+_FOOTER = re.compile(
+    r"^(?:helpful|report|read more|customer (?:image|video)s?|translate (?:all )?reviews? to \w+"
+    r"|see (?:more|all) reviews|show \d+ more reviews?|top reviews from .*"
+    r"|from the united states|from other countries"
+    r"|(?:one|\d[\d,]*) (?:person|people) found this helpful)$",
+    re.IGNORECASE,
+)
+# Lines between the "Reviewed in" line and the body that carry no review text.
+_META_LINE = re.compile(
+    r"^(?:verified purchase|vine customer review of free product|click to play video)$",
+    re.IGNORECASE,
+)
+_VARIATION_KEYS = re.compile(
+    r"^(?:colou?r|size|style|pattern|material|scent|shape|design|flavou?r|capacity|finish"
+    r"|configuration|edition|length|wattage|number of items|item package quantity)"
+    r"(?: name)?:", re.IGNORECASE,
+)
+_ANY_KEY = re.compile(r"[A-Za-z][A-Za-z ]{0,30}:\s*\S")
+# Reviewer badges Amazon prints between the name and the rating line.
+_BADGE = re.compile(r"^(?:vine voice|top \d+ reviewer|hall of fame|top contributor\b.*)$",
+                    re.IGNORECASE)
+
+
+def _is_variation(line: str) -> bool:
+    """`Color: BrownSize: 8.7"` — but not a body that opens with `Update: ...`.
+
+    A known variation key is enough. An unknown key only counts when the line
+    also carries a second key or the glued-on "Verified Purchase", so a review
+    that starts with "Update:" or "Edit:" keeps its first line.
+    """
+    if _VARIATION_KEYS.match(line):
+        return True
+    return bool(_ANY_KEY.match(line)) and (
+        len(_ANY_KEY.findall(line)) > 1 or line.lower().endswith("verified purchase")
+    )
+
+
+def _parse_date(line: str) -> str | None:
+    match = _REVIEWED_DATE.search(line)
+    if not match:
+        return None
+    for fmt in ("%B %d, %Y", "%d %B %Y", "%b %d, %Y", "%d %b %Y"):
+        try:
+            return datetime.strptime(match.group(1), fmt).date().isoformat()
+        except ValueError:
+            continue
+    return None
+
+
+def _body_key(body: str) -> str:
+    """What makes two reviews the same review: the body, ignoring case and spacing."""
+    return re.sub(r"\s+", " ", body or "").strip().casefold()
+
+
+def _next_filled(lines: list[str], start: int) -> int | None:
+    for i in range(start, len(lines)):
+        if lines[i]:
+            return i
+    return None
+
+
+def _review_starts(lines: list[str]) -> list[tuple[int, int]]:
+    """(first line of the review's header, rating-line index) for every review.
+
+    A rating line only counts when the next filled line is "Reviewed in", so a
+    body sentence like "5 out of 5 stars from me" never starts a new review.
+    The header reaches back over the reviewer's name and any badge lines, so
+    none of them leak into the end of the previous review's body.
+    """
+    starts = []
+    for i, line in enumerate(lines):
+        if not _RATING_LINE.match(line):
+            continue
+        nxt = _next_filled(lines, i + 1)
+        if nxt is None or not _REVIEWED_LINE.match(lines[nxt]):
+            continue
+
+        head = i
+        j = i - 1
+        while j >= 0 and not lines[j]:
+            j -= 1
+        while j >= 0 and _BADGE.match(lines[j]):
+            head, j = j, j - 1
+        if j >= 0 and lines[j] and not _FOOTER.match(lines[j]) and not _RATING_LINE.match(lines[j]):
+            head = j
+        starts.append((head, i))
+    return starts
+
+
+def _parse_amazon_review(lines: list[str]) -> dict:
+    """One review's lines, from the rating line up to the next reviewer's name."""
+    rating_match = _RATING_LINE.match(lines[0])
+    rating = float(rating_match.group(1))
+    title = rating_match.group(2).strip()
+
+    pos = _next_filled(lines, 1)
+    date = _parse_date(lines[pos])
+    pos += 1
+
+    verified = False
+    variation_seen = False
+    while pos < len(lines):
+        line = lines[pos]
+        if not line:
+            pos += 1
+        elif _META_LINE.match(line):
+            verified = verified or line.lower() == "verified purchase"
+            pos += 1
+        elif not variation_seen and _is_variation(line):
+            variation_seen = True
+            verified = verified or line.lower().endswith("verified purchase")
+            pos += 1
+        else:
+            break
+
+    body_lines: list[str] = []
+    while pos < len(lines) and not _FOOTER.match(lines[pos]):
+        body_lines.append(lines[pos])
+        pos += 1
+
+    helpful = 0
+    for line in lines[pos:]:
+        match = _HELPFUL.match(line)
+        if match:
+            count = match.group(1)
+            helpful = 1 if count.lower() == "one" else int(count.replace(",", ""))
+            break
+
+    # The product page repeats the title under the body, sometimes twice. A
+    # body that *is* the title ("Love" / "Love") keeps its one line.
+    title_key = _body_key(title)
+    while body_lines and not body_lines[-1]:
+        body_lines.pop()
+    while (title_key and _body_key(body_lines[-1] if body_lines else "") == title_key
+           and sum(1 for line in body_lines if line) > 1):
+        body_lines.pop()
+        while body_lines and not body_lines[-1]:
+            body_lines.pop()
+
+    body = re.sub(r"\n{3,}", "\n\n", "\n".join(body_lines)).strip()
+    return {
+        "title": title,
+        "body": body,
+        "rating": int(rating) if rating.is_integer() else rating,
+        "date": date,
+        "verified_purchase": verified,
+        "helpful_votes": helpful,
+    }
+
+
 def parse_pasted_reviews(text: str, existing: list[dict] | None = None) -> list[dict]:
-    """Split a pasted block into reviews — one blank line between each.
+    """Split a pasted block into reviews.
 
     Rainforest never returns reviews for some listings, so pasting is the only
-    route for those. Whatever is pasted becomes the body; title and rating are
-    left empty for you to fill in inline if you care. Both are optional
-    downstream: tagging joins title and body, so an empty title costs nothing.
+    route for those. Text copied from Amazon's product page or reviews page is
+    read deterministically: rating, title, date and verified purchase come from
+    the header lines, the reviewer name and "Helpful / Report" footers are
+    dropped. Text with no Amazon rating lines falls back to one review per
+    blank-line-separated block, with the title and rating left empty.
+
+    A review whose body matches one already on the product (fetched or pasted
+    earlier), or earlier in the same paste, is skipped.
     """
+    lines = [clean_text(line) for line in (text or "").replace("\r\n", "\n").split("\n")]
+    starts = _review_starts(lines)
+
+    if starts:
+        parsed = []
+        for n, (_, rating_at) in enumerate(starts):
+            end = starts[n + 1][0] if n + 1 < len(starts) else len(lines)
+            parsed.append(_parse_amazon_review(lines[rating_at:end]))
+    else:
+        parsed = [
+            {"title": "", "body": block.strip(), "rating": None, "date": None,
+             "verified_purchase": False, "helpful_votes": 0}
+            for block in re.split(r"\n\s*\n", "\n".join(lines))
+        ]
+
     taken = {r.get("id") for r in (existing or [])}
+    seen = {_body_key(r.get("body")) for r in (existing or [])}
     reviews: list[dict] = []
     counter = 1
 
-    for block in re.split(r"\n\s*\n", text or ""):
-        body = "\n".join(clean_text(line) for line in block.splitlines()).strip()
-        if len(body) < config.MIN_REVIEW_CHARS:
+    for review in parsed:
+        if len(review["body"]) < config.MIN_REVIEW_CHARS:
             continue
+        key = _body_key(review["body"])
+        if key in seen:
+            continue
+        seen.add(key)
 
         # Manual ids have to stay unique within the product, and compaction
         # merges reviews across runs, so never reuse one that already exists.
@@ -153,16 +350,7 @@ def parse_pasted_reviews(text: str, existing: list[dict] | None = None) -> list[
         review_id = f"manual_{counter}"
         taken.add(review_id)
 
-        reviews.append({
-            "id": review_id,
-            "title": "",
-            "body": body,
-            "rating": None,
-            "date": None,
-            "verified_purchase": False,
-            "helpful_votes": 0,
-            "source": "manual",
-        })
+        reviews.append({"id": review_id, **review, "source": "manual"})
 
     return reviews
 
@@ -224,6 +412,8 @@ def normalize_product(fetched: dict) -> dict:
     if not bullets:
         warnings.append("Rainforest returned no feature bullets for this listing.")
     if not reviews:
+        # storage.load_run drops this note once any reviews exist; keep the two
+        # strings identical (storage.NO_REVIEWS_WARNING).
         warnings.append("Rainforest returned no reviews for this listing.")
 
     return {

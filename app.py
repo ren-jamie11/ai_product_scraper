@@ -533,7 +533,7 @@ def api_restore_asin(slug: str, run_id: str, asin: str):
 
 @app.post("/api/runs/<slug>/<run_id>/reviews")
 def api_add_reviews(slug: str, run_id: str):
-    """Append pasted reviews to an ASIN — one blank line between each.
+    """Append pasted reviews to an ASIN — copied from Amazon, or blank-line separated.
 
     Parsed here rather than in the browser so the emoji strip and the minimum
     body length stay in one place, next to the rules the fetched reviews follow.
@@ -546,8 +546,9 @@ def api_add_reviews(slug: str, run_id: str):
     added = normalize.parse_pasted_reviews(payload.get("text", ""), existing)
     if not added:
         raise storage.StorageError(
-            "Nothing there looked like a review. Paste the review text with a "
-            "blank line between each one."
+            "Nothing new there looked like a review. Paste reviews copied from "
+            "Amazon, or plain text with a blank line between each one. Reviews "
+            "already on this listing are skipped."
         )
 
     storage.merge_edits(slug, run_id, {asin: {"reviews": existing + added}})
