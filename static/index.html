@@ -266,6 +266,8 @@ a.pill:hover{text-decoration:underline}
   padding:3px 10px;font-family:var(--sans);font-size:12px;line-height:1.35;cursor:pointer;border:1px solid transparent;text-align:left}
 .bub:hover,.bub:focus-visible{border-color:var(--cobalt)}
 .bub i{font-style:normal;font-family:var(--mono);font-size:10px;opacity:.7}
+/* the label is one flex item, so a <mark> from the filter stays inline in it */
+.bub .lbl{min-width:0}
 .bub.soft{text-decoration:underline dotted;text-underline-offset:3px}
 .bub.plain{cursor:default;background:var(--rule-soft);color:var(--muted)}
 .bub.plain:hover{border-color:transparent}
@@ -328,16 +330,15 @@ section[id]{scroll-margin-top:72px}
 
 /* ---------- results: overview ----------
    The first-glance picture: one column per list, one bar per theme (or per cluster
-   when a list has no themes), length = mentions in the current source. On "All"
-   the bar is split into the listing share (solid) and the review share (faded) in
-   the list's own colour. Nothing here is a new colour. */
+   when a list has no themes), length = mentions in the current source, drawn as a
+   single solid bar in the list's own colour. Who said it is the source toggle's
+   job, so the listing/review split lives in the hover tooltip rather than in a
+   second shade and a legend. Nothing here is a new colour. */
 .ov{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:34px}
 .ovcol{background:var(--glaze);border:1px solid var(--rule);padding:14px 18px 12px;min-width:0}
 .ovcol .oh{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;padding-bottom:7px;border-bottom:1px solid var(--rule)}
 .ovcol .oh h2{font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:-.01em;margin:0}
 .ovcol .oh .note{font-family:var(--mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-left:auto;white-space:nowrap}
-.ovcol .lg{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:flex;gap:14px;margin-bottom:8px}
-.ovcol .lg i{display:inline-block;width:9px;height:9px;border-radius:2px;vertical-align:-1px;margin-right:5px}
 .ovcol .blank{padding:22px 16px;margin:6px 0 4px}
 .ovcol .blank h3{font-size:15px}
 .ovcol .blank p{font-size:12px;margin-bottom:0}
@@ -355,10 +356,48 @@ section[id]{scroll-margin-top:72px}
 .ovrow.kid .trk{height:6px}
 .ovcol.feat .trk i{background:var(--celadon)}
 .ovcol.comp .trk i{background:var(--iron)}
-.ovcol.feat .lg .r,.ovcol.feat .trk i.r{background:var(--celadon);opacity:.45}
-.ovcol.comp .lg .r,.ovcol.comp .trk i.r{background:var(--iron);opacity:.45}
-.ovcol.feat .lg .l{background:var(--celadon)} .ovcol.comp .lg .l{background:var(--iron)}
 .ovcol .more{margin:6px 0 0 22px}
+
+/* ---------- results: the two tiers and the keywords columns ----------
+   A .mdiv is an eyebrow followed by a rule to the right margin: it names a tier
+   ("01 · Feature Analysis") without being a control — only the lists inside it
+   collapse. The keywords columns reuse the overview's box, the sticky bar's
+   search input and the default cobalt .bub, so nothing here is a new colour;
+   every rule below is layout. */
+.mdiv{display:flex;align-items:center;gap:12px;margin:6px 0 16px}
+.mdiv .eyebrow{margin:0}
+.mdiv::after{content:"";flex:1;border-top:1px solid var(--rule)}
+#res-h2{margin-top:34px}
+.kw{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:34px}
+.kwcol{background:var(--glaze);border:1px solid var(--rule);padding:14px 18px 16px;min-width:0}
+.kwcol .oh{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--rule)}
+.kwcol .oh h2{font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:-.01em;margin:0}
+.kwcol .oh .note{font-family:var(--mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-left:auto;white-space:nowrap}
+.kwcol .sq{position:relative;max-width:none;margin:0 0 10px}
+.kwcol .sq input{width:100%;font-family:var(--sans);font-size:12.5px;padding:6px 26px 6px 9px;border:1px solid var(--rule);
+  border-radius:3px;background:var(--glaze);color:var(--ink)}
+.kwcol .sq input:focus{outline:none;border-color:var(--cobalt)}
+.kwcol .sq input::-webkit-search-cancel-button{-webkit-appearance:none}
+.kwcol .sq .x{position:absolute;right:3px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--muted);
+  font-size:16px;line-height:1;cursor:pointer;padding:2px 6px}
+.kwcol .sq .x:hover{color:var(--iron)}
+.kwcol .blank{padding:22px 16px;margin:6px 0 4px}
+.kwcol .blank h3{font-size:15px}
+.kwcol .blank p{font-size:12px;margin-bottom:0}
+.kwrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(80px,1fr) 36px;gap:8px;align-items:center;
+  padding:4px;margin:0 -4px;border-radius:3px;cursor:default;font-size:12.5px;line-height:1.3}
+.kwrow:hover{background:var(--porcelain)}
+.kwrow:hover .lb{color:var(--cobalt)}
+.kwrow .lb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kwrow .trk{height:8px;background:var(--rule-soft);border-radius:2px;display:flex;overflow:hidden}
+.kwrow .trk i{display:block;height:100%;flex:0 0 auto;background:var(--cobalt)}
+.kwrow .val{font-family:var(--mono);font-size:10.5px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+.kwsub{margin-top:14px}
+.kwsub:first-child{margin-top:2px}
+.kwsub h4{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  font-weight:500;margin:0 0 7px;display:flex;align-items:baseline;gap:10px}
+.kwsub h4 .n{margin-left:auto;font-weight:400}
+.kwcol .more{margin:7px 0 0}
 /* ---------- results: insight helpers ---------- */
 .rk{font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.6;margin-top:2px}
 .rk b{color:var(--ink);font-weight:600}
@@ -416,7 +455,7 @@ section[id]{scroll-margin-top:72px}
 @media (max-width:640px){
   .wrap{padding:0 14px 70px}
   .masthead{padding-top:30px}
-  .pgrid,.cgrid,.ov{grid-template-columns:1fr}
+  .pgrid,.cgrid,.ov,.kw{grid-template-columns:1fr}
   #panel{padding:18px 16px 40px}
 }
 @media (prefers-reduced-motion:reduce){#panel{transition:none}}
@@ -598,10 +637,38 @@ section[id]{scroll-margin-top:72px}
     <span class="err" id="res-err" hidden></span>
   </div>
 
+  <!-- Tier 1: the analysis. Overview bars, then the three clustered lists. -->
+  <div class="mdiv" id="res-h1" hidden><span class="eyebrow">01 &middot; Feature Analysis</span></div>
+
   <!-- Overview: bars per theme for Features and Complaints. Built by overviewHtml(). -->
   <div class="ov" id="res-ov" hidden></div>
 
   <div id="res-body"></div>
+
+  <!-- Tier 2: the words shoppers use. The shell is static so the two filter
+       inputs keep focus and caret while their lists re-render; keywordsHtml()
+       only rewrites the note spans and the list containers. -->
+  <div class="mdiv" id="res-h2" hidden><span class="eyebrow">02 &middot; Keywords</span></div>
+  <div class="kw" id="res-kw" hidden>
+    <section class="kwcol" id="sec-search_terms">
+      <div class="oh"><h2>Search Terms</h2><span class="note" id="kw-st-note"></span></div>
+      <div class="sq">
+        <input type="search" id="kw-st-q" placeholder="Filter search terms"
+               autocomplete="off" spellcheck="false" aria-label="Filter search terms">
+        <button type="button" class="x" id="kw-st-x" title="Clear (Esc)" hidden>&times;</button>
+      </div>
+      <div id="kw-st-list"></div>
+    </section>
+    <section class="kwcol" id="sec-usage">
+      <div class="oh"><h2>Usage Keywords</h2><span class="note" id="kw-us-note"></span></div>
+      <div class="sq">
+        <input type="search" id="kw-us-q" placeholder="Filter usage keywords"
+               autocomplete="off" spellcheck="false" aria-label="Filter usage keywords">
+        <button type="button" class="x" id="kw-us-x" title="Clear (Esc)" hidden>&times;</button>
+      </div>
+      <div id="kw-us-list"></div>
+    </section>
+  </div>
 </div>
 
 </div><!-- /wrap -->
@@ -2077,9 +2144,16 @@ async function renderResults(slug, runId, parseId) {
   $("res-sum").hidden = true;
   $("res-bar").hidden = true;
   $("res-err").hidden = true;
+  $("res-h1").hidden = true;
   $("res-ov").hidden = true;
+  $("res-h2").hidden = true;
+  $("res-kw").hidden = true;
   $("res-q").value = "";
   $("res-qx").hidden = true;
+  $("kw-st-q").value = "";
+  $("kw-us-q").value = "";
+  $("kw-st-x").hidden = true;
+  $("kw-us-x").hidden = true;
   $("res-sel-wrap").hidden = true;
   $("res-model").textContent = "";
   $("res-body").innerHTML = "";
@@ -2143,9 +2217,14 @@ async function renderResults(slug, runId, parseId) {
   // ("theme:features:t_01") and is remembered per parse. Which lists are
   // collapsed and which source is shown are session-only: every visit starts
   // with all lists open and every source showing.
+  // `searchClosed` / `ovSearchClosed` hold the themes a search opened and you
+  // then clicked shut; both are session-only and both are emptied by setQuery
+  // the moment the query string changes, so a new query re-opens every hit.
   resultsState = { slug, runId, parseId, data, byBodyTag, expanded: new Set(expanded),
                    source: "all", query: "", terms: [], listsClosed: new Set(), views: new Map(),
-                   ovOpen: new Set(), ovAll: new Set() };
+                   ovOpen: new Set(), ovAll: new Set(),
+                   searchClosed: new Set(), ovSearchClosed: new Set(),
+                   kwQuery: { search_terms: "", usage: "" }, kwAll: new Set() };
   $("res-model").textContent = [data.model, data.reasoning].filter(Boolean).join(" · ");
   renderResultsBody();
 }
@@ -2214,9 +2293,29 @@ function allThemeKeys() {
   return keys;
 }
 
+/* One rule decides whether a theme is open, in the sections and in the overview.
+   A query opens every theme with a hit; clicking one closes it and it stays
+   closed until the query changes, because setQuery empties the closed sets.
+   Only `expanded` is ever persisted — the closed sets die with the session. */
+function openRule(key, openSet, closedSet) {
+  if (openSet.has(key)) return true;
+  return resultsState.terms.length > 0 && !closedSet.has(key);
+}
+function themeOpen(key) { return openRule(key, resultsState.expanded, resultsState.searchClosed); }
+function ovThemeOpen(key) { return openRule(key, resultsState.ovOpen, resultsState.ovSearchClosed); }
+function toggleThemeOpen(key, openSet, closedSet) {
+  if (openRule(key, openSet, closedSet)) {
+    openSet.delete(key);
+    if (resultsState.terms.length) closedSet.add(key);
+  } else {
+    openSet.add(key);
+    closedSet.delete(key);
+  }
+}
+
 function allThemesOpen() {
   const keys = allThemeKeys();
-  return keys.length > 0 && keys.every(k => resultsState.expanded.has(k));
+  return keys.length > 0 && keys.every(themeOpen);
 }
 
 /* ---------- view model ----------
@@ -2347,6 +2446,67 @@ function buildViews() {
     });
   }
   resultsState.views = sections;
+  // A property on the Map rather than an entry in it: sectionView() only ever
+  // uses .get(), so the two cannot collide, and every renderer still reads one
+  // object built once per render.
+  resultsState.views.keywords = buildKeywordViews();
+}
+
+/* ---------- view model: keywords ----------
+   The same shape as a section's, one level simpler: no themes, no ranks to
+   compare, just mentions and products per source. An item shows when it has
+   something in the current source and matches both the sticky query and its own
+   column's local filter; order is mentions in that source, ties by the server's
+   order (which is already -count, display). `refs` is narrowed to the current
+   source so a hover under "Reviews" opens a review rather than a bullet. */
+function buildKeywordViews() {
+  const d = resultsState.data;
+  if (!d.keywords) return null;
+  const occ = d.occurrences;
+  const src = resultsState.source;
+  const sticky = resultsState.terms;
+
+  const local = key => resultsState.kwQuery[key].toLowerCase().split(/\s+/).filter(Boolean);
+  const itemView = (item, index, terms) => {
+    const mentions = { all: 0, listing: 0, review: 0 };
+    const asins = { all: new Set(), listing: new Set(), review: new Set() };
+    const refs = { all: [], listing: [], review: [] };
+    for (const ref of item.occ_ids) {
+      const o = occ[ref];
+      if (!o) continue;
+      mentions.all += 1; mentions[o.body_type] += 1;
+      asins.all.add(o.asin); asins[o.body_type].add(o.asin);
+      refs.all.push(ref); refs[o.body_type].push(ref);
+    }
+    const text = item.display.toLowerCase();
+    return { item, index, mentions, asins, refs,
+             match: terms.every(t => text.includes(t)) };
+  };
+  const listView = (items, terms) => {
+    const views = items.map((item, index) => itemView(item, index, terms));
+    return {
+      order: views.filter(v => v.mentions[src] > 0 && v.match)
+                  .sort((a, b) => b.mentions[src] - a.mentions[src] || a.index - b.index),
+      total: views.filter(v => v.mentions[src] > 0).length,
+    };
+  };
+  const summed = lists => ({
+    count: lists.reduce((n, l) => n + l.order.length, 0),
+    total: lists.reduce((n, l) => n + l.total, 0),
+    mentions: lists.reduce((n, l) => n + l.order.reduce((m, v) => m + v.mentions[src], 0), 0),
+  });
+
+  const stTerms = sticky.concat(local("search_terms"));
+  const st = listView(d.keywords.search_terms.items, stTerms);
+  const usTerms = sticky.concat(local("usage"));
+  const groups = d.keywords.usage.groups.map(g =>
+    Object.assign({ g, key: `usage:${g.key}` }, listView(g.items, usTerms)));
+
+  return {
+    search_terms: Object.assign({ key: "search_terms", terms: stTerms },
+                                st, summed([st])),
+    usage: Object.assign({ key: "usage", terms: usTerms, groups }, summed(groups)),
+  };
 }
 
 /* ---------- search wiring ---------- */
@@ -2355,6 +2515,10 @@ function setQuery(q) {
   q = q.trim();
   if (q === resultsState.query) return;
   resultsState.query = q;
+  // A different query is a fresh start: themes you closed under the old one are
+  // forgotten, so every theme with a hit on the new one opens.
+  resultsState.searchClosed.clear();
+  resultsState.ovSearchClosed.clear();
   renderResultsBody();
 }
 function clearQuery() { $("res-q").value = ""; setQuery(""); }
@@ -2403,16 +2567,28 @@ function renderResultsBody() {
     .concat([
       `<b>${d.products_total}</b> ${d.products_total === 1 ? "product" : "products"}`,
       `<b class="${pct >= 90 ? "good" : "warn"}">${pct}%</b> of mentions traced to a sentence`,
-    ]).join(" &nbsp;&middot;&nbsp; ");
+    ]).concat(d.keywords ? [
+      `<b>${d.keywords.search_terms.items.length}</b> search terms`,
+      `<b>${d.keywords.usage.groups.reduce((n, g) => n + g.items.length, 0)}</b> usage keywords`,
+    ] : []).join(" &nbsp;&middot;&nbsp; ");
 
   // Jump links follow the current source and, while filtering, read "4 of 35".
+  const kw = resultsState.views.keywords;
+  const jumpCount = (count, total, filtering) =>
+    filtering ? `${count} of ${total}` : String(count);
   $("res-jump").innerHTML = d.sections.map(s => {
     const sv = sectionView(s);
     const label = JUMP_NAME[s.key] || s.title;
     const n = s.status === "failed" ? "&mdash;" :
-      resultsState.terms.length ? `${sv.count} of ${sv.total}` : String(sv.count);
+      jumpCount(sv.count, sv.total, resultsState.terms.length > 0);
     return `<a href="#" data-sec="${esc(s.key)}" class="${sv.count ? "" : "none"}">${esc(label)} <b>${n}</b></a>`;
-  }).join("");
+  }).concat(kw ? [["search_terms", "Search terms", kw.search_terms],
+                  ["usage", "Usage", kw.usage]].map(([key, label, kv]) =>
+    // data-sec matches the section ids in the static shell, so the existing
+    // scroll handler finds #sec-search_terms / #sec-usage with no change.
+    `<a href="#" data-sec="${esc(key)}" class="${kv.count ? "" : "none"}">${esc(label)} <b>${
+      jumpCount(kv.count, kv.total, !!(resultsState.query || resultsState.kwQuery[key]))}</b></a>`) : [])
+    .join("");
   $("res-qx").hidden = !resultsState.query;
 
   // The sticky bar. "Group into themes" only appears when a list is long enough
@@ -2437,9 +2613,16 @@ function renderResultsBody() {
       "cluster", "clusters")} or more).</span></div>`;
   }
 
+  $("res-h1").hidden = false;
   $("res-ov").hidden = false;
   $("res-ov").innerHTML = OVERVIEW_LISTS.map(overviewHtml).join("");
   $("res-body").innerHTML = banner + d.sections.map(sectionHtml).join("");
+
+  // Tier two only exists if the backend sent keywords; an older response just
+  // renders the page as it was before, dividers and all.
+  const hasKeywords = keywordsHtml();
+  $("res-h2").hidden = !hasKeywords;
+  $("res-kw").hidden = !hasKeywords;
 }
 
 /* ---------- overview ----------
@@ -2477,9 +2660,7 @@ function overviewHtml(key) {
 
   const bar = v => {
     const seg = (n, cls) => n > 0 ? `<i class="${cls}" style="width:${(100 * n / max).toFixed(2)}%"></i>` : "";
-    return `<div class="trk">${src === "all"
-      ? seg(v.mentions.listing, "l") + seg(v.mentions.review, "r")
-      : seg(v.mentions[src], "l")}</div>`;
+    return `<div class="trk">${seg(v.mentions[src], "l")}</div>`;
   };
   const tip = v => {
     const bits = [plural(v.mentions[src], "mention", "mentions")];
@@ -2498,8 +2679,9 @@ function overviewHtml(key) {
   let rows = "";
   if (sv.themed) {
     for (const tv of sv.themeOrder) {
-      // Filtering unfolds every theme with a match, like the sections below.
-      const open = terms.length > 0 || resultsState.ovOpen.has(tv.key);
+      // Same openRule as the sections below, on the overview's own two sets:
+      // filtering unfolds a theme with a match, a caret click folds it back.
+      const open = ovThemeOpen(tv.key);
       rows += row(tv, tv.t.title, { caret: true, open });
       if (open) for (const v of tv.order) rows += row(v, v.c.title, { kid: true, parent: tv.key });
     }
@@ -2515,10 +2697,148 @@ function overviewHtml(key) {
 
   const note = `${plural(top.length, sv.themed ? "theme" : "cluster", sv.themed ? "themes" : "clusters")} &middot; ${
     plural(sv.mentions, "mention", "mentions")}`;
-  const legend = src === "all"
-    ? `<div class="lg"><span><i class="l"></i>from listings</span><span><i class="r"></i>from reviews</span></div>` : "";
-  return `<div class="ovcol ${tone}"><div class="oh"><h2>${esc(title)}</h2><span class="note">${note}</span></div>${legend}${rows}</div>`;
+  return `<div class="ovcol ${tone}"><div class="oh"><h2>${esc(title)}</h2><span class="note">${note}</span></div>${rows}</div>`;
 }
+
+/* ---------- keywords ----------
+   Tier two: what shoppers type and where they say they put the thing. Ranked,
+   filterable and traceable, but never clickable — the decision was hover only,
+   which is why the chips carry data-kwoccs and not data-occs (the document-wide
+   click handler matches .bub[data-occs], so nothing here opens the panel).
+   Counts, order and bar lengths all follow the source toggle. */
+const KW_TOP_TERMS = 10;
+const KW_TOP_USAGE = 6;
+
+/* The tooltip's last line, and the reason a keyword needs no panel: everything
+   the panel would add is either here or one source toggle away. */
+function kwStats(v) {
+  const total = resultsState.data.products_total;
+  const src = resultsState.source;
+  const bits = [plural(v.mentions[src], "mention", "mentions")];
+  if (src === "all") {
+    bits.push(`${v.mentions.listing} from listings`, `${v.mentions.review} from reviews`);
+  }
+  bits.push(`in ${v.asins[src].size} of ${total} ${total === 1 ? "product" : "products"}`);
+  return bits.join(" · ");
+}
+
+function kwAttrs(v) {
+  const src = resultsState.source;
+  const refs = src === "all" ? v.refs.all : v.refs[src];
+  return `data-kwoccs="${esc(refs.join(" "))}" data-kwstats="${esc(kwStats(v))}"`;
+}
+
+/* The empty state for a keyword column, mirroring nothingHtml's three cases. */
+function kwBlank(kv, title, none) {
+  const src = resultsState.source;
+  const q = resultsState.kwQuery[kv.key], sticky = resultsState.query;
+  if ((q || sticky) && kv.total) {
+    return `<div class="blank"><h3>Nothing matches &ldquo;${esc(q || sticky)}&rdquo;</h3>
+      <p>No ${esc(title)} contains it.</p>
+      <button class="lnk" ${q ? `data-kwclear="${esc(kv.key)}"` : "data-clearq"}>Clear the filter</button></div>`;
+  }
+  if (kv.total === 0 && src !== "all") {
+    return `<div class="blank"><h3>Nothing from ${esc(SOURCE_NAME[src])}</h3>
+      <p>No ${esc(title)} came from ${esc(SOURCE_NAME[src])}.</p></div>`;
+  }
+  return `<div class="blank"><h3>Nothing here</h3><p>${esc(none)}</p></div>`;
+}
+
+function kwNote(kv, one, many) {
+  const filtering = resultsState.kwQuery[kv.key] || resultsState.query;
+  if (filtering) return `${kv.count} of ${kv.total} ${kv.total === 1 ? one : many}`;
+  return `${plural(kv.total, one, many)} &middot; ${plural(kv.mentions, "mention", "mentions")}`;
+}
+
+function keywordsHtml() {
+  const kw = resultsState.views.keywords;
+  if (!kw) return false;
+  const src = resultsState.source;
+
+  // --- search terms: ranked rows, the bar scaled to the top visible row ---
+  const st = kw.search_terms;
+  const all = resultsState.kwAll.has("search_terms");
+  const rows = all ? st.order : st.order.slice(0, KW_TOP_TERMS);
+  const max = Math.max(1, ...rows.map(v => v.mentions[src]));
+  let stHtml = st.order.length
+    ? rows.map(v => `
+        <div class="kwrow" ${kwAttrs(v)}>
+          <span class="lb">${hilite(v.item.display, st.terms)}</span>
+          <div class="trk"><i style="width:${(100 * v.mentions[src] / max).toFixed(2)}%"></i></div>
+          <span class="val">${v.mentions[src]}</span>
+        </div>`).join("")
+    : kwBlank(st, "search term", "No search terms came out of this parse.");
+  if (st.order.length > KW_TOP_TERMS) {
+    stHtml += `<button class="lnk more" data-kwall="search_terms">${
+      all ? `Show top ${KW_TOP_TERMS}` : `Show all ${st.order.length}`}</button>`;
+  }
+
+  // --- usage: four sub-blocks of chips, each with its own "+N more" ---
+  const us = kw.usage;
+  const blocks = us.groups.filter(g => g.order.length).map(g => {
+    const open = resultsState.kwAll.has(g.key);
+    const chips = open ? g.order : g.order.slice(0, KW_TOP_USAGE);
+    const more = g.order.length - chips.length;
+    return `<div class="kwsub">
+      <h4>${esc(g.g.title)}<span class="n">${g.order.length}</span></h4>
+      <div class="bubs">${chips.map(v => `<span class="bub" ${kwAttrs(v)}><span class="lbl">${
+        hilite(v.item.display, us.terms)}</span>${
+        v.mentions[src] > 1 ? `<i>&times;${v.mentions[src]}</i>` : ""}</span>`).join("")}${
+        more > 0 ? `<button class="lnk more" data-kwall="${esc(g.key)}">+${more} more</button>`
+                 : (open && g.order.length > KW_TOP_USAGE
+                    ? `<button class="lnk more" data-kwall="${esc(g.key)}">Show top ${KW_TOP_USAGE}</button>` : "")}
+      </div></div>`;
+  }).join("");
+
+  $("kw-st-note").innerHTML = kwNote(st, "term", "terms");
+  $("kw-us-note").innerHTML = kwNote(us, "keyword", "keywords");
+  $("kw-st-list").innerHTML = stHtml;
+  $("kw-us-list").innerHTML = blocks ||
+    kwBlank(us, "usage keyword", "No usage keywords came out of this parse.");
+  $("kw-st-x").hidden = !resultsState.kwQuery.search_terms;
+  $("kw-us-x").hidden = !resultsState.kwQuery.usage;
+  return true;
+}
+
+/* One box per column, debounced like the sticky search. The inputs live in the
+   static shell, so they keep focus and caret across a re-render. */
+function setKwQuery(key, value) {
+  if (!resultsState || !resultsState.kwQuery) return;
+  value = value.trim();
+  if (value === resultsState.kwQuery[key]) return;
+  resultsState.kwQuery[key] = value;
+  renderResultsBody();
+}
+
+let kwTimers = {};
+for (const [key, input, clear] of [["search_terms", "kw-st-q", "kw-st-x"],
+                                   ["usage", "kw-us-q", "kw-us-x"]]) {
+  $(input).addEventListener("input", () => {
+    clearTimeout(kwTimers[key]);
+    kwTimers[key] = setTimeout(() => setKwQuery(key, $(input).value), 120);
+  });
+  $(input).addEventListener("keydown", e => {
+    if (e.key === "Escape") { $(input).value = ""; setKwQuery(key, ""); $(input).blur(); }
+  });
+  $(clear).onclick = () => { $(input).value = ""; setKwQuery(key, ""); $(input).focus(); };
+}
+
+$("res-kw").addEventListener("click", e => {
+  if (!resultsState) return;
+  if (e.target.closest("[data-clearq]")) { clearQuery(); return; }
+  const clear = e.target.closest("[data-kwclear]");
+  if (clear) {
+    const key = clear.dataset.kwclear;
+    $(key === "usage" ? "kw-us-q" : "kw-st-q").value = "";
+    setKwQuery(key, "");
+    return;
+  }
+  const more = e.target.closest("button[data-kwall]");
+  if (!more) return;
+  const set = resultsState.kwAll;
+  if (set.has(more.dataset.kwall)) set.delete(more.dataset.kwall); else set.add(more.dataset.kwall);
+  renderResultsBody();
+});
 
 /* Open the theme (and cluster) a bar stands for, then bring it into view. */
 function revealItem(listKey, key, parent) {
@@ -2556,8 +2876,7 @@ $("res-ov").addEventListener("click", e => {
   const rowEl = e.target.closest(".ovrow");
   if (!rowEl) return;
   if (e.target.closest(".car.tg")) {
-    const set = resultsState.ovOpen;
-    if (set.has(rowEl.dataset.k)) set.delete(rowEl.dataset.k); else set.add(rowEl.dataset.k);
+    toggleThemeOpen(rowEl.dataset.k, resultsState.ovOpen, resultsState.ovSearchClosed);
     renderResultsBody();
     return;
   }
@@ -2632,8 +2951,9 @@ function themeHtml(s, tv) {
 
   const src = resultsState.source;
   const terms = resultsState.terms;
-  // While filtering, a theme with matches is open so the matches are in view.
-  const open = terms.length > 0 || resultsState.expanded.has(tv.key);
+  // Open or closed is openRule's call: filtering opens a theme with matches,
+  // but a click on the header still closes it and it stays that way.
+  const open = themeOpen(tv.key);
   const total = resultsState.data.products_total;
   const asins = tv.asins[src].size;
 
@@ -2711,13 +3031,17 @@ function clusterHtml(s, v) {
 }
 
 /* A chip carries the ids of every mention it stands for. Dotted means the first
-   one has no confident sentence — you get the whole text instead of a guess. */
+   one has no confident sentence — you get the whole text instead of a guess.
+   The label is wrapped in one .lbl span so a <mark> inside it stays inline: the
+   chip is an inline-flex box with a gap, and bare hilite() fragments would each
+   become their own flex item and drift apart. */
 function chipHtml(t, clusterTitle, listKey) {
   const first = resultsState.data.occurrences[t.occ_ids[0]];
   const soft = !(first && first.match.confident);
   const tone = LIST_TONE[listKey] ? ` ${LIST_TONE[listKey]}` : "";
   return `<button class="bub${tone}${soft ? " soft" : ""}" data-occs="${esc(t.occ_ids.join(" "))}"
-            data-cluster="${esc(clusterTitle)}">${hilite(t.display, resultsState.terms)}${
+            data-cluster="${esc(clusterTitle)}"><span class="lbl">${
+            hilite(t.display, resultsState.terms)}</span>${
             t.count > 1 ? `<i>&times;${t.count}</i>` : ""}</button>`;
 }
 
@@ -2728,9 +3052,16 @@ function persistExpanded() {
   } catch (e) { /* preference only */ }
 }
 
+/* Theme keys go through openRule, so a click during a search closes the theme
+   the search opened. Cluster keys are a plain toggle: nothing ever opens them
+   on your behalf, so there is no search state to remember. */
 function toggleKey(key) {
-  const set = resultsState.expanded;
-  if (set.has(key)) set.delete(key); else set.add(key);
+  if (key.startsWith("theme:")) {
+    toggleThemeOpen(key, resultsState.expanded, resultsState.searchClosed);
+  } else {
+    const set = resultsState.expanded;
+    if (set.has(key)) set.delete(key); else set.add(key);
+  }
   persistExpanded();
   renderResultsBody();
 }
@@ -2765,15 +3096,23 @@ $("res-src").addEventListener("click", e => {
 
 /* Expand all opens every theme and any list that was collapsed, so the effect is
    visible; Collapse all closes the themes and leaves the lists alone. Cluster
-   cards are never touched either way. */
+   cards are never touched either way. Mid-search, collapsing has to say so in
+   the closed sets, or openRule would re-open everything on the next render. */
 $("res-expand").onclick = () => {
   if (!resultsState) return;
   const keys = allThemeKeys();
+  const searching = resultsState.terms.length > 0;
   if (allThemesOpen()) {
-    keys.forEach(k => resultsState.expanded.delete(k));
-    resultsState.ovOpen.clear();
+    keys.forEach(k => {
+      resultsState.expanded.delete(k);
+      resultsState.ovOpen.delete(k);
+      if (searching) { resultsState.searchClosed.add(k); resultsState.ovSearchClosed.add(k); }
+    });
   } else {
-    keys.forEach(k => { resultsState.expanded.add(k); resultsState.ovOpen.add(k); });
+    keys.forEach(k => {
+      resultsState.expanded.add(k); resultsState.ovOpen.add(k);
+      resultsState.searchClosed.delete(k); resultsState.ovSearchClosed.delete(k);
+    });
     resultsState.listsClosed.clear();
   }
   persistExpanded();
@@ -3033,8 +3372,14 @@ function sourceLabel(o, b) {
          (r && r.date ? ` · ${r.date}` : "");
 }
 
-/* ---------- hover card ---------- */
-function tipHtml(occs) {
+/* ---------- hover card ----------
+   `opts.clickable === false` drops the "click for …" halves of the footers, for
+   keywords, which have no panel to open. `opts.stats` adds one more footer line:
+   keyword rows carry it in data-kwstats, because the hover handler only has the
+   element to go on. */
+function tipHtml(occs, opts) {
+  const clickable = !opts || opts.clickable !== false;
+  const stats = opts && opts.stats;
   const d = resultsState.data;
   const o = d.occurrences[occs[0]];
   if (!o) return "";
@@ -3054,8 +3399,11 @@ function tipHtml(occs) {
       </div>
     </div>
     <div class="sent">${sentence}</div>
-    ${m.confident ? "" : `<div class="foot">No exact sentence found &mdash; click for the full text</div>`}
-    ${occs.length > 1 ? `<div class="foot">1 of ${occs.length} sources &middot; click to see all</div>` : ""}`;
+    ${m.confident ? "" : `<div class="foot">No exact sentence found${
+      clickable ? " &mdash; click for the full text" : ""}</div>`}
+    ${occs.length > 1 ? `<div class="foot">1 of ${occs.length} sources${
+      clickable ? " &middot; click to see all" : ""}</div>` : ""}
+    ${stats ? `<div class="foot">${esc(stats)}</div>` : ""}`;
 }
 
 function tipShow(ev, html) {
@@ -3081,20 +3429,25 @@ function tipOff() {
   if (t) t.classList.remove("on");
 }
 
-/* Chips live in cluster cards and in the panel, so the wiring is document-wide. */
+/* Chips live in cluster cards, in the panel and in the keywords columns, so the
+   wiring is document-wide. Hover covers all three; the click handler below still
+   matches .bub[data-occs] alone, which is what keeps keywords hover-only. */
+const HOVER_SEL = ".bub[data-occs], [data-kwoccs]";
 document.addEventListener("mouseover", e => {
-  const bub = e.target.closest(".bub[data-occs]");
-  if (!bub || !resultsState) return;
-  tipShow(e, tipHtml(bub.dataset.occs.split(" ")));
+  const el = e.target.closest(HOVER_SEL);
+  if (!el || !resultsState) return;
+  tipShow(e, el.dataset.kwoccs
+    ? tipHtml(el.dataset.kwoccs.split(" "), { clickable: false, stats: el.dataset.kwstats })
+    : tipHtml(el.dataset.occs.split(" ")));
 });
 document.addEventListener("mousemove", e => {
   if (!$("tip").classList.contains("on")) return;
-  if (!e.target.closest(".bub[data-occs]")) { tipOff(); return; }
+  if (!e.target.closest(HOVER_SEL)) { tipOff(); return; }
   tipMove(e);
 });
 document.addEventListener("mouseout", e => {
-  if (e.target.closest && e.target.closest(".bub[data-occs]") &&
-      !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest(".bub[data-occs]"))) {
+  if (e.target.closest && e.target.closest(HOVER_SEL) &&
+      !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest(HOVER_SEL))) {
     tipOff();
   }
 });
@@ -3164,10 +3517,10 @@ function renderPanel() {
     others.push(`<h4>${label} from this source (${tags.length})</h4><div class="bubs">${
       tags.map(t => {
         const ref = resultsState.byBodyTag.get(o.body_id + " " + t);
-        if (!ref) return `<span class="bub plain">${esc(t)}</span>`;
+        if (!ref) return `<span class="bub plain"><span class="lbl">${esc(t)}</span></span>`;
         const soft = !d.occurrences[ref].match.confident;
         return `<button class="bub${tone}${soft ? " soft" : ""}" data-occs="${esc(ref)}"
-                  data-cluster="">${esc(t)}</button>`;
+                  data-cluster=""><span class="lbl">${esc(t)}</span></button>`;
       }).join("")}</div>`);
   }
 

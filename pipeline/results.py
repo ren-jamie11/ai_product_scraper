@@ -13,12 +13,17 @@ re-group.
 
 from __future__ import annotations
 
+import re
 from collections import Counter
 
 import config
 from pipeline import attribution, storage, themes
 
 PREVIEW = 3
+
+# The four usage sub-lists, in the order they render, with their display titles.
+KEYWORD_GROUPS = (("spaces", "Spaces"), ("placements", "Placements"),
+                  ("occasions", "Occasions"), ("used_for", "Used for"))
 
 
 def build(slug: str, run_id: str, parse_id: str) -> dict:
@@ -134,7 +139,14 @@ def build(slug: str, run_id: str, parse_id: str) -> dict:
                            if theme_section.get("status") == "failed" else None,
         })
 
+    # Counted before the keyword walk on purpose: these two figures mean
+    # "mentions of a clustered tag", which is what the results header reports.
     attributed = sum(1 for o in occurrences.values() if o["match"]["confident"])
+    mentions = len(occurrences)
+
+    keywords = _keywords(bodies_ok, occurrences, bodies, used_products,
+                         attributor, tagged_by_id, products)
+
     live_products = [p for p in products.values() if not p.get("deleted")]
 
     return {
@@ -147,8 +159,9 @@ def build(slug: str, run_id: str, parse_id: str) -> dict:
         "reasoning": clusters.get("reasoning"),
         "products_total": len(live_products) or len(products),
         "attributed": attributed,
-        "mentions": len(occurrences),
+        "mentions": mentions,
         "sections": sections,
+        "keywords": keywords,
         "themes": {
             "status": "ok" if themes_doc else "missing",
             "generated_at": (themes_doc or {}).get("generated_at"),
@@ -200,6 +213,104 @@ def _register(ref: str, occ: dict, occurrences: dict, bodies: dict, used_product
             "ratings_total": p.get("ratings_total"),
             "deleted": bool(p.get("deleted")),
         }
+
+
+_ARTICLE = re.compile(r"^(?:the|a|an)\s+")
+_KEEP = re.compile(r"[^a-z0-9\s-]")
+_EDGE_HYPHEN = re.compile(r"(?<![a-z0-9])-+|-+(?![a-z0-9])")
+
+
+def _keyword_norm(text: str) -> str:
+    """The key two keywords share when they are the same query.
+
+    Lowercase, punctuation dropped except hyphens between characters, whitespace
+    collapsed, a leading article removed, and a trailing plural "s" folded on
+    words longer than three characters that do not end "ss"/"us"/"is".
+
+    The plural fold is the one place this differs from `grouping.collect`, which
+    deliberately keeps tags as exact strings (see grouping.py:125-127: folding
+    "sturdy pot" into "sturdy pots" loses a real distinction on a product sold in
+    pairs). A keyword is the opposite case — a shopper typing "picture frame" and
+    one typing "picture frames" are one query, and counting them apart would
+    split the ranking that makes this list worth reading.
+    """
+    s = _KEEP.sub(" ", (text or "").lower().strip())
+    s = _EDGE_HYPHEN.sub(" ", s)
+    s = " ".join(s.split())
+    s = _ARTICLE.sub("", s)
+    words = []
+    for word in s.split():
+        if len(word) > 3 and word.endswith("s") and not word.endswith(("ss", "us", "is")):
+            word = word[:-1]
+        words.append(word)
+    return " ".join(words)
+
+
+def _keywords(bodies_ok: list[dict], occurrences: dict, bodies: dict, used_products: dict,
+              attributor: attribution.Attributor, tagged_by_id: dict, products: dict) -> dict:
+    """Search terms and usage keywords, deduped and ranked, with provenance.
+
+    Every mention goes through the same `_register` the cluster tags use, so a
+    keyword carries the sentence it was attributed to and its body and product
+    are in the response already. Refs are namespaced under `kw/` and numbered per
+    list, so they can never collide with a section's own `o_0000` ids.
+    """
+    def collect(items: list[str], prefix: str) -> list[dict]:
+        buckets: dict[str, dict] = {}
+        for index, (body, text) in enumerate(items):
+            ref = f"{prefix}/o_{index:04d}"
+            _register(ref, {"body_id": body["body_id"], "asin": body["asin"],
+                            "body_type": body["type"], "text": text},
+                      occurrences, bodies, used_products, attributor, tagged_by_id, products)
+
+            # An all-punctuation keyword would normalise to nothing; keep it
+            # under its own text rather than merging every such tag into one row.
+            norm = _keyword_norm(text) or text.lower()
+            bucket = buckets.get(norm)
+            if bucket is None:
+                bucket = {"norm": norm, "occ_ids": [], "forms": Counter(), "seen": {}}
+                buckets[norm] = bucket
+            bucket["occ_ids"].append(ref)
+            bucket["forms"][text] += 1
+            bucket["seen"].setdefault(text, index)
+
+        out = []
+        for bucket in buckets.values():
+            # Display is the wording most people used; ties go to the first seen.
+            display = min(bucket["forms"].items(),
+                          key=lambda kv: (-kv[1], bucket["seen"][kv[0]]))[0]
+            out.append({"display": display, "norm": bucket["norm"],
+                        "count": len(bucket["occ_ids"]), "occ_ids": bucket["occ_ids"]})
+        out.sort(key=lambda i: (-i["count"], i["display"].lower()))
+        return out
+
+    def gather(key: str, sub: str | None = None) -> list:
+        found = []
+        for body in bodies_ok:
+            tags = body.get("tags") or {}
+            values = tags.get(key) or []
+            if sub is not None:
+                values = (values or {}).get(sub) if isinstance(values, dict) else []
+            for raw in values or []:
+                text = (raw or "").strip()
+                if text:
+                    found.append((body, text))
+        return found
+
+    return {
+        "search_terms": {
+            "key": "search_terms", "title": "Search Terms",
+            "items": collect(gather("search_terms"), "kw/search_terms"),
+        },
+        "usage": {
+            "key": "usage", "title": "Usage Keywords",
+            "groups": [
+                {"key": sub, "title": title,
+                 "items": collect(gather("usage_keywords", sub), f"kw/usage/{sub}")}
+                for sub, title in KEYWORD_GROUPS
+            ],
+        },
+    }
 
 
 def _review_meta(product: dict | None, body_id: str) -> dict | None:
