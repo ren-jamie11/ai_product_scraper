@@ -393,6 +393,77 @@ edits (19 + 35 + 105 assertions), `pipeline.results` re-checked against the pre-
 for three groups, and `python -m pipeline.attribution acacia-wood-riser 2026-09-17_144159`
 byte-identical to its pre-Phase-3 output. Nothing was written to `data/`, and no commit was made.
 
+## Phase 6 — Latency: attribution once per body, and a loading state
+
+Opening a results page had a visible pause with nothing on screen. Measured 2026-09-18 on every
+grouped parse on disk (`pipeline/results.py::build` alone, no server, warm disk):
+
+| Group | Mentions | `build` | Payload |
+|---|---|---|---|
+| foldable-trash-bag-holder | 221 | 168 ms | 130 KB |
+| acacia-wood-riser | 865 | 728 ms | 399 KB |
+| candle-warmer-lamp | 1,201 | 1,235 ms | 593 KB |
+| dishwasher-rack | 1,297 | 1,441 ms | 618 KB |
+
+Everything after the build is cheap: localhost transfer ~10 ms, browser JSON parse ~15 ms,
+`buildViews` + `renderResultsBody` ~2 ms in the Node harness. The profile put **93% of `build`
+inside `Attributor.attribute`**: 138,594 stemmer calls and 16,629 `tokens()` calls for 1,201
+mentions, because `attribute` re-tokenised every sentence unit of a body for every tag in that
+body, although `__init__` already tokenises each unit once for word rarity. The Keywords tier
+doubled the mentions per parse and so doubled the pause.
+
+**Decided in scoping (2026-09-18):** speedup only, no result cache — every open is a fresh build,
+nothing can go stale, no memory growth in a long-running server; spinner on the results view only.
+Declined: an mtime-keyed in-process cache (10 ms repeat opens but a first open unchanged and
+staleness edge cases), splitting the endpoint so clusters render before keywords, and
+precomputing attribution to disk at group time (contradicts Phase 5's "a matcher tweak shows up
+on the next reload").
+
+**6a — `pipeline/attribution.py`.** `stem` is memoised with `functools.lru_cache`;
+`Attributor.__init__` keeps the per-unit token lists it computes for rarity in `self.unit_tokens`;
+`attribute` zips units with those lists and no longer calls `tokens()`. Attribution logic —
+thresholds, stemmer rules, scoring, tie-breaks — is untouched, and `results.py` is untouched.
+
+**6b — `static/index.html`.** One new component, layout-only CSS on existing tokens: `.loading`
+(a 14 px ring, `--rule-soft` with a `--cobalt` top, `spin .8s`, static under
+`prefers-reduced-motion`) with a mono uppercase label. It lives in `#res-loading`, a `.slim`
+line placed directly above `#res-sum`, so the summary replaces it without a layout jump. It is
+shown before the first `await` in `renderResults` and hidden on every exit: run-fetch error,
+missing or ungrouped parse, results error, and after `renderResultsBody()`. The run and results
+requests are fired together; the results promise is settled into `{data}` / `{error}` up front
+so the ungrouped branch, which is decided from the run data, never surfaces the results error.
+
+**Verify:** `python -m pipeline.attribution acacia-wood-riser 2026-09-17_144159` identical before
+and after; `results.build` byte-identical for three groups and under 300 ms on the largest;
+spinner visible while the results request is held open, gone after render, gone on a bad parse
+id, gone on an ungrouped parse.
+
+**Settled in Phase 6 (built 2026-09-18).** Measured, not estimated, on the same machine:
+
+| Group | `build` before | `build` after | live `GET …/results` after |
+|---|---|---|---|
+| candle-warmer-lamp (1,201 mentions) | 1,235 ms | 180 ms | 277 ms |
+| acacia-wood-riser (865) | 728 ms | 100 ms | 184 ms |
+| foldable-trash-bag-holder (221) | 168 ms | 29 ms | 93 ms |
+
+The `stem` cache holds 2,919 distinct words after the three builds (40,597 hits), so it is a few
+hundred KB for the life of the server. All three `build` payloads are byte-identical to
+pre-change snapshots and the attribution table is identical line for line, including its seeded
+random samples. The Phase 4 Node harness (105 assertions) passes on the new page script.
+Playwright, with the results request held open through `page.route`: `#res-loading` is
+`display:flex`, 35 px tall, reading `LOADING RESULTS…` while `#res-sum` is hidden; after release
+the spinner is hidden and the summary shown; a nonexistent parse and an ungrouped parse both hide
+the spinner and show their existing empty states with no error banner. A normal open measured
+340–850 ms from navigation to the Keywords tier being visible, most of it Chromium navigation and
+font loading rather than the build.
+
+Two things worth knowing. **A sync Playwright route handler must not sleep** — it blocks the
+script's own event loop, so the first check ran after the request had already completed and
+reported the spinner hidden; holding the `route` object and continuing it from the main flow is
+the working pattern. **An ungrouped parse now produces one 400 in the server log** (the parallel
+results request, whose error the page discards); the previous sequential code never sent it. The
+cost is one log line per such open, accepted for the saved round trip on every grouped open.
+
 ## Files
 
 | File | Change |

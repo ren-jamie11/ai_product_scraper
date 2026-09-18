@@ -305,6 +305,13 @@ section[id]{scroll-margin-top:72px}
   background:var(--glaze);border:1px solid var(--rule);border-top:0;padding:8px 16px;margin-bottom:24px}
 .slim b{color:var(--ink);font-weight:600}
 .slim .bad{color:var(--iron)} .slim .good{color:var(--celadon)} .slim .warn{color:var(--amber)}
+/* results: loading state — a ring on the accent with a mono label, sitting in the slim
+   line's slot so nothing jumps when the summary replaces it */
+.loading{display:flex;align-items:center;gap:10px;text-transform:uppercase;letter-spacing:.05em}
+.loading .ring{width:14px;height:14px;flex:0 0 auto;border-radius:50%;border:2px solid var(--rule-soft);
+  border-top-color:var(--cobalt);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.loading .ring{animation:none}}
 .seg{display:inline-flex;border:1px solid var(--rule);border-radius:3px;overflow:hidden}
 .seg button{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;padding:6px 11px;border:0;
   border-right:1px solid var(--rule);background:var(--glaze);color:var(--muted);cursor:pointer}
@@ -611,6 +618,10 @@ section[id]{scroll-margin-top:72px}
     <a class="btn ghost" id="res-back" href="#/">Back to run</a>
   </div>
 
+  <!-- Shown from the first frame until the results render or fail. -->
+  <div class="slim loading" id="res-loading" role="status" hidden>
+    <span class="ring" aria-hidden="true"></span><span>Loading results&hellip;</span>
+  </div>
   <div class="slim" id="res-sum" hidden></div>
 
   <!-- Sticky bar: search, source filter, jump links, expand all, and the manual
@@ -2157,13 +2168,20 @@ async function renderResults(slug, runId, parseId) {
   $("res-sel-wrap").hidden = true;
   $("res-model").textContent = "";
   $("res-body").innerHTML = "";
+  $("res-loading").hidden = false;
 
-  // The run answers two things before results are fetched: what the group is
-  // called, and whether this parse has been grouped at all.
+  // The run answers what the group is called and whether this parse has been
+  // grouped; the results are the page. Both are requested at once — the results
+  // call fails cleanly on an ungrouped parse, and that failure is only read
+  // after the run data has said the parse is grouped.
+  const base = `/api/runs/${encodeURIComponent(slug)}/${encodeURIComponent(runId)}`;
+  const resultsReq = api(`${base}/parses/${encodeURIComponent(parseId)}/results`)
+    .then(d => ({ data: d }), e => ({ error: e }));
   let runData;
   try {
-    runData = await api(`/api/runs/${encodeURIComponent(slug)}/${encodeURIComponent(runId)}`);
+    runData = await api(base);
   } catch (e) {
+    $("res-loading").hidden = true;
     setHeader({ eyebrow: "Results", title: "Not found", back: true, backHref: runHref });
     showError(e.message);
     return;
@@ -2184,6 +2202,7 @@ async function renderResults(slug, runId, parseId) {
 
   const here = parses.find(p => p.id === parseId);
   if (!here || !here.grouped) {
+    $("res-loading").hidden = true;
     $("res-body").innerHTML = `
       <div class="blank">
         <h3>${here ? "This parse hasn't been grouped yet" : "That parse doesn't exist"}</h3>
@@ -2195,11 +2214,13 @@ async function renderResults(slug, runId, parseId) {
     return;
   }
 
-  let data;
-  try {
-    data = await api(`/api/runs/${encodeURIComponent(slug)}/${encodeURIComponent(runId)}` +
-                     `/parses/${encodeURIComponent(parseId)}/results`);
-  } catch (e) { showError(e.message); return; }
+  const outcome = await resultsReq;
+  if (outcome.error) {
+    $("res-loading").hidden = true;
+    showError(outcome.error.message);
+    return;
+  }
+  const data = outcome.data;
 
   // Every tag in a body is an occurrence somewhere; this lets the panel's
   // "other tags from this source" chips behave exactly like cluster chips.
@@ -2227,6 +2248,7 @@ async function renderResults(slug, runId, parseId) {
                    kwQuery: { search_terms: "", usage: "" }, kwAll: new Set() };
   $("res-model").textContent = [data.model, data.reasoning].filter(Boolean).join(" · ");
   renderResultsBody();
+  $("res-loading").hidden = true;
 }
 
 /* Chips are coloured by the list they came from — and nothing else is. */

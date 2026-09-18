@@ -489,6 +489,14 @@ Verified with the Phase 8 harness (page script in a Node `vm`, DOM stubs, real
 **Note:** a server left running from before a `results.py` change serves the old payload and the
 page quietly drops the Keywords tier — restart it, or `curl …/results | grep keywords`.
 
+**Latency (Phase 6 of the doc, 2026-09-18).** Opening a results page took 0.2–1.4 s, 93% of it in
+`Attributor.attribute` re-stemming every sentence of a body for every one of its tags. The
+attributor now tokenises each unit once in `__init__` and `stem` is memoised; output is
+byte-identical and the largest group builds in 180 ms instead of 1,235 ms. The results view shows a
+small spinner in the summary line's slot from the first frame, and fetches the run and the results
+in parallel. `python -m pipeline.attribution <slug> <run>` is the regression guard for any change
+to the attributor.
+
 ### Phase 6 — Deferred refinements (flagged, not built yet)
 
 - **Deeper grouping rules.** The four rules above are a starting point. Once you've seen real output, we tighten them — likely around component-vs-attribute boundaries and how aggressively near-synonyms merge.
