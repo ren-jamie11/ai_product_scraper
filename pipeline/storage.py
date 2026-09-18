@@ -35,6 +35,7 @@ _NON_SLUG = re.compile(r"[^a-z0-9]+")
 # The overlay marker for an ASIN the user removed from a run. See "Edits
 # overlay" below for the shape of edits.json.
 DELETED_KEY = "__deleted"
+NO_REVIEWS_WARNING = "Rainforest returned no reviews for this listing."
 
 
 class StorageError(Exception):
@@ -312,6 +313,10 @@ def load_run(slug: str, run_id: str, include_deleted: bool = False) -> dict:
         if override:
             product.update(override)
             product["edited_fields"] = sorted(override.keys())
+        # Once reviews exist (pasted by hand, usually), the fetch-time note that
+        # Rainforest had none is stale. Delete them all and it comes back.
+        if product.get("reviews") and product.get("warnings"):
+            product["warnings"] = [w for w in product["warnings"] if w != NO_REVIEWS_WARNING]
         product["deleted"] = deleted
         products.append(product)
 
