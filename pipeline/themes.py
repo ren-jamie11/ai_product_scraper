@@ -333,12 +333,18 @@ def estimate(clusters_doc: dict, prompt: str | None = None) -> dict:
 # ---------------------------------------------------------------------------
 
 def run_themes(job, slug: str, run_id: str, parse_id: str,
-               clusters_doc: dict | None = None, standalone: bool = True) -> dict:
+               clusters_doc: dict | None = None, standalone: bool = True,
+               only: list[str] | None = None, carry: list[dict] | None = None) -> dict:
     """Theme every eligible list in one parse and write themes.json.
 
     `standalone` is True when this is its own job (the "Group into themes" button)
     and owns the progress bar. When run_grouping calls it, the clustering job owns
     the bar and this step only updates the label.
+
+    `only` limits the calls to those lists (an empty list means make no call at
+    all), and `carry` is finished theme sections from a previous themes.json that
+    are still right — a partial re-grouping passes the untouched lists' themes so
+    they are written back under the new fingerprint instead of being lost.
     """
     started = time.perf_counter()
     prompt, prompt_sha = load_prompt()
@@ -349,7 +355,11 @@ def run_themes(job, slug: str, run_id: str, parse_id: str,
     directory = storage.run_dir(slug, run_id) / parse_id
     product = clusters_doc.get("product") or slug.replace("-", " ").title()
 
-    todo = [s for s in clusters_doc.get("sections") or [] if eligible(s)]
+    carry = list(carry or [])
+    carried_keys = {s.get("key") for s in carry}
+    todo = [s for s in clusters_doc.get("sections") or []
+            if eligible(s) and (only is None or s["key"] in only)
+            and s["key"] not in carried_keys]
     priors = grouping.prior_titles(slug, "themes.json", "themes")
     if todo and priors:
         job.note(
@@ -395,6 +405,8 @@ def run_themes(job, slug: str, run_id: str, parse_id: str,
     if fatal:
         raise ThemeError(fatal[0])
 
+    fresh = list(sections)
+    sections += carry
     sections.sort(key=lambda s: grouping.LISTS.index(s["key"]))
 
     document = {
@@ -409,18 +421,20 @@ def run_themes(job, slug: str, run_id: str, parse_id: str,
         "min_clusters": config.THEME_MIN_CLUSTERS,
         "clusters_fingerprint": fingerprint(clusters_doc),
         "clusters_generated_at": clusters_doc.get("generated_at"),
+        "carried_lists": sorted(carried_keys),
         "sections": sections,
     }
     storage.write_json(directory / "themes.json", document)
     (directory / "themes.md").write_text(render_markdown(document, clusters_doc),
                                          encoding="utf-8")
 
+    # Spend and repairs are this run's; carried sections were paid for last time.
     usage = {
-        "input_tokens": sum(s["usage"]["input_tokens"] for s in sections),
-        "output_tokens": sum(s["usage"]["output_tokens"] for s in sections),
+        "input_tokens": sum(s["usage"]["input_tokens"] for s in fresh),
+        "output_tokens": sum(s["usage"]["output_tokens"] for s in fresh),
     }
     actual = tagging._price(usage["input_tokens"], usage["output_tokens"], choice["model"])
-    repairs = sum(len(s["repairs"]) for s in sections)
+    repairs = sum(len(s["repairs"]) for s in fresh)
     failures = [{"list": s["title"], "reason": s["error"]}
                 for s in sections if s["status"] == "failed"]
 
@@ -431,11 +445,20 @@ def run_themes(job, slug: str, run_id: str, parse_id: str,
             f"themes_log.json. No cluster was dropped."
         )
     if failures:
-        job.note(f"{len(failures)} of {len(todo)} lists could not be grouped into themes.")
-    if not todo:
+        job.note(f"{len(failures)} of {len(sections)} lists could not be grouped into themes.")
+    if carry:
+        kept = ", ".join(grouping.TITLES.get(k, k).lower() for k in sorted(carried_keys))
+        job.note(f"Kept the existing themes for {kept}.")
+    if not todo and only is None:
         job.note(
             f"No list has {config.THEME_MIN_CLUSTERS} or more clusters, so nothing was "
             f"grouped into themes."
+        )
+    elif not todo and only:
+        names = ", ".join(grouping.TITLES.get(k, k).lower() for k in only)
+        job.note(
+            f"{names} has fewer than {config.THEME_MIN_CLUSTERS} clusters, so it stays "
+            f"a flat list rather than being grouped into themes."
         )
 
     summary = {

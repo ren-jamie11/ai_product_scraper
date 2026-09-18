@@ -39,6 +39,8 @@ MODEL_PRICING = {
     "gpt-5.6-sol":   {"input": 1.25, "output": 10.00},
     "gpt-5.6-terra": {"input": 0.25, "output": 2.00},
     "gpt-5.6-luna":  {"input": 0.05, "output": 0.40},
+    # Only used to partition long tag lists before clustering (see GROUP_EMBED_MODEL).
+    "text-embedding-3-small": {"input": 0.02, "output": 0.0},
 }
 
 
@@ -114,18 +116,49 @@ RAINFOREST_WORKERS = int(os.getenv("RAINFOREST_WORKERS", "5"))
 OPENAI_WORKERS = int(os.getenv("OPENAI_WORKERS", "8"))
 OPENAI_MAX_RETRIES = int(os.getenv("OPENAI_MAX_RETRIES", "2"))
 
+# Seconds to wait for one grouping or theme call. The SDK's default is 600, and
+# the grouping model writes ~60-70 tokens a second (measured 2026-09-18 across
+# twelve parses), so a list past ~1,300 tags would time out at the default and
+# then be retried twice — paying three times for nothing. Tagging calls are
+# short and keep the SDK default.
+OPENAI_LONG_CALL_TIMEOUT = int(os.getenv("OPENAI_LONG_CALL_TIMEOUT", "1800"))
+
 
 # ---------------------------------------------------------------------------
 # Grouping
 # ---------------------------------------------------------------------------
 
-# A safety valve, not the normal path. Clustering works by comparing every tag
-# against every other one, so splitting a list across calls destroys exactly the
-# comparisons that matter — two tags in different chunks can never be judged
-# together. Measured 2026-09-15: the largest list on disk (olive trees, 290 unique
-# features) is ~2,264 tokens, and the 20-ASIN target lands near ~4,700. Everything
-# real fits in one call, so this only engages if a list is pathologically large.
-GROUP_CHUNK_SIZE = int(os.getenv("GROUP_CHUNK_SIZE", "1200"))
+# Lists at or under this many unique tags are clustered in one call, exactly as
+# they always were: the model sees every tag at once and judges every pair
+# together. Above it the list is partitioned by meaning (pipeline/partition.py),
+# each partition is clustered in parallel by the same rules, and the partial
+# clusters are joined by one merge call. Measured 2026-09-18: a single call costs
+# ~0.4 s per tag and hits the SDK read timeout near 1,300 tags, and every list
+# validated by hand so far was 75-290 tags — the regime the partitions stay in.
+GROUP_SINGLE_CALL_MAX = int(os.getenv("GROUP_SINGLE_CALL_MAX", "350"))
+
+# Tags per partition, and the size below which a partition is folded into its
+# nearest neighbour rather than clustered on its own.
+GROUP_PARTITION_TARGET = int(os.getenv("GROUP_PARTITION_TARGET", "250"))
+GROUP_PARTITION_MIN = int(os.getenv("GROUP_PARTITION_MIN", "40"))
+
+# Embeddings decide which tags share a partition. 256 dimensions is plenty for a
+# few thousand short phrases and keeps the bisection instant.
+GROUP_EMBED_MODEL = os.getenv("GROUP_EMBED_MODEL", "text-embedding-3-small")
+GROUP_EMBED_DIMENSIONS = int(os.getenv("GROUP_EMBED_DIMENSIONS", "256"))
+
+# The merge call joins partial clusters that mean the same thing. It is a
+# cluster-level judgement — the kind the theme step makes — and that step measured
+# `medium` as unstable and `high` as consistent (2026-09-17), so this is pinned
+# rather than following the Settings dropdown.
+GROUP_MERGE_REASONING = os.getenv("GROUP_MERGE_REASONING", "high")
+GROUP_MERGE_MAX_OUTPUT_TOKENS = int(os.getenv("GROUP_MERGE_MAX_OUTPUT_TOKENS", "24000"))
+
+# Output tokens for the merge call in the cost estimate: a reasoning allowance
+# plus a little per cluster it has to place. Unmeasured until the first
+# partitioned run — compare with cluster_log.json afterwards and adjust.
+GROUP_MERGE_EST_OUTPUT_BASE = int(os.getenv("GROUP_MERGE_EST_OUTPUT_BASE", "6000"))
+GROUP_MERGE_EST_OUTPUT_PER_CLUSTER = int(os.getenv("GROUP_MERGE_EST_OUTPUT_PER_CLUSTER", "40"))
 
 # Reasoning effort for the grouping model. Higher than tagging's `low` because
 # this step is judgment, not pattern-matching: deciding that "sturdy bowl" and
@@ -133,14 +166,25 @@ GROUP_CHUNK_SIZE = int(os.getenv("GROUP_CHUNK_SIZE", "1200"))
 # vivid viewing" are two is the whole job.
 OPENAI_GROUP_REASONING = os.getenv("OPENAI_GROUP_REASONING", "medium")
 
-# A ceiling, not a target. A 290-tag list returning ~36 clusters with titles,
-# descriptions and indices runs about 2,400 output tokens; this leaves room for a
-# much larger category without letting a runaway response bill forever.
-GROUP_MAX_OUTPUT_TOKENS = int(os.getenv("GROUP_MAX_OUTPUT_TOKENS", "8000"))
+# A ceiling, not a target. Reasoning tokens count against it, and they are ~70%
+# of what a grouping call produces. Measured 2026-09-18 over every grouped parse
+# on disk: about 25-28 output tokens per unique tag at `medium`, so a 494-tag
+# list needs ~14,000 and a 1,000-tag list ~27,000. The old 8,000 ceiling is what
+# cut off dishwasher-rack. 40,000 covers ~1,400 tags in one call; above that the
+# partitioned path (GROUP_SINGLE_CALL_MAX) keeps every call well under it.
+GROUP_MAX_OUTPUT_TOKENS = int(os.getenv("GROUP_MAX_OUTPUT_TOKENS", "40000"))
 
-# Rough output tokens per list, for the pre-grouping cost estimate. Actuals land
-# in cluster_log.json after every run — check there and adjust if this drifts.
-GROUP_EST_OUTPUT_TOKENS = int(os.getenv("GROUP_EST_OUTPUT_TOKENS", "2400"))
+# Output tokens per list for the pre-grouping cost estimate: base + per-tag. Fit to
+# the same measurement (olive trees 283 tags → 7,852 actual vs 7,875 estimated;
+# acacia riser 267 → 7,143 vs 7,475). Actuals land in cluster_log.json after every
+# run — check there and adjust if this drifts.
+GROUP_EST_OUTPUT_BASE = int(os.getenv("GROUP_EST_OUTPUT_BASE", "800"))
+GROUP_EST_OUTPUT_PER_TAG = int(os.getenv("GROUP_EST_OUTPUT_PER_TAG", "25"))
+
+# How fast the grouping model writes, used only to tell you how long a list will
+# take while its progress bar sits still. Measured 60-70 tokens/second on
+# gpt-5.6-sol; adjust if a different model is noticeably faster or slower.
+GROUP_TOKENS_PER_SEC = int(os.getenv("GROUP_TOKENS_PER_SEC", "60"))
 
 
 # ---------------------------------------------------------------------------
@@ -158,9 +202,10 @@ THEME_MIN_CLUSTERS = int(os.getenv("THEME_MIN_CLUSTERS", "13"))
 # A ceiling for one theme call. The visible answer (~9 themes with titles, summaries
 # and indices) is well under 1,000 tokens, but the model's reasoning tokens count
 # against this limit too. Measured 2026-09-17 on a 35-cluster list: ~2,500-3,500
-# output tokens at `medium`, and `high` overran a 4,000 ceiling. 12,000 leaves room
-# for `high` without letting a runaway response bill forever.
-THEME_MAX_OUTPUT_TOKENS = int(os.getenv("THEME_MAX_OUTPUT_TOKENS", "12000"))
+# output tokens at `medium`, and `high` overran a 4,000 ceiling; a 57-cluster list
+# used 7,300 at `high` (2026-09-18). A 50-ASIN category can reach 100-150 feature
+# clusters, so 24,000 leaves room without letting a runaway response bill forever.
+THEME_MAX_OUTPUT_TOKENS = int(os.getenv("THEME_MAX_OUTPUT_TOKENS", "24000"))
 
 # Rough output tokens per list, for the pre-theming cost estimate.
 THEME_EST_OUTPUT_TOKENS = int(os.getenv("THEME_EST_OUTPUT_TOKENS", "900"))

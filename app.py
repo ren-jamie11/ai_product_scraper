@@ -279,12 +279,27 @@ def api_results(slug: str, run_id: str, parse_id: str):
 # Step 3 — grouping
 # ---------------------------------------------------------------------------
 
+def _lists_arg(value) -> list[str] | None:
+    """The optional `lists` narrowing on the grouping routes: a JSON array on the
+    POST, a comma-separated query string on the estimate. None means every list."""
+    if value is None or value == "":
+        return None
+    if isinstance(value, str):
+        value = [v.strip() for v in value.split(",") if v.strip()]
+    if not isinstance(value, list) or not all(isinstance(v, str) for v in value):
+        raise grouping.GroupingError("`lists` has to be a list of tag-list names.")
+    return list(grouping.which_lists(value))
+
+
 @app.get("/api/runs/<slug>/<run_id>/parses/<parse_id>/group-estimate")
 def api_group_estimate(slug: str, run_id: str, parse_id: str):
-    """Tag counts per list and what grouping will cost. Spends nothing."""
+    """Tag counts per list and what grouping will cost. Spends nothing.
+
+    `?lists=features` narrows it to the lists a partial re-run would group."""
+    only = _lists_arg(request.args.get("lists"))
     tagged = grouping.load_tagged(slug, run_id, parse_id)
     return jsonify({
-        "estimate": grouping.estimate(tagged),
+        "estimate": grouping.estimate(tagged, only=only),
         "openai_key_set": bool(config.OPENAI_API_KEY),
         "already_grouped": bool(
             storage.read_json(storage.run_dir(slug, run_id) / parse_id / "clusters.json")
@@ -296,12 +311,18 @@ def api_group_estimate(slug: str, run_id: str, parse_id: str):
 
 @app.post("/api/runs/<slug>/<run_id>/parses/<parse_id>/group")
 def api_group(slug: str, run_id: str, parse_id: str):
-    """Kick off clustering in the background and hand back a job id."""
+    """Kick off clustering in the background and hand back a job id.
+
+    A JSON body of `{"lists": ["features"]}` re-groups only those lists and keeps
+    the rest of clusters.json, and the themes built on it, exactly as they are."""
     if not config.OPENAI_API_KEY:
         raise storage.StorageError("OPENAI_API_KEY is empty in config.py.")
 
+    payload = request.get_json(silent=True) or {}
+    only = _lists_arg(payload.get("lists"))
+
     tagged = grouping.load_tagged(slug, run_id, parse_id)
-    to_group = grouping.estimate(tagged)["to_group"]
+    to_group = grouping.estimate(tagged, only=only)["to_group"]
     if not to_group:
         raise grouping.GroupingError(
             "This parse produced no features, complaints or care instructions, so "
@@ -309,12 +330,14 @@ def api_group(slug: str, run_id: str, parse_id: str):
         )
 
     jobs.prune()
+    verb = "Re-grouping" if only else "Grouping"
     job = jobs.start(
-        f"Grouping {to_group} tag {'list' if to_group == 1 else 'lists'}…",
-        lambda j: grouping.run_grouping(j, slug, run_id, parse_id),
+        f"{verb} {to_group} tag {'list' if to_group == 1 else 'lists'}…",
+        lambda j: grouping.run_grouping(j, slug, run_id, parse_id, only=only),
         total=to_group,
     )
-    return jsonify({"job_id": job.id, "parse_id": parse_id, "to_group": to_group}), 202
+    return jsonify({"job_id": job.id, "parse_id": parse_id, "to_group": to_group,
+                    "lists": only}), 202
 
 
 # ---------------------------------------------------------------------------
