@@ -535,24 +535,39 @@ def api_restore_asin(slug: str, run_id: str, asin: str):
 def api_add_reviews(slug: str, run_id: str):
     """Append pasted reviews to an ASIN — copied from Amazon, or blank-line separated.
 
-    Parsed here rather than in the browser so the emoji strip and the minimum
-    body length stay in one place, next to the rules the fetched reviews follow.
+    Parsed here rather than in the browser so the emoji strip, the minimum body
+    length and the duplicate check stay in one place, next to the rules the
+    fetched reviews follow.
     """
     payload = request.get_json(silent=True) or {}
     asin = payload.get("asin")
 
     product = _find_product(slug, run_id, asin)
     existing = list(product.get("reviews") or [])
-    added = normalize.parse_pasted_reviews(payload.get("text", ""), existing)
-    if not added:
+    added, report = normalize.parse_pasted_reviews(payload.get("text", ""), existing)
+
+    # A review the paste carries in full that we hold only as far as "Read more".
+    by_id = {r.get("id"): i for i, r in enumerate(existing)}
+    extended = 0
+    for patch in report["extended"]:
+        at = by_id.get(patch["id"])
+        if at is not None:
+            existing[at] = {**existing[at], "body": patch["body"]}
+            extended += 1
+
+    # A paste of reviews already on the listing is a no-op, not a mistake — the
+    # browser reports it as a note. Only text that held no review at all is an
+    # error, because then there is nothing to say about what happened to it.
+    if not added and not extended and not report["duplicates"]:
         raise storage.StorageError(
-            "Nothing new there looked like a review. Paste reviews copied from "
-            "Amazon, or plain text with a blank line between each one. Reviews "
-            "already on this listing are skipped."
+            "Nothing there looked like a review. Paste reviews copied from "
+            "Amazon, or plain text with a blank line between each one."
         )
 
-    storage.merge_edits(slug, run_id, {asin: {"reviews": existing + added}})
-    return jsonify({"added": len(added), **_edit_result(slug, run_id, [asin])})
+    if added or extended:
+        storage.merge_edits(slug, run_id, {asin: {"reviews": existing + added}})
+    return jsonify({"added": len(added), "duplicates": report["duplicates"],
+                    "extended": extended, **_edit_result(slug, run_id, [asin])})
 
 
 def _find_product(slug: str, run_id: str, asin: str) -> dict:

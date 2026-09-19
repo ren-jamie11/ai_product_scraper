@@ -430,13 +430,38 @@ def _price(input_tokens: int, output_tokens: int, model: str | None = None) -> d
 
 
 def partition(bodies: list[dict]) -> tuple[list[dict], list[dict]]:
-    """Split bodies into the ones worth a call and the ones too short to be."""
+    """Split bodies into the ones worth a call and the ones that aren't.
+
+    Too short to hold a concrete benefit, or the same review text as a body
+    already queued for this listing. Pasted reviews are deduped as they arrive,
+    but a duplicate can also be typed in by hand on the run page, and tagging
+    one twice both costs a call and counts its tags twice in the results. Two
+    listings that share a review each keep their own copy — a competitor is
+    judged on its own reviews.
+
+    Skipped bodies are copies carrying `skip_reason`, so the caller's dicts stay
+    as `build_bodies` made them.
+    """
     taggable, skipped = [], []
+    seen: dict[str, dict[str, str]] = {}
+
     for body in bodies:
-        if len(body.get("text") or "") < config.MIN_TAG_CHARS:
-            skipped.append(body)
-        else:
-            taggable.append(body)
+        text = body.get("text") or ""
+        if len(text) < config.MIN_TAG_CHARS:
+            skipped.append({**body, "skip_reason": f"under {config.MIN_TAG_CHARS} characters"})
+            continue
+
+        if body.get("type") == "review":
+            here = seen.setdefault(body.get("asin"), {})
+            key = normalize.body_key(text)
+            owner, relation = normalize.find_duplicate(key, here)
+            if relation:
+                skipped.append({**body, "skip_reason": f"duplicate of {owner}"})
+                continue
+            here[key] = body["body_id"]
+
+        taggable.append(body)
+
     return taggable, skipped
 
 
@@ -466,11 +491,21 @@ def run_tagging(job, slug: str, run_id: str) -> dict:
     taggable, skipped = partition(bodies)
     estimated = estimate(bodies, prompt)
 
-    if skipped:
+    short = [b for b in skipped if not b["skip_reason"].startswith("duplicate")]
+    duplicates = len(skipped) - len(short)
+
+    if short:
         job.note(
-            f"Skipped {len(skipped)} {'body' if len(skipped) == 1 else 'bodies'} "
+            f"Skipped {len(short)} {'body' if len(short) == 1 else 'bodies'} "
             f"under {config.MIN_TAG_CHARS} characters — too short to hold a "
             f"concrete benefit. Their text is in parse_log.json."
+        )
+    if duplicates:
+        job.note(
+            f"Skipped {duplicates} duplicate review "
+            f"{'body' if duplicates == 1 else 'bodies'} — the same text is "
+            f"already being tagged under another review on the same listing. "
+            f"Tagging it twice would count its tags twice."
         )
 
     choice = tag_choice()
@@ -525,8 +560,7 @@ def run_tagging(job, slug: str, run_id: str) -> dict:
         "prompt_sha": prompt_sha,
         "bodies": results,
         "skipped": [{"body_id": b["body_id"], "asin": b["asin"], "type": b["type"],
-                     "text": b["text"],
-                     "reason": f"under {config.MIN_TAG_CHARS} characters"}
+                     "text": b["text"], "reason": b["skip_reason"]}
                     for b in skipped],
         "failures": failures,
     })
@@ -569,7 +603,8 @@ def run_tagging(job, slug: str, run_id: str) -> dict:
         "min_tag_chars": config.MIN_TAG_CHARS,
         "estimate": estimated,
         "avoided_reasons": _avoided_tally(tagged),
-        "skipped_bodies": [{"body_id": b["body_id"], "text": b["text"]} for b in skipped],
+        "skipped_bodies": [{"body_id": b["body_id"], "reason": b["skip_reason"],
+                            "text": b["text"]} for b in skipped],
         "failures": failures,
         "notes": list(job.notes),
     })

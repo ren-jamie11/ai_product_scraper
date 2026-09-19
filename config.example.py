@@ -77,6 +77,13 @@ PRODUCT_ATTEMPTS = int(os.getenv("PRODUCT_ATTEMPTS", "4"))
 # Reviews shorter than this yield no concrete benefit and are not worth a call.
 MIN_REVIEW_CHARS = int(os.getenv("MIN_REVIEW_CHARS", "1"))
 
+# Amazon's product page cuts long reviews off at "Read more", so the same review
+# copied from there and from the reviews page differs only by its tail. A body
+# that is a prefix of another counts as the same review once both are at least
+# this long; below it only an exact match counts, so two short reviews that open
+# the same way ("Beautiful frame, ..." ) can't collide.
+DUP_PREFIX_MIN_CHARS = int(os.getenv("DUP_PREFIX_MIN_CHARS", "60"))
+
 
 # ---------------------------------------------------------------------------
 # Tagging

@@ -384,8 +384,10 @@ The results view was reworked for first-glance reading; the full spec, scoping d
 per-phase "settled" notes live in `UI-DESIGN-IMPROVEMENT.md`. In short: the source toggle
 now re-ranks and re-numbers themes and clusters natively per source (a client-side view model,
 `buildViews`, computes mentions, products and rank per source for every item); an overview
-panel of segmented listing/review bars per theme (Features and Complaints) sits under the
-sticky bar and clicking a bar reveals the item; the sticky bar holds a search that filters
+panel of one bar per theme (Features and Complaints), in the list's own colour, sits under the
+sticky bar and clicking a bar reveals the item — the bars were segmented into listing and
+review shares until Phase 10 made them solid and moved the split into the hover tooltip; the
+sticky bar holds a search that filters
 themes, clusters and tag chips with marked hits, jump links with counts, and Expand all; the
 summary tiles and lede became one mono line; cluster cards carry a rank-shift line, coverage
 dots and, for features, an under-advertised / unconfirmed badge. No backend change. It was
@@ -455,11 +457,48 @@ tags) and ~2.5× the cost, because the merge runs at `high`; its value is that i
 size and stays stable where one call degrades. `GROUP_SINGLE_CALL_MAX` (350) is the dial.
 Theme step untouched, still `high` (`themes_log.json` says so on every run above).
 
+### Phase 10 — Two-tier results page and Keywords (built 2026-09-18)
+
+The results page reads as two tiers under mono eyebrow dividers: **01 · Feature Analysis** (the
+overview bars and the three clustered lists, unchanged) and **02 · Keywords** (Search Terms
+beside Usage Keywords). The full spec, the scoping decisions and a "settled" note per phase live
+in `UI-DESIGN-IMPROVEMENT.md`. In short:
+
+- **Two search bugs fixed.** One `openRule(key, openSet, closedSet)` now decides whether a theme
+  is open, in the sections and in the overview, so a query opens every theme with a hit but a
+  click still closes one and it stays closed until the query changes; Expand/Collapse all works
+  mid-search and its label is honest. Chip labels are wrapped in a `.lbl` span so a `<mark>`
+  from the filter stays inline instead of splitting the pill into drifting flex items.
+- **Overview bars are one solid colour per list.** The legend is gone; the listing/review split
+  lives in the hover tooltip, since the source toggle already answers "who says it".
+- **`pipeline/results.py` gained an additive `keywords` block** — the only backend change, no
+  `app.py` change. Search terms and the four usage sub-lists are deduped by `_keyword_norm`
+  (lowercase, punctuation except internal hyphens, leading article, **trailing plural `s`** —
+  deliberately unlike `grouping.collect`, which keeps tags as exact strings), ranked by mentions,
+  and every mention goes through the same `_register` as a cluster tag, so it carries its
+  attributed sentence, body and product. `attributed` and `mentions` are computed *before* the
+  keyword walk and keep meaning "clustered tag mentions".
+- **Keywords are hover-only.** Ranked rows with a cobalt bar for search terms, chips with `×N`
+  for usage, a local filter per column that composes with the sticky search and the source
+  toggle, `Show all N` / `+N more`, and jump links and a slim-line total that follow all three.
+  A hover gives ASIN, title, the highlighted sentence and the per-source split; a click opens
+  nothing, because the panel handler still matches `.bub[data-occs]` alone.
+
+Verified with the Phase 8 harness (page script in a Node `vm`, DOM stubs, real
+`pipeline.results.build` output for three groups) plus Playwright at 1280 px and 600 px.
+**Note:** a server left running from before a `results.py` change serves the old payload and the
+page quietly drops the Keywords tier — restart it, or `curl …/results | grep keywords`.
+
+**Latency (Phase 6 of the doc, 2026-09-18).** Opening a results page took 0.2–1.4 s, 93% of it in
+`Attributor.attribute` re-stemming every sentence of a body for every one of its tags. The
+attributor now tokenises each unit once in `__init__` and `stem` is memoised; output is
+byte-identical and the largest group builds in 180 ms instead of 1,235 ms. The results view shows a
+small spinner in the summary line's slot from the first frame, and fetches the run and the results
+in parallel. `python -m pipeline.attribution <slug> <run>` is the regression guard for any change
+to the attributor.
+
 ### Phase 6 — Deferred refinements (flagged, not built yet)
 
-- **Search terms and usage keywords.** Flat frequency lists (spaces / placements /
-  occasions / used_for), each chip opening the same source panel. The data is in
-  `tagged.json` already; only the section is missing.
 - **Deeper grouping rules.** The four rules above are a starting point. Once you've seen real output, we tighten them — likely around component-vs-attribute boundaries and how aggressively near-synonyms merge.
 
 ---

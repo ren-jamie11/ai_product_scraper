@@ -201,9 +201,37 @@ def _parse_date(line: str) -> str | None:
     return None
 
 
-def _body_key(body: str) -> str:
+def body_key(body: str) -> str:
     """What makes two reviews the same review: the body, ignoring case and spacing."""
     return re.sub(r"\s+", " ", body or "").strip().casefold()
+
+
+def find_duplicate(key: str, seen: dict[str, str]) -> tuple[str | None, str | None]:
+    """Is this body already here? `seen` maps a body key to whatever owns it.
+
+    The owner is a review id when pasting and a body_id at parse time — the
+    caller decides, this only reports the match.
+
+    An exact match is `same`. Beyond that, the product page truncates long
+    reviews at "Read more" while the reviews page carries them whole, so the
+    same review pasted from both places differs only by its tail: one key is a
+    prefix of the other. That counts as the same review once both are at least
+    DUP_PREFIX_MIN_CHARS long, reported from the new key's point of view —
+    `extends` when it is the fuller copy, `truncated` when it is the cut one.
+    """
+    if not key:
+        return None, None
+    if key in seen:
+        return seen[key], "same"
+
+    for other, owner in seen.items():
+        if min(len(key), len(other)) < config.DUP_PREFIX_MIN_CHARS:
+            continue
+        if key.startswith(other):
+            return owner, "extends"
+        if other.startswith(key):
+            return owner, "truncated"
+    return None, None
 
 
 def _next_filled(lines: list[str], start: int) -> int | None:
@@ -282,10 +310,10 @@ def _parse_amazon_review(lines: list[str]) -> dict:
 
     # The product page repeats the title under the body, sometimes twice. A
     # body that *is* the title ("Love" / "Love") keeps its one line.
-    title_key = _body_key(title)
+    title_key = body_key(title)
     while body_lines and not body_lines[-1]:
         body_lines.pop()
-    while (title_key and _body_key(body_lines[-1] if body_lines else "") == title_key
+    while (title_key and body_key(body_lines[-1] if body_lines else "") == title_key
            and sum(1 for line in body_lines if line) > 1):
         body_lines.pop()
         while body_lines and not body_lines[-1]:
@@ -302,7 +330,8 @@ def _parse_amazon_review(lines: list[str]) -> dict:
     }
 
 
-def parse_pasted_reviews(text: str, existing: list[dict] | None = None) -> list[dict]:
+def parse_pasted_reviews(text: str,
+                         existing: list[dict] | None = None) -> tuple[list[dict], dict]:
     """Split a pasted block into reviews.
 
     Rainforest never returns reviews for some listings, so pasting is the only
@@ -313,7 +342,17 @@ def parse_pasted_reviews(text: str, existing: list[dict] | None = None) -> list[
     blank-line-separated block, with the title and rating left empty.
 
     A review whose body matches one already on the product (fetched or pasted
-    earlier), or earlier in the same paste, is skipped.
+    earlier), or earlier in the same paste, is skipped — it would otherwise be
+    tagged a second time and inflate every count downstream. Matching is
+    `find_duplicate`, so a copy truncated at "Read more" and the whole one are
+    the same review: the truncated one is dropped, and when the paste is the
+    fuller copy the review already on the product is extended to the full text
+    rather than joined by a near-twin.
+
+    Returns the new reviews and a report:
+    `{"duplicates": n, "extended": [{"id": ..., "body": ...}]}`. Extensions are
+    counted as duplicates too — they are copies of a review already here — and
+    it is the caller that applies them to the product.
     """
     lines = [clean_text(line) for line in (text or "").replace("\r\n", "\n").split("\n")]
     starts = _review_starts(lines)
@@ -331,17 +370,34 @@ def parse_pasted_reviews(text: str, existing: list[dict] | None = None) -> list[
         ]
 
     taken = {r.get("id") for r in (existing or [])}
-    seen = {_body_key(r.get("body")) for r in (existing or [])}
+    seen = {body_key(r.get("body")): r.get("id") for r in (existing or [])}
+    seen.pop("", None)
     reviews: list[dict] = []
+    minted: dict[str, dict] = {}
+    report: dict = {"duplicates": 0, "extended": []}
     counter = 1
 
     for review in parsed:
         if len(review["body"]) < config.MIN_REVIEW_CHARS:
             continue
-        key = _body_key(review["body"])
-        if key in seen:
+
+        key = body_key(review["body"])
+        owner, relation = find_duplicate(key, seen)
+        if relation:
+            report["duplicates"] += 1
+            if relation == "extends":
+                # The paste carries the whole review and what we hold is the
+                # copy Amazon cut off at "Read more". Keep the review — its id
+                # is already referenced everywhere — and give it the full text.
+                # One pasted this run we can fix outright; one already on the
+                # product is the caller's to apply.
+                if owner in minted:
+                    minted[owner]["body"] = review["body"]
+                else:
+                    report["extended"].append({"id": owner, "body": review["body"]})
+                seen = {k: v for k, v in seen.items() if v != owner}
+                seen[key] = owner
             continue
-        seen.add(key)
 
         # Manual ids have to stay unique within the product, and compaction
         # merges reviews across runs, so never reuse one that already exists.
@@ -349,10 +405,13 @@ def parse_pasted_reviews(text: str, existing: list[dict] | None = None) -> list[
             counter += 1
         review_id = f"manual_{counter}"
         taken.add(review_id)
+        seen[key] = review_id
 
-        reviews.append({"id": review_id, **review, "source": "manual"})
+        fresh = {"id": review_id, **review, "source": "manual"}
+        minted[review_id] = fresh
+        reviews.append(fresh)
 
-    return reviews
+    return reviews, report
 
 
 def normalize_product(fetched: dict) -> dict:

@@ -1,329 +1,495 @@
-# UI-DESIGN-IMPROVEMENT — Results view, at a glance
+# UI-DESIGN-IMPROVEMENT — Two-tier results page with Keywords
 
 ## Context
 
-The pipeline is done and trusted: tags → clusters → themes, with every mention traced to
-its sentence. The results view renders all of it, but it renders it as an *index*, not a
-*picture*. On first open a seller sees a summary strip, a paragraph of instructions, and
-a stack of collapsed theme rows whose only size cue is a mono counts line. Nothing on the
-first screen says "these three things matter most, and here is whether customers or
-sellers are saying so."
+The results view (Phase 8, 2026-09-17) already renders themes, clusters and tags with
+sentence-level provenance, a source toggle, a sticky search and an overview bar panel. Three
+things stand between it and "grasp the top insights in one look":
 
-Two measured facts drive the design (numbers from the nine parsed runs on disk):
+1. **Search traps you open.** While a query is active every matching theme is force-opened
+   ([index.html:2636](static/index.html#L2636), `:2502`, `:2507`) so a click on a theme
+   header toggles state but the render overrides it. The "Expand all" label ignores search.
+   Marked hits also break chip layout: `.bub` is `inline-flex; gap:6px`
+   ([index.html:265](static/index.html#L265)) and `hilite()` splits the label into text +
+   `<mark>` + text, so each fragment becomes its own flex item and the words drift apart
+   (`search-tool-bug.png`).
+2. **Bars carry a split nobody needs at a glance.** Listing/review segmentation on the
+   overview bars adds a legend and a second shade per list; the source toggle already
+   answers "who says it".
+3. **Search terms and usage keywords are invisible.** They are tagged for every body
+   (25–155 search-term mentions, 70–420 usage mentions per group on disk) but
+   `pipeline/results.py` drops them (`_register` keeps only `attribution.LISTS`), and the
+   view has no section for them. Deferred since Phase 6.
 
-- Reviews supply ~70–80% of feature mentions; complaints are 100% reviews. So the current
-  "All" order is really the reviews order, and the source toggle deliberately keeps that
-  order (`clusterView`: "Order never changes"). The seller-side ranking is never visible.
-- Feature lists run 18–57 clusters and 8–12 themes; complaints 3–17 clusters. That is too
-  many to scan as cards, but exactly the size a horizontal bar list handles well.
+**Goal:** the page reads as two tiers. **Feature Analysis** (overview bars, then Product
+Features & Benefits, Complaints, Assembly/Care) and **Keywords** (Search Terms beside Usage
+Keywords), each keyword list ranked, filterable, expandable, and traceable on hover. Search
+never traps a theme open, and marked chips keep their shape.
 
-**Goal:** an Amazon seller opens a results page and, without a click, knows the top
-themes by mentions in each list and how much of that comes from listings vs reviews; can
-flip to the customer's or the seller's native ranking; can type "handle" and see only what
-concerns handles; and can drill from a bar to a theme to a cluster to a tag to the sentence.
+**Untouched:** fonts, tokens, colours (no new colour anywhere: keywords use the existing
+cobalt accent, which no Feature Analysis chip or bar uses), tagging / clustering / theming
+code and prompts, every data file, the groups / run / parse views. Backend change is one
+additive `keywords` block in the results response.
 
-**Untouched:** fonts, colours, spacing tokens; tagging / clustering / theming code and
-prompts; the groups, group detail and run views; every data file. The results endpoint
-(`pipeline/results.py`) already returns everything needed, so **no backend change** is
-planned. All work is in the results section of `static/index.html` (CSS ≈ lines 245–357,
-markup ≈ 496–537, JS ≈ 1990–2370 plus the hover/panel code that follows).
-
-## Decisions settled in scoping (2026-09-17)
+## Decisions settled in scoping (2026-09-18)
 
 | Area | Decision |
 |---|---|
-| Summary graphic unit | Theme bars, each expandable in place to its cluster bars. Unthemed lists show cluster bars directly. |
-| Placement | One overview panel at the top of the page, two columns: **Features** and **Complaints**. Care is list-only. |
-| Bar encoding | Length = mentions; segmented into listing share (solid) and review share (lighter) in the list's colour. |
-| Bar click | Scrolls to the theme/cluster, opens it, flashes it. Chart stays as the map. |
-| Bar count | All themes; all member clusters on expand; unthemed lists top 10 with "show all". |
-| Native ranking | On Listings / Reviews, themes and clusters re-sort by that source's mentions. Items with nothing from that source are hidden (as today). |
-| Numbering | 01, 02… = position in the current view. Re-numbered per source. |
-| All ranking | Raw total mentions (unchanged). The segmented bar shows the imbalance. |
-| Rank shift | "listings #11 · reviews #2" line on cluster cards and theme rows. |
-| Search scope | Theme title + summary, cluster title + description, and every tag chip in the current source view. |
-| Search effect | Non-matches hidden. Matching themes auto-open while searching; matched words marked in titles and chips. Overview follows the search. Sticky bar shows match counts. |
-| Sticky bar | Search · All/Listings/Reviews · jump links with counts (Features 35 · Complaints 17 · Care 7) · Expand/Collapse all · Group into themes (only when needed, as now). |
-| Summary strip | Replaced by one mono line: `35 features · 17 complaints · 7 care · 10 products · 92% of mentions traced`. |
-| Lede paragraph | Dropped. |
-| Default state | Overview visible, all themes collapsed, expansion still remembered per parse. |
-| Open cluster | Two blocks (From listings / From reviews), unchanged. |
-| Gap badges | Small pill on feature cluster cards: **under-advertised** (customers say it, listings don't) / **unconfirmed** (listings claim it, reviews don't). Features list only. |
-| Coverage | "in N of M products" becomes M dots, N filled, plus `N/M`. |
-| Copy to clipboard | Not wanted. |
-| State | Source and search are session-only. Theme/cluster expansion stays in `localStorage` as today. |
-| Order | 1 ranking → 2 overview → 3 search + bar → 4 insights. |
+| Search + themes | Typing a query auto-opens matching themes; a click then collapses one and it stays collapsed. A new or changed query starts fresh (collapses forgotten). |
+| Expand / Collapse all | Works during search; label reflects what is actually open. |
+| Search scope | The sticky search filters everything on the page: themes, clusters, tags, search terms, usage keywords. |
+| Overview bars | One solid colour per list (celadon features, iron complaints). Bars still re-lengthen by the source toggle. Legend dropped; listing/review split stays in the hover tooltip. |
+| Major sections | "Feature Analysis" and "Keywords". Mono eyebrow dividers (`01 · FEATURE ANALYSIS`), not collapsible; only the lists inside collapse as today. |
+| Jump links | Gain `Search terms N · Usage N`, counts following source and reading `N of M` while filtering. |
+| Search terms display | Ranked rows: term · thin cobalt bar · mentions. 10 rows, then `Show all N`. |
+| Usage keywords display | Four stacked sub-blocks (Spaces, Placements, Occasions, Used for), cobalt chips sorted by frequency with `×N`, 6 chips each then `+N more`. |
+| Colour | Cobalt (`--cobalt` / `--cobalt-wash`), the default `.bub` and accent token. Nothing new. |
+| Dedup | Deterministic normalisation: lowercase, strip punctuation except internal hyphens, collapse whitespace, drop leading articles, fold trailing plural `s` (len > 3, not `ss`/`us`/`is`). Display = most frequent original wording. No model call. |
+| Source toggle | Applies to Keywords: counts, order, bars follow the source; tooltip shows `N mentions · a from listings · b from reviews · in x of y products`. |
+| Keyword interaction | Hover tooltip only (ASIN, title, source, highlighted sentence, source count). No click-through panel. |
+| Local filters | One box per column (Search Terms; Usage across all four sub-lists), in the column header, header count reads `N of M` while filtering, hits marked. Combined with the sticky search (both must match). |
+| Show-all state | Session-only, like the overview's show-all today. |
+| Bugfix scope | Exactly the two named bugs. |
 
 ## Working principles
 
-- Everything is computed in the browser from `resultsState.data`; the results endpoint
-  is not changed. A tiny **view model** step (`buildViews`) runs once per render and every
-  renderer reads from it, replacing the ad-hoc `clusterView` cache.
-- Bars are plain `div`s. No chart library. Colours come only from the existing tokens:
-  `--celadon` for features, `--iron` for complaints, `--cobalt` for the neutral accent.
-- Reuse: `stat()`, `plural()`, `esc()`, `.seg`, `.pill`, `.btn.ghost`, `.note`, `.blank`,
-  `.hint`, `.sbar`, `.thm`, `.cl`, `.bub`, `mark`.
-- **Caution from memory:** two lines in `static/index.html` contain a literal NUL byte
-  used as a Map-key separator. `Edit` cannot match them. If a change touches those lines,
-  patch with a short Python script instead.
+- One view model per render: `buildViews()` grows a `keywords` branch so sections, jump
+  links, overview and Keywords all agree on what is visible under the current source and
+  query. Every renderer reads from `resultsState.views`.
+- Reuse: `hilite`, `plural`, `esc`, `covHtml`, `tipHtml`/`tipShow`/`tipMove`/`tipOff`,
+  `.ovcol`/`.oh`/`.note`, `.ovrow .trk`, `.bub`, `.bubs`, `.lnk`, `.blank`, `.sbar .sq`
+  input styling, `.eyebrow`, the mono micro-label rule (`.cl .cb h4`).
+- Bars are plain `div`s. New CSS is layout only.
+- **Caution from memory:** two lines in `static/index.html` contain a literal NUL byte used
+  as a Map-key separator; `Edit` cannot match them. If a change touches those lines, patch
+  with a short Python script.
+- Backend stays computed-on-request; nothing new is written to disk.
 
 ---
 
-## Phase 1 — Native ranking per source
+## Phase 1 — Search bugfixes
 
-**What changes:** the source toggle re-ranks instead of only re-counting.
+**Theme collapse during search.** Add `resultsState.searchClosed = new Set()` (session-only,
+cleared inside `setQuery` whenever the query string changes, so a new query re-opens
+everything with a hit). Introduce one helper and route every open/closed decision through it:
 
-`static/index.html`, results JS:
+```js
+function themeOpen(key) {                       // themes in the sections
+  if (resultsState.expanded.has(key)) return true;
+  return resultsState.terms.length > 0 && !resultsState.searchClosed.has(key);
+}
+```
 
-1. Replace `clusterView()` + `resultsState.views` with `buildViews()` called at the top of
-   `renderResultsBody()`. For each section it produces:
-   - per cluster: `{ all, listing, review }` mention counts (sum of `count` over
-     `listing_tags` / `review_tags`; `all = total_tags`), per-source `asinSet` (from
-     `occurrences[ref].asin`, as today), `preview` per source, and **ranks**
-     `rank.all / rank.listing / rank.review` (1-based, ties broken by server order; `null`
-     when the cluster has no mentions from that source). Ranks are computed for all three
-     sources every time, because Phase 4 needs them regardless of the current view.
-   - per theme: the same shape, summed over member clusters (`asinSet` = union).
-   - `order`: the list of visible clusters (and of visible themes, and of visible member
-     clusters within each theme) sorted by mentions in the current source, desc, ties by
-     server order. On `all` this equals the server order exactly.
-2. `sectionHtml`, `themeHtml`, `clusterHtml` iterate `order` instead of `s.clusters` /
-   `t.cluster_ids`, and print the position in `order` (padded) as the `01` label instead
-   of `c.number` / `t.number`.
-3. Section header note and theme counts already use the view numbers; make sure they read
-   from the view model so they stay consistent.
+- `themeHtml` ([index.html:2636](static/index.html#L2636)): `const open = themeOpen(tv.key)`.
+- `toggleKey` for theme keys: if `themeOpen(key)` → `expanded.delete(key)` and, while
+  searching, `searchClosed.add(key)`; else `expanded.add(key)` and `searchClosed.delete(key)`.
+  Cluster keys keep today's plain toggle. Persist only `expanded`.
+- `allThemesOpen` ([index.html:2217](static/index.html#L2217)) uses `themeOpen`, so the
+  sticky button's label is right mid-search; Collapse all adds every theme key to
+  `searchClosed` and removes from `expanded`; Expand all does the reverse.
+- Overview theme rows ([index.html:2502](static/index.html#L2502)) get the same rule with
+  their own session set (`ovOpen` + `ovSearchClosed`) via the same helper parametrised on
+  the two sets; the caret click toggles it the same way. The unthemed "show all while
+  searching" at `:2507` stays (matches are few; no collapse is needed there).
 
-**Verify**
-- Olive trees, Listings: features re-order; the bar total equals 91 listing mentions
-  (`data/olive-trees/…/clusters.json`), complaints section shows "Nothing from listings".
-- Print the expected order to compare against the screen:
-  ```
-  python -c "import json;d=json.load(open('data/olive-trees/2026-09-11_155256/parse-2026-09-16_162551/clusters.json',encoding='utf-8'));s=d['sections'][0];occ={o['occ_id']:o for o in s['occurrences']};u={x['uid']:x for x in s['unique_tags']};print(sorted(((sum(1 for uid in c['uids'] for o in u[uid]['occ_ids'] if occ[o]['body_type']=='listing'),c['title']) for c in s['clusters']),reverse=True)[:8])"
-  ```
-- All view is pixel-identical in order to today (numbers match `clusters.md`).
-- Toggling back to All restores the numbering.
+**Marked chips.** In `chipHtml` ([index.html:2715](static/index.html#L2715)) wrap the label:
+`<span class="lbl">${hilite(...)}</span>` so the label is a single flex item and the count
+badge `<i>` the second; `mark` renders inline within it. Grep for every other `.bub` whose
+label is passed through `hilite` (the panel's "other tags" chips at ≈`:3158–3172`) and wrap
+the same way. No CSS change needed beyond `.bub .lbl{min-width:0}`.
 
+**Verify:** type `nested` on acacia-wood-riser → themes with hits open → click a theme
+header → it collapses and stays collapsed → edit the query → it re-opens → Collapse all /
+Expand all label and action both correct → the "can be used separately, stepped together,
+or nested at angles" chip renders as one wrapped pill with the mark inline.
 
-**Settled in Phase 1 (built 2026-09-17).** `clusterView` and its per-render cache are
-gone; `buildViews()` runs at the top of `renderResultsBody()` and stores one view per list
-in `resultsState.views` (`sectionView(s)` reads it). Every cluster and theme view carries
-`mentions`, `asins` (a Set) and `rank` for all three sources, and `number` is the rank in
-the current source, so a cluster inside an open theme still shows its rank in the whole
-list (01, 02, 17, 29 …), not its position in the theme. Theme mentions and products are
-summed from member clusters rather than read from `themes.json`; on "All" the two agree
-exactly (asserted on olive trees). Checked by executing the page's own render functions in
-Node with DOM stubs (`scratchpad/test_render.js`) against olive trees, wooden serving bowls
-and wood picture frames in every source and expansion state: All order equals the server
-order, Listings order equals the count computed straight from `clusters.json`, numbering
-has no gaps, and complaints vanish under Listings.
+**Settled in Phase 1 (built 2026-09-18).** The helper landed as a three-function family rather
+than the plan's single `themeOpen`, because the overview needs the same rule on its own two
+sets and the toggle needs the inverse: `openRule(key, openSet, closedSet)` is the rule,
+`themeOpen` / `ovThemeOpen` bind it to `(expanded, searchClosed)` and `(ovOpen, ovSearchClosed)`,
+and `toggleThemeOpen(key, openSet, closedSet)` does the add/delete on whichever pair it is
+handed. `toggleKey` routes on the `"theme:"` prefix that `themeKey` already writes, so cluster
+keys keep the plain toggle and only `expanded` is persisted. Two things the plan did not spell
+out, both deliberate: **a theme with no hits counts as open while searching** (`openRule` asks
+only whether it was clicked shut), which is invisible because `themeOrder` never renders it but
+does mean `allThemesOpen()` is true the instant you type — so the sticky button correctly reads
+**Collapse all** mid-search, which is the bug it was meant to fix; and Collapse all mid-search
+has to write every key into *both* closed sets or the next render re-opens everything.
 
----
+For the chips, wrapping the label was enough on its own: `hilite` splits a match into text +
+`<mark>` + text, and the `.bub` gap was pushing each fragment apart as a separate flex item.
+One `<span class="lbl">` makes the label a single item and the `<i>` count the second, with
+`.bub .lbl{min-width:0}` so a long label can still shrink and wrap. Three renderers pass a
+label through `hilite` or `esc` into a `.bub`, and all three were wrapped: `chipHtml` (which
+also covers preview chips) and the panel's two "other tags" branches. The panel's `.bub plain`
+span needed the wrap too, for shape consistency rather than for marks.
 
-## Phase 2 — Overview panel (the at-a-glance graphic)
+**Measured** with the Node harness (page script in a `vm` context, DOM stubs, real
+`results.build` output for acacia-wood-riser): 19 of 19 assertions pass. Typing `nested` opens
+all 11 themes (2 of them with hits); clicking one leaves `searchClosed` holding exactly that
+key, `expanded` empty, and the other themes open; the card renders `aria-expanded="false"`;
+changing the query to `nested tray` empties both closed sets and the theme re-opens; Collapse
+all closes all 11 and fills both closed sets, Expand all re-opens all 11 and empties them, and
+the label flips correctly at every step; an overview caret click takes the open theme rows from
+2 to 1. Of 35 rendered chips, every one carries exactly one `.lbl` span and all 3 marked chips
+have the `<mark>` inside it — e.g. `<span class="lbl">space-saving <mark>nested</mark>
+storage</span>`.
 
-**Markup:** a new `<div class="ov" id="res-ov">` between the sticky bar and `#res-body`.
-Two `.ovcol` columns (Features, Complaints); each has a head (list title, mono note
-`N clusters · N mentions`), a one-time legend (`▮ listings ▮ reviews`, hidden on a single
-source), and rows.
+## Phase 2 — Solid overview bars
 
-**Row (`.ovrow`)**: `[caret?] [label] [bar] [value]` in a CSS grid
-`auto minmax(0,1fr) minmax(120px,1.4fr) auto`. Label is the theme/cluster title, single
-line, ellipsis, `title=` full text. Bar is a track with two segments whose widths are
-`% of the column's max mentions`: listing segment solid list colour, review segment same
-colour at reduced opacity. Value is mentions in mono. `title` on the row gives the
-breakdown: `71 mentions · 20 listings · 51 reviews · in 8 of 10 products`.
+In `overviewHtml` ([index.html:2478](static/index.html#L2478)) the `bar` helper always emits
+one segment, `seg(v.mentions[src], "l")`; delete the `legend` string (`:2518–2519`) and its
+placement; keep `tip(v)` unchanged so the split lives on in the tooltip. CSS: remove lines
+358–360 (`.r` shade and `.lg` swatches), keep `.ovcol.feat .trk i` / `.ovcol.comp .trk i`,
+and rewrite the comment block at `:329–333`. Also update the CLAUDE.md Phase 8 sentence
+"segmented listing/review bars" when the phase is settled.
 
-- Themed list: one row per theme in view order. Caret toggles that theme's member cluster
-  rows beneath it (indented, thinner track, scaled to the **same** column max so a cluster
-  bar is directly comparable to a theme bar). Open state kept in a session-only
-  `resultsState.ovOpen` Set.
-- Unthemed list: top 10 cluster rows plus a `.lnk` "Show all N"; session-only flag.
-- Listings / Reviews source: single-segment bars, native order from Phase 1.
-- Empty or failed list: the column shows a short `.blank` message so the layout holds.
-- Under 640px the two columns stack.
+**Verify:** All / Listings / Reviews each re-lengthen bars; no legend; hover still reads
+`106 mentions · 40 from listings · 66 from reviews · in 9 of 12 products`.
 
-**Click on label or bar** → `revealItem(key)`: add the theme key (and the cluster key if it
-is a cluster row, plus its parent theme's key) to `resultsState.expanded`, clear the
-list's collapsed state, `persistExpanded()`, `renderResultsBody()`, then
-`querySelector('[data-k="…"]').scrollIntoView({block:"start"})` and add a `.flash` class
-removed after ~1.2 s. `.thm, .cl { scroll-margin-top: <sticky bar height + 12px> }` so
-the target lands under the sticky bar. `.flash` = cobalt outline that fades; honours
-`prefers-reduced-motion`.
+**Settled in Phase 2 (built 2026-09-18).** `bar` collapsed to
+`seg(v.mentions[src], "l")` with the `src === "all"` branch gone; `seg` keeps its two-argument
+shape so the diff is one line. The plan named CSS lines 358–360 for deletion; **339–340
+(`.ovcol .lg`, `.ovcol .lg i`) went too**, because the legend was their only caller and leaving
+the rules behind would contradict deleting it. That is the one deviation, agreed before
+building. `tip(v)` is untouched, so the split it removes from the bar is still one hover away.
+The comment block now says that in as many words: length is mentions in the current source,
+who said it is the source toggle's job, the split lives in the tooltip.
 
-**Verify**
-- Olive trees: 11 feature theme bars, 8 complaint bars; the longest feature bar is the
-  76-mention theme; listing segment visibly smaller than review segment.
-- Wooden serving bowls (unthemed, 18 clusters): 10 cluster bars + "Show all 18".
-- Wood picture frames (57 clusters, 12 themes): panel stays under one screen collapsed.
-- Click the third feature bar → page scrolls, that theme is open and flashes, its clusters
-  are visible; reload → it is still open (expansion persisted).
-- Switch to Listings → bars re-order and become single-segment; complaints column shows
-  "Nothing from listings".
+**Measured** with the harness across three groups (acacia-wood-riser, candle-warmer-lamp,
+olive-trees) × three sources: every one of the 162 rendered bars has exactly one `<i>`, no
+output contains `class="lg"` or `class="r"`, and the longest bar in each of the nine columns is
+exactly 100.00 % with the rest scaled to it — 21/11/21 bars for acacia, 23/15/23 for candle
+warmer, 19/10/19 for olive trees under all/listings/reviews. Under **All** the top row's title
+still reads e.g. `106 mentions · 32 from listings · 74 from reviews · in 12 of 12 products`.
+A regex sweep of the stylesheet confirms `.ovcol .lg` and `.trk i.r` are gone while
+`.ovcol.feat .trk i` and `.ovcol.comp .trk i` survive. The CLAUDE.md sentence about
+"segmented listing/review bars" is corrected in Phase 5, where the task groups the doc edits.
 
+## Phase 3 — `keywords` block in the results API
 
-**Settled in Phase 2 (built 2026-09-17).** `overviewHtml(key)` renders one `.ovcol` per
-list in `OVERVIEW_LISTS` (features, complaints) into `#res-ov`, which sits between the
-sticky bar and the sections. Rows are CSS-grid `caret · label · track · value`; the track
-holds up to two `<i>` segments sized as a percentage of the column's largest top-level bar,
-so a cluster bar unfolded under a theme is on the same scale as the theme bars around it.
-Segment colour is the list's chip colour; the review share is the same colour at 45%
-opacity, and a single-source view draws one solid segment. The legend only appears on
-"All". A themed list shows every theme; an unthemed list shows `OVERVIEW_TOP` (10) clusters
-and a "Show all N" link. Caret and show-all state live in `resultsState.ovOpen` /
-`resultsState.ovAll` (session-only); clicking anywhere else on a row calls
-`revealItem(list, key, parent)`, which opens the list, the theme and the cluster, persists
-expansion, re-renders, scrolls the target under the sticky bar (`scroll-margin-top`) and
-flashes a cobalt outline for 1.3 s (reduced motion: no smooth scroll, and the page already
-disables all transitions). Row `title` attributes carry the full breakdown. The Node render
-harness now asserts overview row counts too: olive trees 11 + 8 theme rows, wooden serving
-bowls 10 + 3 with a show-all, wood picture frames 10 + 10.
+File: [pipeline/results.py](pipeline/results.py). No `app.py` change (the route is a
+passthrough at `app.py:270`).
 
----
+- Add `_keyword_norm(text) -> str` implementing the dedup rule from the table. Note that
+  `grouping.collect` deliberately does **not** fold plurals for tags (`grouping.py:125–127`);
+  keywords are different — a shopper's "picture frame" and "picture frames" are one query —
+  so the fold applies here only and the docstring says so.
+- After the cluster loop and **after** computing `attributed` / `mentions` (so those two
+  figures keep meaning "clustered tag mentions"), walk `bodies_ok` once:
+  - `search_terms` → refs `kw/search_terms/o_0000…`
+  - `usage_keywords[sub]` for `spaces`, `placements`, `occasions`, `used_for` → refs
+    `kw/usage/<sub>/o_0000…`
+  - each occurrence is `{"body_id", "asin", "body_type": body["type"], "text": raw}` and is
+    passed through the existing `_register(...)`, so it gets attribution (the tooltip can
+    highlight the sentence) and its body and product land in `bodies` / `products`.
+  - Group by `norm`; `display` is the most frequent original wording (ties → first seen);
+    items sorted by `-count, display.lower()`.
+- Response gains:
 
-## Phase 3 — Search and the sticky bar
+```json
+"keywords": {
+  "search_terms": {"key": "search_terms", "title": "Search Terms",
+                   "items": [{"display": "candle warmer lamp", "norm": "...", "count": 24, "occ_ids": ["kw/search_terms/o_0003", "..."]}]},
+  "usage": {"key": "usage", "title": "Usage Keywords",
+            "groups": [{"key": "spaces", "title": "Spaces", "items": [...]},
+                       {"key": "placements", "title": "Placements", "items": [...]},
+                       {"key": "occasions", "title": "Occasions", "items": [...]},
+                       {"key": "used_for", "title": "Used for", "items": [...]}]}
+}
+```
 
-**Sticky bar (`#res-bar`)** becomes: search field · source seg · jump links ·
-Expand/Collapse all · Group into themes (conditional) · progress · error. The search field
-is a plain `<input type="search" id="res-q">` styled like `.fld input` but inline (height
-matches `.seg`), placeholder *"Filter… e.g. handle, pot, appearance"*, with a clear `×`.
-`/` focuses it, Escape clears it. Input is debounced ~120 ms into `resultsState.query`
-and a re-render.
+Per-source counts are derived in the browser from `d.occurrences[ref].body_type`, exactly
+as clusters do, so the payload stays one shape.
 
-**Jump links (`.jump`)**: `Features 35 · Complaints 17 · Care 7` as links to
-`#sec-<key>` (sections get ids); counts come from the view model so they follow the source
-filter, and while a query is active they read `Features 4 of 35`. Clicking scrolls with
-the same offset as `revealItem`.
+**Verify (REPL):** for acacia-wood-riser, `sum(i["count"] for i in kw["search_terms"]["items"])`
+equals the raw search-term occurrence count from tagged.json (110); every `occ_id` resolves
+in `occurrences`, every `body_id` in `bodies`; `attributed` and `mentions` are unchanged
+from before the phase; `python -m pipeline.attribution <slug> <run>` output unchanged.
 
-**Slim summary line**: `#res-sum` loses the `.sumstrip` tiles and becomes a single mono
-line (`.slim`): `35 features · 17 complaints · 7 care · 10 products · 92% of mentions
-traced to a sentence`. A failed list reads `complaints failed` in iron. `res-lede` markup
-and its JS references are removed.
+**Settled in Phase 3 (built 2026-09-18).** `_keyword_norm` is four regexes and a word loop;
+the only subtlety is hyphens, where `[^a-z0-9\s-]` keeps them and a second pass drops the ones
+that are not between two characters, so `anti-tip` survives and a trailing dash does not. Its
+docstring carries the contrast with `grouping.collect` explicitly, because the two functions
+sit one import apart and do the opposite thing on purpose. Two guards the plan did not name:
+a keyword that normalises to nothing (all punctuation) is bucketed under its own lowercase text
+rather than merging every such tag into one row, and `display` resolves ties by first-seen
+index, so the ranking is deterministic across runs. The walk is a `collect` / `gather` pair so
+search terms and the four usage sub-lists share one code path; each list numbers its refs from
+`o_0000` under its own `kw/…` prefix, which cannot collide with a section's ids.
 
-**Search semantics** (in `buildViews`, so ranking, overview and sections all agree):
+Ordering mattered more than it looked. `attributed` and `mentions` are now computed into
+locals **before** the keyword walk and read from those locals in the return, so both keep
+meaning "mentions of a clustered tag" even though `occurrences` has roughly doubled by the time
+the dict is built. The keyword refs are also registered *after* the cluster loop, which keeps
+the browser's first-wins `byBodyTag` map resolving feature/complaint/care strings to their
+cluster refs — the source panel is untouched.
 
-- Normalise query and haystacks: lowercase, collapse whitespace. Split the query on
-  whitespace; every term must appear as a substring somewhere in the item's haystack.
-- Cluster haystack = title + description + display text of the tags in the current source
-  view. Cluster matches → it is visible. Its `preview` puts matching chips first so the
-  reason is visible while collapsed.
-- Theme haystack = title + summary. A theme whose own text matches shows **all** its
-  member clusters; otherwise it shows only matching clusters and is visible only if at
-  least one matches. A theme with matches is rendered open while the query is non-empty
-  (`expanded` is not modified; the open state is an override in the view model).
-- Highlighting: a helper `hilite(text, terms)` escapes and wraps each term hit in
-  `<mark>`; used for theme titles/summaries, cluster titles/descriptions and chip text.
-  Chip handlers already use `closest(".bub")`, so a `<mark>` child is safe; confirm in
-  the hover/panel code (`mouseover` handler ≈ line 2589, `openPanel` ≈ 2615).
-- Overview rows are built from the same filtered view, so the chart follows the search;
-  the "top 10" cap for unthemed lists is lifted while searching.
-- Empty result: each affected section and overview column shows `.blank`
-  *"Nothing matches "xyz""* with a clear link.
+**Measured** on three groups. `attributed` / `mentions` identical to a pre-change snapshot
+(acacia 366/401, candle warmer 640/721, olive trees 481/520) and `sections` byte-identical
+under a sorted-key dump; `python -m pipeline.attribution acacia-wood-riser 2026-09-17_144159`
+byte-identical before and after. Mention counts match tagged.json exactly on every group —
+acacia **110** search terms and **354** usage, candle warmer 153 and 327, olive trees 124 and
+159 — and all 464 / 480 / 283 keyword refs resolve in `occurrences`, with every `body_id` in
+`bodies` and every `asin` in `products`. Distinct counts for acacia after the fold are
+**81 search terms and 129 usage keywords** (spaces 13, placements 27, occasions 9, used_for 80).
+The plan's original "87 / 135" were the *pre-fold* figures, counted before the dedup rule in
+the decisions table was applied; the post-fold numbers are what the page shows and the
+paragraphs above now say so.
 
-**Verify**
-- Olive trees, type `pot`: only pot-related clusters remain, their themes are open, "pot"
-  is marked in chips and titles, jump links read `Features n of 35`, overview shrinks to
-  the same items. Clear → everything returns and expansion is exactly as before.
-- Type `handle` on ceramic mugs: matches via tag text alone (a cluster whose title lacks
-  the word).
-- Type two words (`real look`): both must match.
-- Listings + query: hidden-by-source items never match.
-- Narrow to 600px: search stays usable, bar wraps to two rows, nothing overflows.
+## Phase 4 — Two tiers and the Keywords section
 
+**Markup** ([index.html:561–605](static/index.html#L561-L605)). Inside `#view-results`, keep
+`#res-sum`, `#res-bar` as they are, then:
 
-**Settled in Phase 3 (built 2026-09-17).** The sticky bar is now `search · All/Listings/
-Reviews · jump links · Expand all · Group into themes`; the "Show" label went. The summary
-tiles became one `.slim` mono line (`35 feature clusters (409 mentions) · 17 complaint
-clusters (76 mentions) · 7 care clusters (35 mentions) · 10 products · 93% of mentions
-traced to a sentence`) and the lede paragraph is gone. Filtering lives in `buildViews`:
-the query is split on whitespace, every term must be a substring of the item's lowercased
-text, a cluster's text is title + description + the tag chips of the current source, a
-theme's is title + summary. A theme matching on its own text keeps all its clusters
-(`tv.self`); otherwise it keeps the matching ones, and while a query is active every theme
-with matches renders open in both the overview and the sections without touching the
-persisted `expanded` set. Matching chips move to the front of a collapsed card's preview.
-`hilite(text, terms)` escapes and marks hits in theme titles and summaries, cluster titles
-and descriptions, chip text and overview labels. `sv.count` / `sv.total` (shown vs present
-in this source) feed the jump links ("Features 3 of 35"), the section notes and the empty
-states, which offer a "Clear the filter" link. Jump links scroll instead of navigating,
-because a hash change would re-route. `/` focuses the search, Escape clears it, and the
-input is debounced 120 ms. Checked with the Node harness on olive trees ("pot", "real
-look", "zzzz"), ceramic mugs ("handle": matches through tag text alone, 8 of 31) and
-wooden serving bowls, plus Playwright screenshots at 1280 px and 600 px with no console
-errors. One bug caught by the harness: clusters shown only because their theme matched had
-no number, so numbers are now assigned to every present cluster before filtering.
+```html
+<div class="mdiv" id="res-h1"><span class="eyebrow">01 &middot; Feature Analysis</span></div>
+<div class="ov" id="res-ov" hidden></div>
+<div id="res-body"></div>
+<div class="mdiv" id="res-h2"><span class="eyebrow">02 &middot; Keywords</span></div>
+<div class="kw" id="res-kw" hidden>
+  <section class="kwcol" id="sec-search_terms">
+    <div class="oh"><h2>Search Terms</h2><span class="note" id="kw-st-note"></span></div>
+    <div class="sq"><input type="search" id="kw-st-q" placeholder="Filter search terms"><button class="x" hidden>&times;</button></div>
+    <div id="kw-st-list"></div>
+  </section>
+  <section class="kwcol" id="sec-usage"> … same shell, ids kw-us-note / kw-us-q / kw-us-list … </section>
+</div>
+```
 
----
+The shell is static so the filter inputs keep focus and caret while the lists re-render;
+only `#kw-*-note` and `#kw-*-list` are rewritten by `renderResultsBody`. Dividers are hidden
+until results load, like `#res-ov`.
 
-## Phase 4 — Insight helpers
+**CSS (layout only).** `.mdiv{display:flex;align-items:center;gap:12px;margin:6px 0 16px}
+.mdiv .eyebrow{margin:0} .mdiv::after{content:"";flex:1;border-top:1px solid var(--rule)}`,
+`#res-h2{margin-top:34px}`. `.kw` reuses the `.ov` grid rule (`repeat(2,minmax(0,1fr))`) and
+joins the 640 px media query at `:419`. `.kwcol` = `.ovcol` box; `.kwcol .sq` = `.sbar .sq`
+input rules with `max-width:none; margin:0 0 10px`. Search-term rows: `.kwrow{display:grid;
+grid-template-columns:minmax(0,1fr) minmax(80px,1fr) 36px}` copying `.ovrow`'s padding,
+hover and `.lb/.trk/.val` rules, with `.kwcol .trk i{background:var(--cobalt)}`. Usage
+sub-blocks: `.kwsub h4` = the mono micro-label rule, with the count pushed right in `.note`
+style. Chips: plain `.bub` (already cobalt) with `data-kwoccs`.
 
-All computed in `buildViews` from ranks and per-source mentions already there.
+**View model.** `buildViews()` adds `resultsState.views.keywords`:
+- for every item: `mentions{all,listing,review}` and `asins{…}` from its `occ_ids`;
+  `present(src)`; `match` = sticky terms **and** the column's local terms all found in
+  `display`; order by `mentions[src]` desc, then server order.
+- `search_terms`: `{order, count, total, mentions}`; `usage`: the same per group plus
+  section totals (distinct keywords, mentions), so jump links and header notes are one
+  lookup.
+- `resultsState.kwQuery = {search_terms: "", usage: ""}` and `resultsState.kwAll = new Set()`
+  (`"search_terms"`, `"usage:spaces"`, …), both session-only. Local inputs debounce 120 ms
+  like `#res-q`; Escape clears; `.x` shows when non-empty.
 
-1. **Rank shift line** on cluster cards and theme rows, after the counts line, mono:
-   `listings #11 · reviews #2`; a missing source reads `not in listings`. Shown in every
-   view (it is the insight, not the filter).
-2. **Gap badges** on feature cluster cards only (complaints have no listing side; care
-   is too small). Shares are normalised by source volume so review dominance doesn't
-   bias them: `ls = listing mentions / section listing mentions`,
-   `rs = review mentions / section review mentions`.
-   - `under-advertised` (`.pill.warn`): `rs ≥ 2·ls` and review mentions ≥ 5.
-   - `unconfirmed` (`.pill.na`): `ls ≥ 2·rs` and listing mentions ≥ 3.
-   Thresholds are named constants at the top of the results JS with a comment; tune after
-   one look at real output (olive trees and wood frames are the test beds).
-   Pill `title` explains the rule in one sentence.
-3. **Coverage dots**: in the counts line, replace `in N of M products` with a `.cov`
-   row of M dots (`--cobalt` filled, `--rule` empty) followed by `N/M`; fall back to the
-   text form when M > 20.
-4. **Small polish** found while building: overview rows get the same gap-badge dot in
-   the label when applicable; `Expand all` also opens overview theme rows.
+**Renderers.** `keywordsHtml()` writes the two lists and notes:
+- Search Terms: `KW_TOP_TERMS = 10` rows, each `<div class="kwrow" data-kwoccs="…" title="…">
+  <span class="lb">${hilite(display, allTerms)}</span><div class="trk"><i style="width:%"></i></div>
+  <span class="val">N</span></div>`; bar scale = top visible item; then
+  `<button class="lnk more" data-kwall="search_terms">Show all 81</button>` / `Show top 10`.
+- Usage: four `.kwsub` blocks, `KW_TOP_USAGE = 6` chips each, `+N more` toggles that block's
+  key in `kwAll`. A group with nothing under the current source/filter is omitted; if all
+  four are, the column shows the `.blank` state.
+- Header notes: `81 terms · 110 mentions`, or `12 of 81 terms` while either filter is active.
+- Empty states mirror `nothingHtml`: "Nothing matches “…”" with a Clear-the-filter link
+  (clears the local box only) / "Nothing from reviews" / "No search terms came out of this parse".
 
-**Verify**
-- Olive trees feature list: every card shows both ranks; the top review cluster that is
-  weak in listings carries `under-advertised`; a listing-heavy cluster with few reviews
-  carries `unconfirmed`; complaints and care cards carry no badges.
-- Dots count equals `unique_asins` / `products_total`; a 12-product run renders 12 dots.
-- Nothing else on the page changed colour or font.
+**Sticky bar and slim line.** `#res-jump` appends `Search terms <b>N</b>` and
+`Usage <b>N</b>` (`data-sec="search_terms"` / `"usage"`, so the existing scroll handler
+finds `#sec-search_terms` / `#sec-usage`); `N` follows the source and reads `N of M`
+during a sticky search. `#res-sum` appends `81 search terms · 129 usage keywords`.
 
+**Hover.** Extend the document-wide `mouseover` / `mousemove` / `mouseout` selectors
+([index.html:3085–3100](static/index.html#L3085-L3100)) to `.bub[data-occs], [data-kwoccs]`.
+`tipHtml(occs, {clickable})` gains a second argument: for keywords the footers become
+`No exact sentence found` (no "click for the full text") and `1 of N sources` (no "click to
+see all"), plus `in x of y products`. The document-wide click handler keeps matching only
+`.bub[data-occs]`, so keyword rows and chips open no panel (E1). Flipping that later is one
+attribute rename.
 
-**Settled in Phase 4 (built 2026-09-17).** `buildViews` already had ranks per source, so the
-rank line (`rankHtml`: `listings #11 · reviews #2`, or `not in listings`) costs nothing and
-sits under the counts on every cluster card and theme row. Coverage is `covHtml`: one dot
-per product, filled in cobalt when the item appears in it, plus `N/M`, falling back to text
-past `COV_MAX_DOTS` (20). Gap badges are features-only and the thresholds moved after one
-look at real output: the planned "2× share ratio" flagged a third of every list, including
-top-three listing features, so **under-advertised** now needs review mentions ≥ 5, a review
-share at least 3× the listing share *and* a listing rank at least 3 places below the review
-rank (or no listing mention at all); **unconfirmed** is simply listing mentions ≥ 3 with
-review mentions ≤ 2. On olive trees that yields 5 + 3 of 35 clusters (e.g. *Compact Fit for
-Corners* 0 listing / 20 review mentions; *Long-Lasting Fresh Appearance* 6 / 0), on ceramic
-mugs 8 + 2 of 31 (*Well-Sized Drink Capacity* 2 / 46), on wood frames 3 + 11 of 53 (that run
-has few reviews per listing, so many claims are genuinely unconfirmed). The pill's `title`
-states the rule and both ranks. Under-advertised clusters also get a small amber dot after
-their label in the overview. Expand all / Collapse all now also unfolds and folds the
-overview's theme rows. Constants (`GAP_RATIO`, `GAP_RANK_GAP`, `GAP_MIN_REVIEWS`,
-`GAP_MIN_LISTINGS`, `GAP_MAX_REVIEWS`) sit above the results JS with the reasoning.
+**Verify:** open acacia-wood-riser → two eyebrow dividers; overview and three lists under
+the first, two columns under the second; top search term first with the longest bar; Usage
+shows four blocks of ≤ 6 chips; `+N more` expands one block; `Show all 81` expands the rows
+and the button reads `Show top 10`; type in the Search Terms box → rows filter, hit marked,
+note reads `12 of 81 terms`, caret stays in the box; sticky search `kitchen` narrows both
+columns and the jump links read `N of M`; Reviews toggle re-ranks the keywords and hides
+listing-only ones; hover a row → tooltip with ASIN, title, highlighted sentence, no "click"
+copy; click does nothing; 600 px width stacks the columns.
 
----
+**Settled in Phase 4 (built 2026-09-18).** The view model went in as `buildKeywordViews()`
+hung off `resultsState.views.keywords` — a property on the Map, which cannot collide with its
+entries because `sectionView` only ever calls `.get()`. Each item view carries `mentions`,
+`asins` **and `refs`, all three per source**, and `kwAttrs` hands the hover the refs for the
+*current* source: under **Reviews** a hover opens a review rather than the bullet that happened
+to be first, which is what "counts, order, bars follow the source" has to mean once the tooltip
+shows a sentence. `listView` / `summed` are shared by the search-term column and all four usage
+sub-lists, so a sub-list, a column and the jump links are one lookup apart.
+
+Three decisions the plan left open. **The native `title` on `.kwrow` was dropped** (the one
+agreed deviation): the row already has the `#tip` hover card, and a browser tooltip would stack
+on top of it after a delay. **The hover payload travels in `data-kwstats`**, because the
+document-wide handler has only the element — `tipHtml(occs, opts)` gained `opts.clickable` to
+strip the two "click …" halves and `opts.stats` to append that line, and the existing chip call
+site passes nothing, so its output is byte-identical. **`+N more` flips to `Show top 6`** once a
+usage block is open, matching the search-term column rather than stranding an expanded block
+with no way back. Keyword chips are `<span class="bub">`, not `<button>`: there is nothing to
+press, and the document-wide click handler still matches `.bub[data-occs]` only, so neither a
+row nor a chip can open the panel. Flipping that later is still one attribute rename.
+
+**Measured** with the harness across acacia-wood-riser, candle-warmer-lamp and olive-trees —
+105 assertions, all passing. Ten rows by default with the top bar at exactly 100 % and the rest
+descending; four usage blocks of ≤ 6 chips; `Show all 81` expands to 81 rows and flips to
+`Show top 10`; `+N more` on spaces expands that block alone (13 chips) and leaves the other
+three at 6. All 242 / 362 / 283 rendered `data-kwoccs` refs resolve in `occurrences`, and no
+`data-occs` appears anywhere inside `#res-kw`. Under **Reviews** every rendered ref is a review
+(24) and under **Listings** every one is a listing (17); returning to **All** restores the
+original top term.
+
+**In the browser** (Playwright against a live `python app.py`, no console errors at either
+width): the local filter `wood` takes the note to `42 OF 81 TERMS`, marks every hit, keeps the
+caret in the box and moves the jump link to `SEARCH TERMS 42 OF 81` while the usage column's
+note stays `129 KEYWORDS · 354 MENTIONS`; the sticky search narrows both columns at once.
+Hovering the top row gives `B0GTYTMYQB · REVIEW · ★★★★★ · 2026-07-24`, the product title, the
+highlighted sentence *"These are nice **wood display risers** that can be set up in a variety of
+configurations."*, then `1 of 4 sources` and `4 mentions · 1 from listings · 3 from reviews ·
+in 2 of 12 products` — no "click" copy anywhere. Clicking the row, and clicking a usage chip,
+both leave `#panel` hidden. At 600 px the two columns stack. Screenshots:
+`shot-1280-full.png`, `shot-1280-keywords.png`, `shot-1280-search.png`,
+`shot-1280-kwfilter.png`, `shot-1280-kwhover.png`, `shot-1280-markedchip.png`,
+`shot-600-full.png`, `shot-600-keywords.png`, `shot-600-search.png`.
+
+**One trap worth recording:** a `python app.py` left running from before Phase 3 keeps serving
+the old `results.build`, so the page renders with no Keywords tier and no error — the guard
+(`if (!d.keywords)`) doing exactly its job. Restart the server after a backend change, or check
+`curl …/results | grep keywords` before concluding the front end is broken.
+
+## Phase 5 — Documentation and end-to-end check
+
+- Save this file as `UI-DESIGN-IMPROVEMENT.md`; append a "Settled in Phase N" paragraph
+  after each phase lands, in the house style.
+- Add a short "Phase 10 — Two-tier results page and Keywords (built …)" note to `CLAUDE.md`
+  pointing at the doc, and correct the Phase 8 wording about segmented bars.
+- Refresh the memory note `index-html-nul-byte.md` only if the NUL lines moved.
+
+**Settled in Phase 5 (built 2026-09-18).** `CLAUDE.md` gained a **Phase 10 — Two-tier results
+page and Keywords** section between Phase 9 and the Phase 6 deferred list, summarising the two
+bugfixes, the solid bars, the additive `keywords` block and the hover-only Keywords tier, and
+pointing here for the spec. "Search terms and usage keywords" is struck from the Phase 6
+deferred list, which now holds only the deeper grouping rules. The Phase 8 sentence about "an
+overview panel of segmented listing/review bars" now describes one bar per theme in the list's
+colour and says in the same breath that the segmentation was removed in Phase 10 and the split
+moved to the tooltip — the history is worth keeping, since the screenshots in that phase's notes
+still show two shades. The pre-fold figures **87 / 135** were corrected to the post-fold
+**81 / 129** in the six places this document used them to describe what the built page shows.
+
+The NUL-byte lines did not move in a way that changes the memory note: they are still exactly
+two, still the `byBodyTag` key separators, now at 2208 and 3519 (they were 2134 and 3166).
+`index-html-nul-byte.md` names the symptom rather than the line numbers, so it needed no edit.
+Both were worked around rather than patched: Phase 1's panel edit starts one line below the
+second NUL, so `Edit` never had to match it and no Python patch was needed all build.
+
+**End-to-end, on the final tree.** All three harnesses re-run green after the documentation
+edits (19 + 35 + 105 assertions), `pipeline.results` re-checked against the pre-change snapshots
+for three groups, and `python -m pipeline.attribution acacia-wood-riser 2026-09-17_144159`
+byte-identical to its pre-Phase-3 output. Nothing was written to `data/`, and no commit was made.
+
+## Phase 6 — Latency: attribution once per body, and a loading state
+
+Opening a results page had a visible pause with nothing on screen. Measured 2026-09-18 on every
+grouped parse on disk (`pipeline/results.py::build` alone, no server, warm disk):
+
+| Group | Mentions | `build` | Payload |
+|---|---|---|---|
+| foldable-trash-bag-holder | 221 | 168 ms | 130 KB |
+| acacia-wood-riser | 865 | 728 ms | 399 KB |
+| candle-warmer-lamp | 1,201 | 1,235 ms | 593 KB |
+| dishwasher-rack | 1,297 | 1,441 ms | 618 KB |
+
+Everything after the build is cheap: localhost transfer ~10 ms, browser JSON parse ~15 ms,
+`buildViews` + `renderResultsBody` ~2 ms in the Node harness. The profile put **93% of `build`
+inside `Attributor.attribute`**: 138,594 stemmer calls and 16,629 `tokens()` calls for 1,201
+mentions, because `attribute` re-tokenised every sentence unit of a body for every tag in that
+body, although `__init__` already tokenises each unit once for word rarity. The Keywords tier
+doubled the mentions per parse and so doubled the pause.
+
+**Decided in scoping (2026-09-18):** speedup only, no result cache — every open is a fresh build,
+nothing can go stale, no memory growth in a long-running server; spinner on the results view only.
+Declined: an mtime-keyed in-process cache (10 ms repeat opens but a first open unchanged and
+staleness edge cases), splitting the endpoint so clusters render before keywords, and
+precomputing attribution to disk at group time (contradicts Phase 5's "a matcher tweak shows up
+on the next reload").
+
+**6a — `pipeline/attribution.py`.** `stem` is memoised with `functools.lru_cache`;
+`Attributor.__init__` keeps the per-unit token lists it computes for rarity in `self.unit_tokens`;
+`attribute` zips units with those lists and no longer calls `tokens()`. Attribution logic —
+thresholds, stemmer rules, scoring, tie-breaks — is untouched, and `results.py` is untouched.
+
+**6b — `static/index.html`.** One new component, layout-only CSS on existing tokens: `.loading`
+(a 14 px ring, `--rule-soft` with a `--cobalt` top, `spin .8s`, static under
+`prefers-reduced-motion`) with a mono uppercase label. It lives in `#res-loading`, a `.slim`
+line placed directly above `#res-sum`, so the summary replaces it without a layout jump. It is
+shown before the first `await` in `renderResults` and hidden on every exit: run-fetch error,
+missing or ungrouped parse, results error, and after `renderResultsBody()`. The run and results
+requests are fired together; the results promise is settled into `{data}` / `{error}` up front
+so the ungrouped branch, which is decided from the run data, never surfaces the results error.
+
+**Verify:** `python -m pipeline.attribution acacia-wood-riser 2026-09-17_144159` identical before
+and after; `results.build` byte-identical for three groups and under 300 ms on the largest;
+spinner visible while the results request is held open, gone after render, gone on a bad parse
+id, gone on an ungrouped parse.
+
+**Settled in Phase 6 (built 2026-09-18).** Measured, not estimated, on the same machine:
+
+| Group | `build` before | `build` after | live `GET …/results` after |
+|---|---|---|---|
+| candle-warmer-lamp (1,201 mentions) | 1,235 ms | 180 ms | 277 ms |
+| acacia-wood-riser (865) | 728 ms | 100 ms | 184 ms |
+| foldable-trash-bag-holder (221) | 168 ms | 29 ms | 93 ms |
+
+The `stem` cache holds 2,919 distinct words after the three builds (40,597 hits), so it is a few
+hundred KB for the life of the server. All three `build` payloads are byte-identical to
+pre-change snapshots and the attribution table is identical line for line, including its seeded
+random samples. The Phase 4 Node harness (105 assertions) passes on the new page script.
+Playwright, with the results request held open through `page.route`: `#res-loading` is
+`display:flex`, 35 px tall, reading `LOADING RESULTS…` while `#res-sum` is hidden; after release
+the spinner is hidden and the summary shown; a nonexistent parse and an ungrouped parse both hide
+the spinner and show their existing empty states with no error banner. A normal open measured
+340–850 ms from navigation to the Keywords tier being visible, most of it Chromium navigation and
+font loading rather than the build.
+
+Two things worth knowing. **A sync Playwright route handler must not sleep** — it blocks the
+script's own event loop, so the first check ran after the request had already completed and
+reported the spinner hidden; holding the `route` object and continuing it from the main flow is
+the working pattern. **An ungrouped parse now produces one 400 in the server log** (the parallel
+results request, whose error the page discards); the previous sequential code never sent it. The
+cost is one log line per such open, accepted for the saved round trip on every grouped open.
 
 ## Files
 
 | File | Change |
 |---|---|
-| `static/index.html` | results CSS (overview panel, search input, jump links, slim line, flash, coverage dots), results markup (bar contents, overview container, lede removed), results JS (`buildViews`, native ordering, overview renderer, search, insights). |
-| `UI-DESIGN-IMPROVEMENT.md` | this plan, saved into the repo on approval; "Settled in Phase N" notes appended as phases land. |
-| `CLAUDE.md` | after Phase 4, a short paragraph under Phase 7 pointing at the new doc. |
+| `static/index.html` | Phase 1 search-state helper, `toggleKey`, `allThemesOpen`, overview open rule, `.lbl` wrapper in chip renderers; Phase 2 `bar`/legend/CSS; Phase 4 markup shell, layout CSS, `buildViews` keywords branch, `keywordsHtml`, jump links, slim line, hover wiring, `tipHtml` option. |
+| `pipeline/results.py` | Phase 3 `_keyword_norm`, keyword occurrence walk through `_register`, `keywords` block in the return. |
+| `UI-DESIGN-IMPROVEMENT.md` | This plan, then per-phase settled notes. |
+| `CLAUDE.md` | One Phase 10 pointer and the Phase 8 bar wording. |
 
-No changes to `app.py`, `pipeline/`, prompts, or data.
+No changes to `app.py`, `pipeline/tagging.py`, `grouping.py`, `themes.py`, `attribution.py`,
+`partition.py`, prompts, or any data file.
 
 ## End-to-end verification (after Phase 4)
 
-1. `python app.py`, open `#/g/olive-trees/r/2026-09-11_155256/p/parse-2026-09-16_162551`.
-2. First screen with no clicks: slim line, sticky bar, overview with 11 + 8 segmented bars,
-   collapsed themes below. No lede, no tiles.
-3. Toggle Listings → bars and sections re-rank and re-number; toggle Reviews → likewise;
-   All → identical to `clusters.md` order.
-4. Type `pot` → filtered overview and sections, marks visible; Escape clears.
-5. Click a bar → scroll, open, flash. Hover a chip → sentence; click → panel. Unchanged
-   behaviour downstream of the click.
-6. Repeat 2–3 on `wooden-serving-bowls` (unthemed) and `wood-picture-frames` (largest).
-7. Open an ungrouped parse → the existing empty state still renders, no overview, no
-   JS errors in the console.
+1. `python app.py`, open acacia-wood-riser (12 ASINs, 81 distinct search terms, 129 usage
+   keywords) and candle-warmer-lamp (the group in the screenshot).
+2. Search `nested`: themes with hits open; collapse one; it stays; change the query; it
+   re-opens; Collapse all closes every theme and the label flips.
+3. Marked chips keep pill shape; compare with `search-tool-bug.png`.
+4. Overview bars are solid; toggle All / Listings / Reviews; hover shows the split.
+5. Keywords: counts on the header, the jump links and the slim line agree with a REPL count
+   over tagged.json (after normalisation, distinct counts; before, mention counts).
+6. Local filter, sticky search and source toggle compose correctly (each alone, then all
+   three together); clearing each restores the previous state.
+7. Hover a search term and a usage chip: right ASIN and sentence; click opens nothing.
+8. Repeat the Phase 8 harness: extract the page script, run `buildViews` / `renderResultsBody`
+   / `keywordsHtml` in Node with DOM stubs against `pipeline.results.build(...)` for three
+   groups; Playwright screenshots at 1280 px and 600 px.
+9. Reload: theme expansion still remembered; keyword show-all and local filters reset.
