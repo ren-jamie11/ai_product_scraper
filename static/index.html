@@ -54,6 +54,14 @@ h1{font-family:var(--disp);font-weight:800;font-size:clamp(28px,4.2vw,48px);line
 .btn.ghost:hover:not(:disabled){border-color:var(--cobalt);color:var(--cobalt)}
 .btn:disabled{opacity:.4;cursor:not-allowed}
 .err{font-family:var(--mono);font-size:11px;color:var(--iron);background:var(--iron-wash);padding:5px 9px;border-radius:3px}
+/* Says what an edit just did, then gets out of the way. Fixed, because the card
+   you pasted into is usually scrolled far below the top of the page. */
+.gnote{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:60;
+  font-family:var(--mono);font-size:11px;color:var(--celadon);background:var(--glaze);
+  border:1px solid var(--celadon);padding:7px 13px;border-radius:3px;max-width:calc(100vw - 32px);
+  box-shadow:0 2px 10px rgba(19,26,42,.13);animation:gnote 6s ease-out forwards}
+@keyframes gnote{0%{opacity:0;transform:translate(-50%,6px)}
+  6%,70%{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,0)}}
 .spacer{flex:1 1 auto}
 .hint{font-family:var(--mono);font-size:10px;color:var(--muted)}
 .reset{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;background:none;border:0;
@@ -483,6 +491,7 @@ section[id]{scroll-margin-top:72px}
 </header>
 
 <div class="err" id="globalerr" hidden style="margin-top:16px"></div>
+<div class="gnote" id="globalnote" hidden style="margin-top:16px"></div>
 
 <!-- ==================== GROUPS VIEW ==================== -->
 <div id="view-groups" hidden>
@@ -791,6 +800,22 @@ function showError(msg) {
   const el = $("globalerr");
   el.textContent = msg;
   el.hidden = !msg;
+}
+
+let noteTimer = null;
+
+/** A line about what an edit just did, which fades on its own. */
+function showNote(msg) {
+  const el = $("globalnote");
+  clearTimeout(noteTimer);
+  el.textContent = msg;
+  el.hidden = !msg;
+  if (!msg) return;
+  // Restart the fade — re-assigning the animation is the only way to replay it.
+  el.style.animation = "none";
+  void el.offsetWidth;
+  el.style.animation = "";
+  noteTimer = setTimeout(() => { el.hidden = true; }, 6000);
 }
 
 function slugify(name) {
@@ -1502,6 +1527,7 @@ function queueEdit(build) {
     });
     runState.stats = result.stats || runState.stats;
     renderRunBody();
+    return result;
   });
   return editChain;
 }
@@ -1527,6 +1553,19 @@ function restoreProduct(asin) {
 function addReviews(asin, text) {
   return queueEdit(() =>
     api(runPath("/reviews"), { method: "POST", body: JSON.stringify({ asin, text }) }));
+}
+
+/** What a paste did, in the order it matters: what landed, then what didn't. */
+function pasteNote(r) {
+  const parts = [];
+  if (r.added) parts.push(`${plural(r.added, "review", "reviews")} added`);
+  // Extensions are duplicates too — count them once, under the thing they did.
+  const omitted = (r.duplicates || 0) - (r.extended || 0);
+  if (omitted > 0) parts.push(`${plural(omitted, "duplicate", "duplicates")} omitted`);
+  if (r.extended) {
+    parts.push(`${plural(r.extended, "review", "reviews")} replaced with the full text`);
+  }
+  return parts.join(" · ");
 }
 
 /* ---------- wiring one card ---------- */
@@ -1669,7 +1708,10 @@ function wireReviews(card, p, panel) {
     const text = area.value;
     if (!text.trim()) return;
     card.dataset.tab = "reviews";
-    await addReviews(asin, text);
+    const result = await addReviews(asin, text);
+    // Without this, a paste that was all duplicates looks exactly like one that
+    // worked — the box closes either way.
+    if (result) showNote(pasteNote(result));
   };
 }
 
