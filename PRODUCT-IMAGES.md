@@ -369,3 +369,19 @@ reduced-motion rules and the now-orphaned `.bub.plain`), `openPanel` / `closePan
 - Verified with Playwright at 1280 and 600 px (`scratchpad/r2/r3.py`, 13/13 each: no ring after
   Esc, veil, × or zoom-then-Esc; keyboard pin still focuses × and returns to the chip; box size;
   backdrop click; wheel zoom), and round 2's suite still passes 57/57 at both widths.
+
+## Settled: round 4, zoom view on the Extract page (built 2026-09-25)
+
+- **Clicking a listing card's image** (Extract page, before results) opens the same zoom view on
+  that listing's main image. `listingGallery(p)` builds `[main_image, ...images]` deduped by Amazon
+  image id, because a run's `images` excludes the main image (`results.py` merges them only for
+  the results payload).
+- **Keys step listings, buttons step images.** In this mode (`zoomState.list = { asins, i }`) the
+  ← / → keys move to the previous/next listing on its main image, in card order, skipping removed
+  or imageless listings and stopping at either end. The on-screen ‹ ›, thumbnails, wheel, drag,
+  +/− and Esc are unchanged. The rail adds `Listing n of N · ← → to switch` and `ASIN · price`
+  (`#zsub`, hidden on the results page, where ← / → still step images).
+- **On close** the last-viewed listing's card is scrolled to the centre and flashed (`.flash`).
+  `showView` now also closes the zoom view, so leaving the page never strands it.
+- Verified with Playwright at 1280 and 600 px on ceramic-dinnerware (16 listings,
+  `scratchpad/r2/r4.py`, 20/20 each), with rounds 2 and 3 still passing (57/57, 13/13).

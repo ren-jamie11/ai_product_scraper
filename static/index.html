@@ -1048,9 +1048,11 @@ function showView(which) {
   $("view-group").hidden = which !== "group";
   $("view-run").hidden = which !== "run";
   $("view-results").hidden = which !== "results";
-  // The hover card and pinned card belong to the results view only.
+  // The hover card and pinned card belong to the results view only; the zoom view
+  // to whichever view opened it.
   tipOff();
   unpin();
+  closeZoom();
 }
 
 function resultsHref(slug, runId, parseId) {
@@ -3867,7 +3869,7 @@ function closeZoom() {
   // From the Extract page, land on the listing last viewed: scroll its card in and flash it.
   if (list) {
     const card = document.querySelector(`.pcard[data-asin="${CSS.escape(list.asins[list.i])}"]`);
-    if (card) {
+    if (card && card.offsetParent) {
       card.scrollIntoView({ block: "center" });
       card.classList.add("flash");
       setTimeout(() => card.classList.remove("flash"), 1400);
