@@ -277,8 +277,6 @@ a.pill:hover{text-decoration:underline}
 /* the label is one flex item, so a <mark> from the filter stays inline in it */
 .bub .lbl{min-width:0}
 .bub.soft{text-decoration:underline dotted;text-underline-offset:3px}
-.bub.plain{cursor:default;background:var(--rule-soft);color:var(--muted)}
-.bub.plain:hover{border-color:transparent}
 mark{background:#F2D06B;color:var(--ink);padding:0 1px;border-radius:2px}
 
 /* ---------- results: chips coloured by list ----------
@@ -439,11 +437,37 @@ section[id]{scroll-margin-top:72px}
 .noimg{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center}
 #tip .sent{color:#E6E9F0}
 #tip .foot{font-family:var(--mono);font-size:9.5px;color:#9FB8E8;margin-top:7px}
-/* with a product image the card takes its full width, so image and text share one edge */
-#tip.wide{width:min(420px,calc(100vw - 24px))}
-#tip .bigimg{--cap:55vh;margin-top:9px}
 
-/* ---------- results: big product image (hover card, panel) ----------
+/* ---------- results: pinned card ----------
+   The hover card after a click: fixed where it stood, full width, over a light
+   veil that holds the page still. It scrolls inside only when taller than the
+   viewport. Its ×, text buttons, links and pager are ink-ground variants. */
+.pveil{position:fixed;inset:0;background:rgba(19,26,42,.22);z-index:84}
+#tip.pin{pointer-events:auto;z-index:85;width:min(420px,calc(100vw - 24px));max-height:calc(100vh - 16px);overflow:auto;
+  overscroll-behavior:contain;padding:12px 14px 13px;transition:none;box-shadow:0 10px 30px rgba(19,26,42,.32);
+  scrollbar-width:thin;scrollbar-color:rgba(159,184,232,.35) transparent}
+#tip.pin .tr{-webkit-line-clamp:3}
+#tip .th .x{flex:0 0 auto;align-self:flex-start;margin:-5px -7px 0 auto;padding:4px 7px;font-size:18px;color:#9FB8E8}
+#tip .th .x:hover{color:#fff;background:rgba(255,255,255,.1)}
+#tip a{color:inherit;text-decoration:underline 1px rgba(159,184,232,.32);text-underline-offset:2px}
+#tip a:hover{color:#fff;text-decoration-color:currentColor}
+#tip :focus-visible{outline:1px solid #9FB8E8;outline-offset:1px}
+#tip .rvt{font-weight:600;color:#fff;margin:0 0 3px;overflow-wrap:anywhere}
+#tip .sent.full{white-space:pre-wrap;overflow-wrap:anywhere;color:#B8C0CF}
+#tip .sent .hit{color:#fff;background:rgba(242,208,107,.14);box-shadow:0 0 0 2px rgba(242,208,107,.14);border-radius:2px}
+#tip .tbtn{border:0;background:none;padding:0;margin-left:6px;font-family:var(--mono);font-size:10px;color:#9FB8E8;cursor:pointer;
+  white-space:nowrap;text-decoration:underline;text-decoration-color:rgba(159,184,232,.45);text-underline-offset:2px}
+#tip .tbtn:hover{color:#fff;text-decoration-color:currentColor}
+#tip .cimg{position:relative;margin-top:6px}
+#tip .cimg .bigimg{--cap:55vh;cursor:zoom-in}
+#tip .cpager{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:10px;
+  font-family:var(--mono);font-size:10px;color:#9FB8E8}
+#tip .cpager button{font-family:var(--mono);font-size:12px;line-height:1;padding:4px 9px;border:1px solid rgba(159,184,232,.4);
+  background:rgba(255,255,255,.06);color:#fff;cursor:pointer;border-radius:3px}
+#tip .cpager button:hover:not(:disabled){border-color:#9FB8E8;background:rgba(255,255,255,.13)}
+#tip .cpager button:disabled{opacity:.3;cursor:not-allowed}
+
+/* ---------- results: big product image (pinned card) ----------
    Full width, white ground, height from the image's own ratio up to --cap; a taller
    image is scaled down and centred, never cropped. `.wait` reserves a square until
    the image loads so the card doesn't jump. */
@@ -451,37 +475,7 @@ section[id]{scroll-margin-top:72px}
 .bigimg.wait{aspect-ratio:1;max-height:var(--cap)}
 .bigimg img{display:block;width:100%;height:auto;max-height:var(--cap);object-fit:contain}
 .bigimg .noimg{width:100%;height:120px}
-
-/* ---------- results: source panel ---------- */
-.pveil{position:fixed;inset:0;background:rgba(19,26,42,.22);z-index:84}
-#panel{position:fixed;top:0;right:0;height:100%;width:min(560px,100%);background:var(--glaze);border-left:1px solid var(--rule);
-  z-index:85;overflow:auto;padding:22px 24px 40px;transform:translateX(100%);transition:transform .16s ease}
-#panel.on{transform:none}
-.ph{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px}
-.ph .eyebrow{margin:0 0 4px}
-.ph h3{font-family:var(--disp);font-weight:700;font-size:20px;margin:0;letter-spacing:-.015em;line-height:1.2}
-.ph .x{margin-left:auto;font-size:18px;flex:0 0 auto}
-.pager{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-bottom:14px}
-.pager button{font-family:var(--mono);font-size:12px;padding:2px 9px;border:1px solid var(--rule);background:var(--glaze);
-  color:var(--ink);cursor:pointer;border-radius:3px}
-.pager button:hover:not(:disabled){border-color:var(--cobalt);color:var(--cobalt)}
-.pager button:disabled{opacity:.35;cursor:not-allowed}
-.psrc{display:flex;gap:14px;padding:14px;border:1px solid var(--rule);background:var(--porcelain);margin-bottom:14px}
-.psrc img,.psrc .noimg{width:96px;height:96px;flex:0 0 auto;object-fit:contain;background:var(--glaze);border:1px solid var(--rule-soft);border-radius:3px}
-.psrc .meta{min-width:0;flex:1 1 auto}
-.psrc .ttl{font-weight:600;font-size:13px;line-height:1.36;margin:0 0 5px}
-.psrc .ids{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px}
-.psrc .ids a{color:var(--cobalt);text-decoration:none}
-.psrc .ids a:hover{text-decoration:underline}
-.psrc .facts{display:flex;gap:6px;flex-wrap:wrap}
-.ptext{font-size:13px;line-height:1.65;white-space:pre-wrap;color:#2A3240;overflow-wrap:anywhere}
-.ptext .hit{background:var(--amber-wash);box-shadow:0 0 0 3px var(--amber-wash);border-radius:2px}
-.pother h4{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
-  font-weight:500;margin:20px 0 8px}
-/* panel gallery: the big image under the text, arrows over its edges, a counter below */
-.pgal{margin-top:16px}
-.pgal .pgimg{position:relative}
-.pgal .bigimg{border:1px solid var(--rule-soft);cursor:zoom-in}
+/* image arrows over a big image's edges (pinned card, zoom view) */
 .gnav{position:absolute;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:16px;line-height:1;
   padding:6px 11px;border:1px solid var(--rule);background:var(--glaze);color:var(--ink);cursor:pointer;border-radius:3px;
   box-shadow:0 1px 4px rgba(19,26,42,.12)}
@@ -489,10 +483,9 @@ section[id]{scroll-margin-top:72px}
 .gnav.next{right:8px}
 .gnav:hover:not(:disabled){border-color:var(--cobalt);color:var(--cobalt)}
 .gnav:disabled{opacity:.35;cursor:not-allowed}
-.gcount{font-family:var(--mono);font-size:10.5px;color:var(--muted);text-align:center;margin-top:6px}
 
 /* ---------- results: zoom view ----------
-   White full-screen overlay above the panel: a stage on the left holding one image
+   White full-screen overlay above the pinned card: a stage on the left holding one image
    transformed by translate/scale, a rail on the right with the title, n / N, the
    thumbnails and +/−. */
 .zveil{position:fixed;inset:0;z-index:90;background:#fff;display:flex;user-select:none}
@@ -529,7 +522,6 @@ section[id]{scroll-margin-top:72px}
   .wrap{padding:0 14px 70px}
   .masthead{padding-top:30px}
   .pgrid,.cgrid,.ov,.kw{grid-template-columns:1fr}
-  #panel{padding:18px 16px 40px}
   /* the zoom rail becomes a strip under the stage: title, then n / N, thumbnails and +/− in a row */
   .zveil{flex-direction:column}
   .zrail{flex:0 0 auto;border-left:0;border-top:1px solid var(--rule);padding:10px 12px 14px;flex-direction:row;
@@ -538,7 +530,6 @@ section[id]{scroll-margin-top:72px}
   .zthumbs{flex:1 1 0;min-width:0;display:flex;overflow-x:auto;overscroll-behavior:contain}
   .zth{flex:0 0 52px;height:52px}
 }
-@media (prefers-reduced-motion:reduce){#panel{transition:none}}
 @media (prefers-reduced-motion:reduce){.zstage.busy::after{animation:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -759,10 +750,9 @@ section[id]{scroll-margin-top:72px}
 
 </div><!-- /wrap -->
 
-<!-- ==================== HOVER CARD + SOURCE PANEL ==================== -->
-<div id="tip" aria-hidden="true"></div>
+<!-- ==================== HOVER CARD / PINNED CARD ==================== -->
+<div id="tip" role="dialog" aria-label="Tag source" aria-hidden="true"></div>
 <div class="pveil" id="pveil" hidden></div>
-<aside id="panel" hidden aria-label="Tag source"></aside>
 <div id="zoom" class="zveil" hidden role="dialog" aria-modal="true" aria-label="Product images">
   <div class="zstage" id="zstage">
     <img id="zimg" alt="" draggable="false">
@@ -1046,9 +1036,9 @@ function showView(which) {
   $("view-group").hidden = which !== "group";
   $("view-run").hidden = which !== "run";
   $("view-results").hidden = which !== "results";
-  // The hover card and source panel belong to the results view only.
+  // The hover card and pinned card belong to the results view only.
   tipOff();
-  closePanel();
+  unpin();
 }
 
 function resultsHref(slug, runId, parseId) {
@@ -2347,14 +2337,6 @@ async function renderResults(slug, runId, parseId) {
   }
   const data = outcome.data;
 
-  // Every tag in a body is an occurrence somewhere; this lets the panel's
-  // "other tags from this source" chips behave exactly like cluster chips.
-  const byBodyTag = new Map();
-  for (const [ref, o] of Object.entries(data.occurrences)) {
-    const key = o.body_id + " " + o.text;
-    if (!byBodyTag.has(key)) byBodyTag.set(key, ref);
-  }
-
   let expanded = [];
   try { expanded = JSON.parse(localStorage.getItem(`results:${slug}:${parseId}`) || "[]"); }
   catch (e) { expanded = []; }
@@ -2366,7 +2348,7 @@ async function renderResults(slug, runId, parseId) {
   // `searchClosed` / `ovSearchClosed` hold the themes a search opened and you
   // then clicked shut; both are session-only and both are emptied by setQuery
   // the moment the query string changes, so a new query re-opens every hit.
-  resultsState = { slug, runId, parseId, data, byBodyTag, expanded: new Set(expanded),
+  resultsState = { slug, runId, parseId, data, expanded: new Set(expanded),
                    source: "all", query: "", terms: [], listsClosed: new Set(), views: new Map(),
                    ovOpen: new Set(), ovAll: new Set(),
                    searchClosed: new Set(), ovSearchClosed: new Set(),
@@ -2680,7 +2662,7 @@ $("res-q").addEventListener("keydown", e => {
 });
 $("res-qx").onclick = () => { clearQuery(); $("res-q").focus(); };
 document.addEventListener("keydown", e => {
-  if (e.key !== "/" || !resultsState || $("view-results").hidden || !$("panel").hidden) return;
+  if (e.key !== "/" || !resultsState || $("view-results").hidden || pinState) return;
   if (e.target.closest("input, textarea, select, [contenteditable]")) return;
   e.preventDefault();
   $("res-q").focus();
@@ -2851,13 +2833,13 @@ function overviewHtml(key) {
    Tier two: what shoppers type and where they say they put the thing. Ranked,
    filterable and traceable, but never clickable — the decision was hover only,
    which is why the chips carry data-kwoccs and not data-occs (the document-wide
-   click handler matches .bub[data-occs], so nothing here opens the panel).
+   click handler matches .bub[data-occs], so nothing here pins a card).
    Counts, order and bar lengths all follow the source toggle. */
 const KW_TOP_TERMS = 10;
 const KW_TOP_USAGE = 6;
 
-/* The tooltip's last line, and the reason a keyword needs no panel: everything
-   the panel would add is either here or one source toggle away. */
+/* The tooltip's last line, and the reason a keyword needs no pinned card:
+   everything it would add is either here or one source toggle away. */
 function kwStats(v) {
   const total = resultsState.data.products_total;
   const src = resultsState.source;
@@ -3529,18 +3511,18 @@ function bigImgHtml(src, cls) {
 }
 
 /* Clears the reserved square once the image is in (or swaps in the placeholder),
-   then re-clamps the hover card, which may just have grown taller. */
+   then re-places the pinned card, which may just have changed height. */
 function bigImgDone(img, ok) {
   const frame = img.parentNode;
   if (!frame) return;
   frame.classList.remove("wait");
   if (!ok) img.replaceWith(Object.assign(document.createElement("div"),
                                          { className: "noimg", textContent: "no image" }));
-  if (tipLast && frame.closest("#tip") && $("tip").classList.contains("on")) tipMove(tipLast);
+  if (frame.closest("#tip")) pinPlace();
 }
 
 /* A cached image is complete the moment it's inserted: settle it now, so the frame
-   never flashes square on a second hover or a panel arrow. */
+   never flashes square on an arrow or a source step. */
 function settleImgs(root) {
   root.querySelectorAll(".bigimg.wait img").forEach(img => {
     if (img.complete && img.naturalWidth) bigImgDone(img, true);
@@ -3554,13 +3536,25 @@ function sourceLabel(o, b) {
          (r && r.date ? ` · ${r.date}` : "");
 }
 
+/* The cited sentence, marked; with no confident match, the first 200 characters. */
+function sentenceHtml(b, m) {
+  return m.confident
+    ? markedSentence(b.text, m)
+    : esc(b.text.replace(/\s+/g, " ").slice(0, 200)) + (b.text.length > 200 ? "&hellip;" : "");
+}
+
+/* Whether the full text says more than sentenceHtml shows (whitespace aside). */
+function hasMore(b, m) {
+  const flat = t => t.replace(/\s+/g, " ").trim();
+  const shown = m.confident ? b.text.slice(m.unit[0], m.unit[1]) : flat(b.text).slice(0, 200);
+  return flat(shown) !== flat(b.text);
+}
+
 /* ---------- hover card ----------
-   `opts.clickable === false` drops the "click for …" halves of the footers, for
-   keywords, which have no panel to open. `opts.stats` adds one more footer line:
-   keyword rows carry it in data-kwstats, because the hover handler only has the
-   element to go on. */
+   Facts only; a click pins the card and grows it (see pinned card below).
+   `opts.stats` adds one more footer line: keyword rows carry it in data-kwstats,
+   because the hover handler only has the element to go on. */
 function tipHtml(occs, opts) {
-  const clickable = !opts || opts.clickable !== false;
   const stats = opts && opts.stats;
   const d = resultsState.data;
   const o = d.occurrences[occs[0]];
@@ -3569,12 +3563,6 @@ function tipHtml(occs, opts) {
   const p = d.products[o.asin] || {};
   const m = o.match;
 
-  const sentence = m.confident
-    ? markedSentence(b.text, m)
-    : esc(b.text.replace(/\s+/g, " ").slice(0, 200)) + (b.text.length > 200 ? "&hellip;" : "");
-  // The main image only: the card takes no clicks, so browsing lives in the panel.
-  const imgs = gallery(p);
-
   return `
     <div class="th">${thumbHtml(p.main_image)}
       <div style="min-width:0">
@@ -3582,62 +3570,64 @@ function tipHtml(occs, opts) {
         <div class="tr">${esc(p.title || "(no title)")}</div>
       </div>
     </div>
-    <div class="sent">${sentence}</div>
-    ${m.confident ? "" : `<div class="foot">No exact sentence found${
-      clickable ? " &mdash; click for the full text" : ""}</div>`}
-    ${occs.length > 1 ? `<div class="foot">1 of ${occs.length} sources${
-      clickable ? " &middot; click to see all" : ""}</div>` : ""}
-    ${stats ? `<div class="foot">${esc(stats)}</div>` : ""}
-    ${imgs.length ? bigImgHtml(imgs[0]) : ""}
-    ${imgs.length > 1 && clickable ? `<div class="foot">1 / ${imgs.length} images &middot; click to browse</div>` : ""}`;
+    <div class="sent">${sentenceHtml(b, m)}</div>
+    ${m.confident ? "" : `<div class="foot">No exact sentence found</div>`}
+    ${occs.length > 1 ? `<div class="foot">1 of ${occs.length} sources</div>` : ""}
+    ${stats ? `<div class="foot">${esc(stats)}</div>` : ""}`;
 }
 
 function tipShow(ev, html) {
   const t = $("tip");
   t.innerHTML = html;
-  t.classList.toggle("wide", !!t.querySelector(".bigimg"));
-  settleImgs(t);
   t.classList.add("on");
   tipMove(ev);
 }
 
-/* The last pointer position, so an image that finishes loading can re-clamp the card. */
-let tipLast = null;
-
 function tipMove(ev) {
-  tipLast = { clientX: ev.clientX, clientY: ev.clientY };
+  placeAt(ev.clientX, ev.clientY);
+}
+
+/* Beside the point (x, y): up and to the right, flipped left or below when it
+   doesn't fit, and clamped inside the viewport. The hover card follows the
+   pointer; the pinned card stays by its click point. */
+function placeAt(cx, cy) {
   const t = $("tip");
   const r = t.getBoundingClientRect();
-  let x = ev.clientX + 14, y = ev.clientY - r.height - 12;
-  if (x + r.width > innerWidth - 8) x = Math.max(8, ev.clientX - r.width - 14);
-  if (y < 8) y = ev.clientY + 18;
+  let x = cx + 14, y = cy - r.height - 12;
+  if (x + r.width > innerWidth - 8) x = Math.max(8, cx - r.width - 14);
+  if (y < 8) y = cy + 18;
   if (y + r.height > innerHeight - 8) y = Math.max(8, innerHeight - r.height - 8);
   t.style.left = x + "px";
   t.style.top = y + "px";
 }
 
+/* Hides the hover card. A pinned card ignores it: only unpin() closes that. */
 function tipOff() {
   const t = $("tip");
-  if (t) t.classList.remove("on");
+  if (t && !pinState) t.classList.remove("on");
 }
 
-/* Chips live in cluster cards, in the panel and in the keywords columns, so the
-   wiring is document-wide. Hover covers all three; the click handler below still
-   matches .bub[data-occs] alone, which is what keeps keywords hover-only. */
+/* Chips live in cluster cards and in the keywords columns, so the wiring is
+   document-wide. Hover covers both; the click handler below still matches
+   .bub[data-occs] alone, which is what keeps keywords hover-only. While a card is
+   pinned the hover handlers stand down, so it isn't redrawn or hidden under the
+   pointer (the veil keeps the chips out of reach anyway). */
 const HOVER_SEL = ".bub[data-occs], [data-kwoccs]";
 document.addEventListener("mouseover", e => {
+  if (pinState) return;
   const el = e.target.closest(HOVER_SEL);
   if (!el || !resultsState) return;
   tipShow(e, el.dataset.kwoccs
-    ? tipHtml(el.dataset.kwoccs.split(" "), { clickable: false, stats: el.dataset.kwstats })
+    ? tipHtml(el.dataset.kwoccs.split(" "), { stats: el.dataset.kwstats })
     : tipHtml(el.dataset.occs.split(" ")));
 });
 document.addEventListener("mousemove", e => {
-  if (!$("tip").classList.contains("on")) return;
+  if (pinState || !$("tip").classList.contains("on")) return;
   if (!e.target.closest(HOVER_SEL)) { tipOff(); return; }
   tipMove(e);
 });
 document.addEventListener("mouseout", e => {
+  if (pinState) return;
   if (e.target.closest && e.target.closest(HOVER_SEL) &&
       !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest(HOVER_SEL))) {
     tipOff();
@@ -3645,174 +3635,177 @@ document.addEventListener("mouseout", e => {
 });
 document.addEventListener("click", e => {
   const bub = e.target.closest(".bub[data-occs]");
-  if (!bub || !resultsState) return;
+  if (!bub || !resultsState || pinState) return;
   e.stopPropagation();
-  openPanel(bub.dataset.occs.split(" "), bub.dataset.cluster || "");
+  pinCard(bub, e);
 });
 
-/* ---------- source panel ---------- */
-let panelState = null;
+/* ---------- pinned card ----------
+   A click on a chip pins the hover card where it stands and grows it: the review
+   title, the sentence with read more, the product's images and the source pager.
+   It is the same #tip in a second state (.pin), over a light veil that holds the
+   page still; a veil click, ×, Esc or any page scroll closes it. `img` is the
+   gallery index and `imgAsin` the product it belongs to, so paging to another
+   source on the same ASIN keeps the image. `x`, `y` is the point the card is
+   placed beside, and `back` the chip that gets focus back on close. */
+let pinState = null;
 
-function openPanel(occs, clusterTitle) {
-  // `img` is the gallery index shown under the text; `imgAsin` the product it
-  // belongs to, so paging to another source on the same ASIN keeps the image.
-  panelState = { occs, at: 0, cluster: clusterTitle, img: 0, imgAsin: null };
-  tipOff();
+function pinCard(el, ev) {
+  // A keyboard click has no pointer position, so the chip itself is the anchor.
+  const r = el.getBoundingClientRect();
+  const kb = ev.detail === 0;
+  pinState = { occs: el.dataset.occs.split(" "), at: 0, img: 0, imgAsin: null, more: false,
+               x: kb ? r.right : ev.clientX, y: kb ? r.top + r.height / 2 : ev.clientY, back: el };
+  const t = $("tip");
+  t.classList.add("pin", "on");
+  t.setAttribute("aria-hidden", "false");
+  t.scrollTop = 0;
   $("pveil").hidden = false;
-  $("panel").hidden = false;
-  renderPanel();
-  requestAnimationFrame(() => $("panel").classList.add("on"));
+  renderCard();
+  t.querySelector('[data-act="close"]').focus({ preventScroll: true });
 }
 
-function closePanel() {
-  const panel = $("panel");
-  if (!panel || panel.hidden) return;
+function unpin() {
+  if (!pinState) return;
+  const back = pinState.back;
+  pinState = null;
   closeZoom();
-  panel.classList.remove("on");
-  panel.hidden = true;
+  const t = $("tip");
+  // Hide it while .pin still turns the fade off, so the card doesn't reflow to
+  // hover width on its way out.
+  t.classList.remove("on");
+  void t.offsetWidth;
+  t.classList.remove("pin");
+  t.setAttribute("aria-hidden", "true");
   $("pveil").hidden = true;
-  panelState = null;
+  if (back && back.isConnected) back.focus({ preventScroll: true });
 }
 
-function renderPanel() {
-  const { occs, at, cluster } = panelState;
+function pinProduct() {
   const d = resultsState.data;
-  const o = d.occurrences[occs[at]];
+  return d.products[d.occurrences[pinState.occs[pinState.at]].asin] || {};
+}
+
+/* Header (thumb, ASIN · source, title, ×), review title, sentence + read more,
+   `n / N images`, the big image with ‹ ›, then the sources pager bottom right. */
+function cardHtml() {
+  const s = pinState;
+  const d = resultsState.data;
+  const o = d.occurrences[s.occs[s.at]];
   const b = d.bodies[o.body_id];
   const p = d.products[o.asin] || {};
   const m = o.match;
-  const link = p.link;
-  if (panelState.imgAsin !== o.asin) { panelState.img = 0; panelState.imgAsin = o.asin; }
+  const imgs = gallery(p), n = imgs.length;
+  if (s.imgAsin !== o.asin) { s.img = 0; s.imgAsin = o.asin; }
+  s.img = Math.max(0, Math.min(n - 1, s.img));
+  const link = inner => p.link
+    ? `<a href="${esc(p.link)}" target="_blank" rel="noopener">${inner}</a>` : inner;
+  const rt = o.body_type === "review" && b.review && b.review.title;
+  const more = hasMore(b, m);
 
-  const facts = [];
-  if (p.price) facts.push(`<span class="pill na">${esc(p.price)}</span>`);
-  if (p.rating) facts.push(`<span class="pill ok">${esc(p.rating)}&#9733; &middot; ${
-    esc((p.ratings_total || 0).toLocaleString())}</span>`);
-  if (p.brand) facts.push(`<span class="pill na">${esc(p.brand)}</span>`);
-  if (p.deleted) facts.push(`<span class="pill warn">removed from run</span>`);
-
-  const review = o.body_type === "review" ? (b.review
-    ? `<div class="rv" style="border:0;padding:0;margin:0 0 10px">
-         <div class="rh">
-           <span class="stars">${esc(stars(b.review.rating))}</span>
-           <span class="rt">${esc(b.review.title || "(untitled)")}</span>
-           <span class="rd">${esc(b.review.date || "")}${b.review.verified_purchase ? " &middot; verified" : ""}${
-             b.review.source === "manual" ? " &middot; pasted" : ""}</span>
-         </div>
-       </div>`
-    : `<div class="note-line info" style="margin-bottom:10px"><span class="ic">Note</span>
-         <span>This review was removed from the run after it was tagged; its text is still here.</span></div>`)
-    : "";
-
-  const others = [];
-  for (const [key, label] of [["features", "Features"], ["complaints", "Complaints"],
-                              ["assembly_maintenance", "Assembly &amp; care"]]) {
-    const tags = (b.tags[key] || []).filter(t => t !== o.text);
-    if (!tags.length) continue;
-    const tone = LIST_TONE[key] ? ` ${LIST_TONE[key]}` : "";
-    others.push(`<h4>${label} from this source (${tags.length})</h4><div class="bubs">${
-      tags.map(t => {
-        const ref = resultsState.byBodyTag.get(o.body_id + " " + t);
-        if (!ref) return `<span class="bub plain"><span class="lbl">${esc(t)}</span></span>`;
-        const soft = !d.occurrences[ref].match.confident;
-        return `<button class="bub${tone}${soft ? " soft" : ""}" data-occs="${esc(ref)}"
-                  data-cluster=""><span class="lbl">${esc(t)}</span></button>`;
-      }).join("")}</div>`);
-  }
-
-  $("panel").innerHTML = `
-    <div class="ph">
-      <div style="min-width:0">
-        ${cluster ? `<p class="eyebrow">${esc(cluster)}</p>` : ""}
-        <h3>${esc(o.text)}</h3>
-      </div>
-      <button class="x" id="pclose" title="Close (Esc)">&times;</button>
-    </div>
-    ${occs.length > 1 ? `
-      <div class="pager">
-        <button id="pprev" ${at === 0 ? "disabled" : ""}>&lsaquo;</button>
-        <span>Source ${at + 1} of ${occs.length}</span>
-        <button id="pnext" ${at === occs.length - 1 ? "disabled" : ""}>&rsaquo;</button>
-      </div>` : ""}
-    <div class="psrc">
-      ${thumbHtml(p.main_image)}
-      <div class="meta">
-        <p class="ttl">${esc(p.title || "(no title returned)")}</p>
-        <div class="ids">${link
-          ? `<a href="${esc(link)}" target="_blank" rel="noopener">${esc(o.asin)}</a>`
-          : esc(o.asin)} &middot; ${esc(o.body_type)}</div>
-        <div class="facts">${facts.join("")}</div>
-      </div>
-    </div>
-    ${review}
-    ${m.confident ? "" : `<div class="note-line info" style="margin-bottom:10px"><span class="ic">Note</span>
-      <span>No single sentence could be pinned down for this tag, so here is the whole text.</span></div>`}
-    <div class="ptext">${markedBody(b.text, m)}</div>
-    ${pgalHtml(gallery(p), panelState.img)}
-    <div class="pother">${others.join("")}</div>`;
-
-  settleImgs($("panel"));
-  wirePgal();
-  $("pclose").onclick = closePanel;
-  const prev = $("pprev"), next = $("pnext");
-  if (prev) prev.onclick = () => { panelState.at -= 1; renderPanel(); $("panel").scrollTop = 0; };
-  if (next) next.onclick = () => { panelState.at += 1; renderPanel(); $("panel").scrollTop = 0; };
-}
-
-$("pveil").addEventListener("click", closePanel);
-
-/* ---------- panel gallery ----------
-   The arrows swap only this block, so the panel keeps its scroll position. */
-function pgalHtml(urls, i) {
-  if (!urls.length) return "";
-  const n = urls.length;
   return `
-    <div class="pgal" id="pgal">
-      <div class="pgimg">
-        ${bigImgHtml(urls[i])}
-        ${n > 1 ? `
-          <button class="gnav prev" data-gstep="-1" aria-label="Previous image" ${i === 0 ? "disabled" : ""}>&lsaquo;</button>
-          <button class="gnav next" data-gstep="1" aria-label="Next image" ${i === n - 1 ? "disabled" : ""}>&rsaquo;</button>` : ""}
+    <div class="th">${thumbHtml(p.main_image)}
+      <div style="min-width:0">
+        <div class="tt">${link(esc(o.asin))} &middot; ${esc(sourceLabel(o, b))}</div>
+        <div class="tr">${link(esc(p.title || "(no title)"))}</div>
       </div>
-      <div class="gcount">${i + 1} / ${n}</div>
-    </div>`;
+      <button class="x" data-act="close" aria-label="Close" title="Close (Esc)">&times;</button>
+    </div>
+    ${rt ? `<div class="rvt">${esc(rt)}</div>` : ""}
+    <div class="sent${s.more ? " full" : ""}">${s.more ? markedBody(b.text, m) : sentenceHtml(b, m)}${
+      more ? `<button class="tbtn" data-act="more">${s.more ? "show less" : "read more"}</button>` : ""}</div>
+    ${m.confident ? "" : `<div class="foot">No exact sentence found</div>`}
+    ${n > 1 ? `<div class="foot">${s.img + 1} / ${n} images</div>` : ""}
+    ${n ? `<div class="cimg">${bigImgHtml(imgs[s.img])}${n > 1 ? `
+      <button class="gnav prev" data-gstep="-1" aria-label="Previous image" ${s.img === 0 ? "disabled" : ""}>&lsaquo;</button>
+      <button class="gnav next" data-gstep="1" aria-label="Next image" ${s.img === n - 1 ? "disabled" : ""}>&rsaquo;</button>` : ""}</div>` : ""}
+    ${s.occs.length > 1 ? `
+      <div class="cpager">
+        <button data-sstep="-1" aria-label="Previous source" ${s.at === 0 ? "disabled" : ""}>&larr;</button>
+        <span>${s.at + 1} of ${s.occs.length} sources</span>
+        <button data-sstep="1" aria-label="Next source" ${s.at === s.occs.length - 1 ? "disabled" : ""}>&rarr;</button>
+      </div>` : ""}`;
 }
 
-function panelProduct() {
-  const d = resultsState.data;
-  return d.products[d.occurrences[panelState.occs[panelState.at]].asin] || {};
+/* Every state change re-renders the whole card, then re-places it against the
+   anchor, since it may have grown or shrunk. */
+function renderCard() {
+  const t = $("tip");
+  t.innerHTML = cardHtml();
+  settleImgs(t);
+  pinPlace();
 }
 
-function renderPgal() {
-  const g = $("pgal");
-  if (!g) return;
-  g.outerHTML = pgalHtml(gallery(panelProduct()), panelState.img);
-  settleImgs($("pgal"));
-  wirePgal();
+function pinPlace() {
+  if (pinState) placeAt(pinState.x, pinState.y);
 }
 
-function wirePgal() {
-  const g = $("pgal");
-  if (!g) return;
-  g.querySelectorAll("[data-gstep]").forEach(btn => {
-    btn.onclick = () => {
-      const step = +btn.dataset.gstep;
-      panelState.img += step;
-      renderPgal();
-      // Keep keyboard focus on an arrow; the one pressed may now be disabled.
-      const again = $("pgal").querySelector(`[data-gstep="${step}"]:not(:disabled)`) ||
-                    $("pgal").querySelector("[data-gstep]:not(:disabled)");
-      if (again) again.focus();
-    };
-  });
-  g.querySelector(".bigimg").onclick = () => {
-    const p = panelProduct();
-    openZoom(gallery(p), panelState.img, p.title);
-  };
+/* Focus back on the control just pressed (re-rendered), or its enabled twin. */
+function refocus(sel, alt) {
+  const t = $("tip");
+  const el = t.querySelector(`${sel}:not(:disabled)`) || (alt && t.querySelector(`${alt}:not(:disabled)`));
+  if (el) el.focus({ preventScroll: true });
 }
+
+$("tip").addEventListener("click", e => {
+  if (!pinState) return;
+  const t = $("tip");
+  const act = e.target.closest("[data-act]");
+  if (act && act.dataset.act === "close") { unpin(); return; }
+  if (act && act.dataset.act === "more") {
+    pinState.more = !pinState.more;
+    renderCard();
+    if (!pinState.more) t.scrollTop = 0;
+    refocus('[data-act="more"]');
+    return;
+  }
+  const g = e.target.closest("[data-gstep]");
+  if (g) {
+    pinState.img += +g.dataset.gstep;
+    renderCard();
+    refocus(`[data-gstep="${g.dataset.gstep}"]`, "[data-gstep]");
+    return;
+  }
+  const s = e.target.closest("[data-sstep]");
+  if (s) {
+    pinState.at += +s.dataset.sstep;
+    pinState.more = false;
+    renderCard();
+    refocus(`[data-sstep="${s.dataset.sstep}"]`, "[data-sstep]");
+    return;
+  }
+  if (e.target.closest(".bigimg")) {
+    const p = pinProduct();
+    openZoom(gallery(p), pinState.img, p.title);
+  }
+});
+
+$("pveil").addEventListener("click", unpin);
+// Scrolling inside the card fires on the card and doesn't bubble; this is the page.
+addEventListener("scroll", () => { if (pinState) unpin(); }, { passive: true });
+addEventListener("resize", pinPlace);
+
+/* A wheel over the pinned card, or over the zoom view above it, never reaches the
+   page (which would close the card): it scrolls whatever inside can still scroll
+   that way, and otherwise does nothing. */
+function containWheel(root) {
+  root.addEventListener("wheel", e => {
+    for (let el = e.target; el && el.nodeType === 1; el = el.parentNode) {
+      const cs = getComputedStyle(el);
+      if (e.deltaY && /auto|scroll/.test(cs.overflowY) && el.scrollHeight > el.clientHeight + 1 &&
+          (e.deltaY < 0 ? el.scrollTop > 0 : el.scrollTop + el.clientHeight < el.scrollHeight - 1)) return;
+      if (e.deltaX && /auto|scroll/.test(cs.overflowX) && el.scrollWidth > el.clientWidth + 1 &&
+          (e.deltaX < 0 ? el.scrollLeft > 0 : el.scrollLeft + el.clientWidth < el.scrollWidth - 1)) return;
+      if (el === root) break;
+    }
+    e.preventDefault();
+  }, { passive: false });
+}
+containWheel($("tip"));
+containWheel($("zoom"));
 
 /* ---------- zoom view ----------
-   Opened from the panel image only. State is { urls, at, s, x, y }: the image is
+   Opened from the pinned card's image only. State is { urls, at, s, x, y }: the image is
    laid out fitted and centred in the stage (w × h), then moved by
    translate(x, y) scale(s) about its centre, so a stage point P maps back to the
    image as (P − centre − (x, y)) / s. */
@@ -3836,8 +3829,8 @@ function closeZoom() {
   const { at, back } = zoomState;
   zoomState = null;
   $("zimg").removeAttribute("src");
-  // The panel picks up where the zoom view left off.
-  if (panelState && $("pgal") && at !== panelState.img) { panelState.img = at; renderPgal(); }
+  // The pinned card picks up where the zoom view left off.
+  if (pinState && at !== pinState.img) { pinState.img = at; renderCard(); }
   if (back && back.isConnected) back.focus();
 }
 
@@ -4092,7 +4085,7 @@ $("sveil").addEventListener("click", e => {
 
 document.addEventListener("keydown", e => {
   // The zoom view sits over everything, so it answers first: Esc closes it (the
-  // panel stays open underneath) and the arrows step its images.
+  // pinned card stays open underneath) and the arrows step its images.
   if (!$("zoom").hidden) {
     if (e.key === "Escape") closeZoom();
     else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
@@ -4102,10 +4095,10 @@ document.addEventListener("keydown", e => {
     return;
   }
   if (e.key !== "Escape") return;
-  if (!$("cveil").hidden) closeConfirm(false);
+  if (pinState) unpin();
+  else if (!$("cveil").hidden) closeConfirm(false);
   else if (!$("sveil").hidden) $("sveil").hidden = true;
   else if (!$("veil").hidden) closeModal();
-  else if (!$("panel").hidden) closePanel();
 });
 
 window.addEventListener("hashchange", route);

@@ -167,3 +167,191 @@ the `.pgal` viewer in the panel, and the `#zoom` view. No other view or pipeline
 
 **Restart `python app.py`** after pulling this: a server started before the `results.py` change
 serves products without `images`, and the page falls back to the main image only, with no gallery.
+
+
+---
+
+## Round 2: click-to-pin card (scoped 2026-09-25)
+
+### Context
+
+Round 1 (built 2026-09-25, spec and Settled note in `PRODUCT-IMAGES.md`) put the big product
+image in every hover card and a gallery in the side panel. In use, the image on hover is noise:
+many tags (`packaging`, `uv-resistant`) need no visual, and a 400 px image appears on every
+mouse pass. Round 2 separates the two:
+
+- **Hover** is back to the original compact card.
+- **Click** pins that same card in place and expands it to show the product image with ‹ ›,
+  "read more", source paging and links.
+- The side panel is removed, because the pinned card now does its job.
+
+The zoom view, the `images` field in `results.py`, and the `.bigimg` frame from round 1 are kept
+and reused.
+
+### Decisions (settled in scoping, 2026-09-25)
+
+| # | Decision |
+|---|---|
+| A1 | On click the card pins **beside the chip**, at the hover position, and is re-clamped into the viewport as it grows. |
+| A2 | The pinned card is `position:fixed`. **Any page scroll closes it.** Scrolling inside the card scrolls it only when its content overflows, otherwise nothing happens. The page never scrolls from a wheel over the card. |
+| A3 | Closes on: click outside, Esc (zoom view first if open), a small × at the top right. |
+| A4 | **Locked while pinned.** Other chips show no hover and can't be clicked through, because a light veil covers the page. A click on the veil (on a chip or anywhere else) just closes the card. |
+| A5 | **Light dim** behind the pinned card (the old `.pveil` look). |
+| B1 | Layout, top to bottom: header (56 px thumb, `ASIN · REVIEW · ★★★★★ · date`, title, ×) → review title → sentence + `read more` → `1 / 7 images` → big image with ‹ › over its edges → a bottom-right pager `← 1 of 3 sources →`. |
+| B2 | `read more` expands **in place** to the full body text with the cited sentence still highlighted, plus `show less`. It appears only when the full text differs from what is shown. When the card gets taller than the viewport it scrolls inside (`max-height: 100vh − 16px`). |
+| B3 | Carried over from the panel: **review title only**, in bold above the text, for reviews that have one. Price, rating and brand pills, the tag name or cluster heading, and "other tags from this source" are dropped. |
+| B4 | Hover card footer shows **facts only**: `1 of 3 sources` and `No exact sentence found`, with no "click to …" wording. Round 1's hover image and `1 / N images` foot are removed. |
+| C1 | Stepping sources keeps the image index if the source is the same ASIN, and resets to the main image otherwise. An open `read more` collapses on every source step. |
+| C2 | Keys while pinned: **Esc only.** ← / → stay with the zoom view. |
+| C3 | Search-term rows and usage chips **keep the original hover-only card**: the sentence and stats foot, no image, not clickable. |
+| — | ASIN and product title in the pinned card link to `p.link` (new tab, `rel=noopener`). The big image opens the existing zoom view, and closing the zoom view leaves the card on the image last viewed there. |
+| D1 | The side panel is **deleted**: markup, CSS and JS. |
+| D2 | Only `static/index.html` changes. The zoom view internals, `results.py`, clusters, themes, keyword logic and the Extract view are untouched. |
+
+### Implementation (`static/index.html` only)
+
+**Hover card back to original.** In `tipHtml` (~L3562), remove the big image, the `/ N images`
+foot and both "click to …" suffixes. The `clickable` option then has no job and goes. Keyword
+hovers still pass `stats`. `tipShow` drops the `wide` toggle and `settleImgs`.
+
+**Pinned card: one `#tip` element, two states.** Add `pinState = { occs, at, img, imgAsin, more, x, y }`.
+- `pinCard(el, ev)` is called from the existing document click handler, which still matches
+  `.bub[data-occs]` only, so keywords stay unclickable. It records the anchor (the click point),
+  fills `#tip` with `cardHtml()`, adds `.pin` (`pointer-events:auto`, fixed width
+  `min(420px, calc(100vw − 24px))`, `max-height: calc(100vh − 16px)`, `overflow:auto`,
+  `overscroll-behavior:contain`, z-index 85), shows `#pveil` repurposed as the card veil (84),
+  and clamps the position with the same logic as `tipMove`, using the anchor.
+- `cardHtml()` builds on the `tipHtml` pieces (`thumbHtml`, `sourceLabel`, `markedSentence`,
+  `markedBody`, `bigImgHtml`, `gallery`): ASIN and title wrapped in `<a href=p.link>` (plain text
+  when there is no link), review title, sentence or full text (`.more`, using `white-space:pre-wrap`
+  when expanded) with a `read more` / `show less` text button, `1 / N images` (only when N > 1),
+  the `.bigimg` (cap 55vh, `cursor:zoom-in`) with `.gnav` ‹ › when N > 1, and the sources pager
+  when there is more than one source. The pager is styled like `.pager` in a dark variant that
+  suits the ink ground.
+- Re-render on every state change (image step, source step, read more) and re-clamp after, so the
+  card stays on screen as it grows or shrinks. `bigImgDone` re-clamps against the pin anchor when
+  pinned (today it uses `tipLast`).
+- `unpin()` removes `.pin`, hides the veil, clears `pinState`, and calls `closeZoom()`.
+- Close triggers: veil click, ×, Esc, and `window` `scroll`. The card's own overflow scroll
+  doesn't bubble to window. A `wheel` listener on the card calls `preventDefault` when the card
+  can't scroll further in that direction, so a wheel over it never scrolls the page and never
+  closes it.
+- While pinned, the `mouseover`/`mousemove`/`mouseout` hover handlers return early, so the card
+  isn't re-rendered or hidden under the cursor.
+
+**Zoom wiring.** The card image calls `openZoom(gallery(p), pinState.img, p.title)`. In `closeZoom`,
+replace the panel sync (`panelState` / `renderPgal`, ~L3839) with the same sync for `pinState`
+(set `img`, re-render the card). The zoom view (z 90) sits above the veil and card. The Esc
+handler order becomes zoom → card → the existing modal branches.
+
+**Delete the side panel:** `<aside id="panel">`, the `#panel` / `.ph` / `.pager` (if nothing
+else uses it; check first) / `.psrc` / `.ptext` / `.pother` / `.pgal` / `.gcount` CSS and the
+640 px and reduced-motion rules for `#panel`, and `openPanel` / `closePanel` / `renderPanel` /
+`pgalHtml` / `panelProduct` / `renderPgal` / `wirePgal`. Other references to update:
+- `showView` (~L1051): `closePanel()` becomes `unpin()`.
+- The `/` shortcut guard (~L2683): `!$("panel").hidden` becomes `pinState`.
+- Stale comments that mention the panel (~L2854, 2859, 3559, 3575, 3624).
+- `byBodyTag` (~L2350–2356, and `resultsState` at ~L2369) is used only by the panel's "other
+  tags" chips, so it goes too.
+- ⚠ The `byBodyTag` key and the `renderPanel` lookup hold a **literal NUL byte**. Remove those
+  lines with a Python `str.replace` (`encoding="utf-8", newline=""`, assert exactly one match
+  each), never with the Edit tool. Afterwards, `grep -c $'\x00'` should show **0** NUL bytes left,
+  because both users are gone. Say so in the Settled note.
+
+### Verification
+
+1. Node vm harness (page script and DOM stubs against real `pipeline.results.build` output for
+   three groups):
+   - `tipHtml` has no `.bigimg`, no "click to" and no "images" text, and keyword tips keep their
+     stats foot.
+   - `cardHtml` layout order matches B1.
+   - `read more` appears only when the body is longer than what's shown.
+   - The C1 keep and reset rule holds.
+   - No reference to `panel`, `renderPanel` or `byBodyTag` remains.
+2. Playwright on a fresh server (spare port), at 1280 and 600 px:
+   - **Hover:** compact original card with no image. Keyword hover unchanged.
+   - **Pin:** click a chip; the card grows beside the chip, stays inside the viewport and doesn't
+     follow the mouse. The veil dims the page.
+   - **Images:** image ‹ › and the counter work.
+   - **Sources:** ← → step sources; the image is kept on the same ASIN and reset on a different
+     one, and read more collapses.
+   - **Read more:** it expands and shows less. A long review makes the card scroll inside
+     without scrolling the page.
+   - **Links:** the ASIN and title open the Amazon URL (check the href and target).
+   - **Zoom:** clicking the image opens the zoom view, and closing it syncs the card's image.
+   - **Esc:** Esc closes the zoom view, then the card.
+   - **Close:** a click on the veil or on another chip closes the card without pinning. A page
+     scroll closes the card. The × closes it.
+   - **Keywords:** clicking one does nothing.
+3. Regression: clusters, themes, search (`/` shortcut), source toggle and keywords render with no
+   page errors. `git diff --stat` shows only `static/index.html` (plus `PRODUCT-IMAGES.md`).
+
+### Delivery
+
+Append a `## Round 2: click-to-pin card (scoped 2026-09-25)` section to `PRODUCT-IMAGES.md`
+with this decisions table. An Opus subagent then builds it end to end without stopping,
+appends `## Settled: round 2 (built 2026-09-25)`, and reports back. No commit.
+
+## Settled: round 2 (built 2026-09-25)
+
+Built as specified, in `static/index.html` only. The hover card is back to the compact original:
+no image, and a facts-only footer (`1 of N sources`, `No exact sentence found`, keyword stats).
+Clicking a `.bub[data-occs]` chip pins the same `#tip` (`.pin`) beside the click point over `#pveil`.
+The pinned card shows the review title, the sentence with read more / show less, `n / N images`,
+the big image with ‹ ›, and the `← n of N sources →` pager. The ASIN and title link to `p.link`
+(`_blank`, `noopener`). The side panel is gone: its markup, CSS (including the 640 px and
+reduced-motion rules and the now-orphaned `.bub.plain`), `openPanel` / `closePanel` /
+`renderPanel` / `pgalHtml` / `panelProduct` / `renderPgal` / `wirePgal` and `byBodyTag`. `.pager`,
+`.ptext`, `.pother`, `.psrc`, `.ph` and `.gcount` were used only by the panel, so they went too.
+`.rv`, `.note-line` and `.x` are still used elsewhere and were kept. `.gnav`, `.bigimg`,
+`markedBody`, `bigImgHtml`, `gallery` and the zoom view were kept and reused.
+
+- **NUL bytes: 0 left** in `index.html`. Both were removed by a Python `str.replace` (the
+  `byBodyTag` map, and the whole panel section holding the lookup), with each match asserted.
+- **Shared pieces.** `sentenceHtml` (hover and pin) and `hasMore` (read more only when the
+  whitespace-flattened full text differs from what is shown). `placeAt(x, y)` is the old
+  `tipMove` clamp, used by the hover card with the pointer and by the pinned card with its anchor.
+  `tipLast` is gone, and `bigImgDone` re-places the pinned card. `tipOff` is a no-op while pinned,
+  because `openZoom` calls it.
+- **Interaction details the spec left open.** A keyboard-activated chip (`detail === 0`) anchors
+  on the chip's rect. Focus goes to × on pin and back to the chip on close. Arrows and the pager
+  keep focus on the pressed control. Show less resets the card's scroll to the top, while a source
+  step keeps it, so the pager stays under the pointer. On close the card hides before `.pin` is
+  removed, so it doesn't reflow to hover width while fading out. `resize` re-places it.
+- **Deviations.**
+  - The pinned card also shows `No exact sentence found` under the text when there is no
+    confident match. B1 doesn't list it, but otherwise you can't tell why nothing is highlighted.
+  - The wheel guard (`containWheel`) is also on `#zoom`. A wheel over the zoom rail used to scroll
+    the page under it, and now that would close the card and the zoom view together. The zoom
+    view's internals are untouched.
+  - `#tip` got `role="dialog" aria-label="Tag source"`, and `aria-hidden` is toggled on pin.
+  - Cluster chips still carry `data-cluster`, which nothing reads now. It was left alone, since
+    the cluster rendering was out of scope.
+- **Verified.**
+  - Node `vm` harness on real `results.build` output for olive-trees, colorful-picture-frames
+    and dishwasher-rack, 88/88:
+    - No panel or `byBodyTag` identifiers and no "click to" strings are left.
+    - Hover tips have no image or hints over all 1,771 occurrences, and 419 keyword tips keep
+      their stats foot.
+    - Read more shows up exactly when the text says more (1,730 with, 41 without), and the
+      expanded view keeps the sentence `.hit`.
+    - The B1 order holds.
+    - The links are right.
+    - C1 keep and reset, plus the read-more collapse, work through the real click handler.
+    - Zoom opens on the card's image and syncs it on close.
+    - Esc, the veil, × and a page scroll each unpin.
+  - Playwright on a fresh server (port 5056), 57/57 at 1280 × 800 and at 600 × 900:
+    - Hover card is compact with no buttons, and a keyword click does nothing.
+    - The pinned card sits beside the click point inside the viewport, at the pinned width, and
+      doesn't follow the mouse.
+    - Image arrows work, with focus held.
+    - Same-ASIN keep and different-ASIN reset, plus a disabled → at the last source.
+    - A long dishwasher-rack review expands to 100vh − 16 and scrolls inside; the wheel never
+      moves the page, at the top, the middle or the bottom.
+    - Zoom opens on the same image; the wheel there doesn't close the card; Esc closes the zoom
+      view, then the card.
+    - A click on another chip through the veil, or on bare veil, closes without pinning.
+    - A wheel on the veil and a scripted scroll both close the card.
+    - `/` is ignored while pinned and works after.
+    - Clusters, themes, keywords, the source toggle and search still render, with no page errors.
+  - Screenshots are in `scratchpad/shots2/`.
