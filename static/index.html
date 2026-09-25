@@ -439,6 +439,18 @@ section[id]{scroll-margin-top:72px}
 .noimg{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center}
 #tip .sent{color:#E6E9F0}
 #tip .foot{font-family:var(--mono);font-size:9.5px;color:#9FB8E8;margin-top:7px}
+/* with a product image the card takes its full width, so image and text share one edge */
+#tip.wide{width:min(420px,calc(100vw - 24px))}
+#tip .bigimg{--cap:55vh;margin-top:9px}
+
+/* ---------- results: big product image (hover card, panel) ----------
+   Full width, white ground, height from the image's own ratio up to --cap; a taller
+   image is scaled down and centred, never cropped. `.wait` reserves a square until
+   the image loads so the card doesn't jump. */
+.bigimg{--cap:70vh;width:100%;background:#fff;border-radius:3px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.bigimg.wait{aspect-ratio:1;max-height:var(--cap)}
+.bigimg img{display:block;width:100%;height:auto;max-height:var(--cap);object-fit:contain}
+.bigimg .noimg{width:100%;height:120px}
 
 /* ---------- results: source panel ---------- */
 .pveil{position:fixed;inset:0;background:rgba(19,26,42,.22);z-index:84}
@@ -466,14 +478,68 @@ section[id]{scroll-margin-top:72px}
 .ptext .hit{background:var(--amber-wash);box-shadow:0 0 0 3px var(--amber-wash);border-radius:2px}
 .pother h4{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
   font-weight:500;margin:20px 0 8px}
+/* panel gallery: the big image under the text, arrows over its edges, a counter below */
+.pgal{margin-top:16px}
+.pgal .pgimg{position:relative}
+.pgal .bigimg{border:1px solid var(--rule-soft);cursor:zoom-in}
+.gnav{position:absolute;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:16px;line-height:1;
+  padding:6px 11px;border:1px solid var(--rule);background:var(--glaze);color:var(--ink);cursor:pointer;border-radius:3px;
+  box-shadow:0 1px 4px rgba(19,26,42,.12)}
+.gnav.prev{left:8px}
+.gnav.next{right:8px}
+.gnav:hover:not(:disabled){border-color:var(--cobalt);color:var(--cobalt)}
+.gnav:disabled{opacity:.35;cursor:not-allowed}
+.gcount{font-family:var(--mono);font-size:10.5px;color:var(--muted);text-align:center;margin-top:6px}
+
+/* ---------- results: zoom view ----------
+   White full-screen overlay above the panel: a stage on the left holding one image
+   transformed by translate/scale, a rail on the right with the title, n / N, the
+   thumbnails and +/−. */
+.zveil{position:fixed;inset:0;z-index:90;background:#fff;display:flex;user-select:none}
+.zstage{flex:1 1 auto;min-width:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;
+  touch-action:none}
+.zstage img{flex:0 0 auto;max-width:none;transform-origin:50% 50%;cursor:zoom-in;-webkit-user-drag:none}
+.zstage.zoomed img{cursor:grab}
+.zstage.grabbing,.zstage.grabbing img{cursor:grabbing}
+.zstage.busy img,.zstage.broken img{visibility:hidden}
+.zstage.busy::after{content:"";position:absolute;left:50%;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;
+  border:2px solid var(--rule-soft);border-top-color:var(--cobalt);animation:spin .8s linear infinite}
+.zstage.broken::after{content:"image didn't load";position:absolute;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.zstage .gnav{font-size:22px;padding:9px 14px}
+.zstage .gnav.prev{left:14px}
+.zstage .gnav.next{right:14px}
+.zrail{flex:0 0 220px;border-left:1px solid var(--rule);padding:52px 16px 16px;overflow:auto;overscroll-behavior:contain;
+  display:flex;flex-direction:column;gap:10px}
+.zttl{font-weight:600;font-size:13px;line-height:1.36;margin:0;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.zcount{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.zthumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.zth{padding:0;border:1px solid var(--rule);background:#fff;border-radius:3px;cursor:pointer;aspect-ratio:1;overflow:hidden}
+.zth img,.zth .noimg{width:100%;height:100%;object-fit:contain;display:flex}
+.zth:hover{border-color:var(--cobalt-lt)}
+.zth.on{border-color:var(--cobalt);box-shadow:0 0 0 1px var(--cobalt)}
+.zbtns{display:flex;gap:6px}
+.zbtns button{font-family:var(--mono);font-size:15px;line-height:1;width:34px;padding:6px 0;border:1px solid var(--rule);
+  background:var(--glaze);color:var(--ink);cursor:pointer;border-radius:3px}
+.zbtns button:hover:not(:disabled){border-color:var(--cobalt);color:var(--cobalt)}
+.zbtns button:disabled{opacity:.35;cursor:not-allowed}
+.zveil .zx{position:absolute;top:12px;right:14px;font-size:22px;z-index:1;background:rgba(255,255,255,.9)}
+.zveil .zx:hover{background:var(--iron-wash)}
 
 @media (max-width:640px){
   .wrap{padding:0 14px 70px}
   .masthead{padding-top:30px}
   .pgrid,.cgrid,.ov,.kw{grid-template-columns:1fr}
   #panel{padding:18px 16px 40px}
+  /* the zoom rail becomes a strip under the stage: title, then n / N, thumbnails and +/− in a row */
+  .zveil{flex-direction:column}
+  .zrail{flex:0 0 auto;border-left:0;border-top:1px solid var(--rule);padding:10px 12px 14px;flex-direction:row;
+    flex-wrap:wrap;align-items:center;overflow:visible}
+  .zttl{flex:1 0 100%;-webkit-line-clamp:1}
+  .zthumbs{flex:1 1 0;min-width:0;display:flex;overflow-x:auto;overscroll-behavior:contain}
+  .zth{flex:0 0 52px;height:52px}
 }
 @media (prefers-reduced-motion:reduce){#panel{transition:none}}
+@media (prefers-reduced-motion:reduce){.zstage.busy::after{animation:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -697,6 +763,23 @@ section[id]{scroll-margin-top:72px}
 <div id="tip" aria-hidden="true"></div>
 <div class="pveil" id="pveil" hidden></div>
 <aside id="panel" hidden aria-label="Tag source"></aside>
+<div id="zoom" class="zveil" hidden role="dialog" aria-modal="true" aria-label="Product images">
+  <div class="zstage" id="zstage">
+    <img id="zimg" alt="" draggable="false">
+    <button class="gnav prev" id="zprev" aria-label="Previous image">&lsaquo;</button>
+    <button class="gnav next" id="znext" aria-label="Next image">&rsaquo;</button>
+  </div>
+  <div class="zrail">
+    <p class="zttl" id="zttl"></p>
+    <div class="zcount" id="zcount"></div>
+    <div class="zthumbs" id="zthumbs"></div>
+    <div class="zbtns">
+      <button id="zout" title="Zoom out" aria-label="Zoom out">&minus;</button>
+      <button id="zin" title="Zoom in" aria-label="Zoom in">+</button>
+    </div>
+  </div>
+  <button class="x zx" id="zclose" title="Close (Esc)" aria-label="Close">&times;</button>
+</div>
 
 <!-- ==================== NEW GROUP MODAL ==================== -->
 <div class="veil" id="veil" hidden>
@@ -3429,6 +3512,41 @@ function thumbHtml(src, cls) {
     : `<div class="noimg ${cls || ""}">no image</div>`;
 }
 
+/* The product's images, main first. A server from before `images` existed still
+   gives the main image. */
+function gallery(p) {
+  return p.images && p.images.length ? p.images : (p.main_image ? [p.main_image] : []);
+}
+
+/* Amazon's size code (`._AC_SL1500_`) dropped, which serves the original upload. */
+function fullSize(url) {
+  return String(url || "").replace(/\._[^/]*_(?=\.(jpe?g|png|webp|gif)$)/i, "");
+}
+
+function bigImgHtml(src, cls) {
+  return `<div class="bigimg wait ${cls || ""}"><img src="${esc(src)}" alt="" draggable="false"
+            onload="bigImgDone(this, true)" onerror="bigImgDone(this, false)"></div>`;
+}
+
+/* Clears the reserved square once the image is in (or swaps in the placeholder),
+   then re-clamps the hover card, which may just have grown taller. */
+function bigImgDone(img, ok) {
+  const frame = img.parentNode;
+  if (!frame) return;
+  frame.classList.remove("wait");
+  if (!ok) img.replaceWith(Object.assign(document.createElement("div"),
+                                         { className: "noimg", textContent: "no image" }));
+  if (tipLast && frame.closest("#tip") && $("tip").classList.contains("on")) tipMove(tipLast);
+}
+
+/* A cached image is complete the moment it's inserted: settle it now, so the frame
+   never flashes square on a second hover or a panel arrow. */
+function settleImgs(root) {
+  root.querySelectorAll(".bigimg.wait img").forEach(img => {
+    if (img.complete && img.naturalWidth) bigImgDone(img, true);
+  });
+}
+
 function sourceLabel(o, b) {
   if (o.body_type !== "review") return "listing";
   const r = b.review;
@@ -3454,6 +3572,8 @@ function tipHtml(occs, opts) {
   const sentence = m.confident
     ? markedSentence(b.text, m)
     : esc(b.text.replace(/\s+/g, " ").slice(0, 200)) + (b.text.length > 200 ? "&hellip;" : "");
+  // The main image only: the card takes no clicks, so browsing lives in the panel.
+  const imgs = gallery(p);
 
   return `
     <div class="th">${thumbHtml(p.main_image)}
@@ -3467,17 +3587,25 @@ function tipHtml(occs, opts) {
       clickable ? " &mdash; click for the full text" : ""}</div>`}
     ${occs.length > 1 ? `<div class="foot">1 of ${occs.length} sources${
       clickable ? " &middot; click to see all" : ""}</div>` : ""}
-    ${stats ? `<div class="foot">${esc(stats)}</div>` : ""}`;
+    ${stats ? `<div class="foot">${esc(stats)}</div>` : ""}
+    ${imgs.length ? bigImgHtml(imgs[0]) : ""}
+    ${imgs.length > 1 && clickable ? `<div class="foot">1 / ${imgs.length} images &middot; click to browse</div>` : ""}`;
 }
 
 function tipShow(ev, html) {
   const t = $("tip");
   t.innerHTML = html;
+  t.classList.toggle("wide", !!t.querySelector(".bigimg"));
+  settleImgs(t);
   t.classList.add("on");
   tipMove(ev);
 }
 
+/* The last pointer position, so an image that finishes loading can re-clamp the card. */
+let tipLast = null;
+
 function tipMove(ev) {
+  tipLast = { clientX: ev.clientX, clientY: ev.clientY };
   const t = $("tip");
   const r = t.getBoundingClientRect();
   let x = ev.clientX + 14, y = ev.clientY - r.height - 12;
@@ -3526,7 +3654,9 @@ document.addEventListener("click", e => {
 let panelState = null;
 
 function openPanel(occs, clusterTitle) {
-  panelState = { occs, at: 0, cluster: clusterTitle };
+  // `img` is the gallery index shown under the text; `imgAsin` the product it
+  // belongs to, so paging to another source on the same ASIN keeps the image.
+  panelState = { occs, at: 0, cluster: clusterTitle, img: 0, imgAsin: null };
   tipOff();
   $("pveil").hidden = false;
   $("panel").hidden = false;
@@ -3537,6 +3667,7 @@ function openPanel(occs, clusterTitle) {
 function closePanel() {
   const panel = $("panel");
   if (!panel || panel.hidden) return;
+  closeZoom();
   panel.classList.remove("on");
   panel.hidden = true;
   $("pveil").hidden = true;
@@ -3551,6 +3682,7 @@ function renderPanel() {
   const p = d.products[o.asin] || {};
   const m = o.match;
   const link = p.link;
+  if (panelState.imgAsin !== o.asin) { panelState.img = 0; panelState.imgAsin = o.asin; }
 
   const facts = [];
   if (p.price) facts.push(`<span class="pill na">${esc(p.price)}</span>`);
@@ -3616,8 +3748,11 @@ function renderPanel() {
     ${m.confident ? "" : `<div class="note-line info" style="margin-bottom:10px"><span class="ic">Note</span>
       <span>No single sentence could be pinned down for this tag, so here is the whole text.</span></div>`}
     <div class="ptext">${markedBody(b.text, m)}</div>
+    ${pgalHtml(gallery(p), panelState.img)}
     <div class="pother">${others.join("")}</div>`;
 
+  settleImgs($("panel"));
+  wirePgal();
   $("pclose").onclick = closePanel;
   const prev = $("pprev"), next = $("pnext");
   if (prev) prev.onclick = () => { panelState.at -= 1; renderPanel(); $("panel").scrollTop = 0; };
@@ -3625,6 +3760,227 @@ function renderPanel() {
 }
 
 $("pveil").addEventListener("click", closePanel);
+
+/* ---------- panel gallery ----------
+   The arrows swap only this block, so the panel keeps its scroll position. */
+function pgalHtml(urls, i) {
+  if (!urls.length) return "";
+  const n = urls.length;
+  return `
+    <div class="pgal" id="pgal">
+      <div class="pgimg">
+        ${bigImgHtml(urls[i])}
+        ${n > 1 ? `
+          <button class="gnav prev" data-gstep="-1" aria-label="Previous image" ${i === 0 ? "disabled" : ""}>&lsaquo;</button>
+          <button class="gnav next" data-gstep="1" aria-label="Next image" ${i === n - 1 ? "disabled" : ""}>&rsaquo;</button>` : ""}
+      </div>
+      <div class="gcount">${i + 1} / ${n}</div>
+    </div>`;
+}
+
+function panelProduct() {
+  const d = resultsState.data;
+  return d.products[d.occurrences[panelState.occs[panelState.at]].asin] || {};
+}
+
+function renderPgal() {
+  const g = $("pgal");
+  if (!g) return;
+  g.outerHTML = pgalHtml(gallery(panelProduct()), panelState.img);
+  settleImgs($("pgal"));
+  wirePgal();
+}
+
+function wirePgal() {
+  const g = $("pgal");
+  if (!g) return;
+  g.querySelectorAll("[data-gstep]").forEach(btn => {
+    btn.onclick = () => {
+      const step = +btn.dataset.gstep;
+      panelState.img += step;
+      renderPgal();
+      // Keep keyboard focus on an arrow; the one pressed may now be disabled.
+      const again = $("pgal").querySelector(`[data-gstep="${step}"]:not(:disabled)`) ||
+                    $("pgal").querySelector("[data-gstep]:not(:disabled)");
+      if (again) again.focus();
+    };
+  });
+  g.querySelector(".bigimg").onclick = () => {
+    const p = panelProduct();
+    openZoom(gallery(p), panelState.img, p.title);
+  };
+}
+
+/* ---------- zoom view ----------
+   Opened from the panel image only. State is { urls, at, s, x, y }: the image is
+   laid out fitted and centred in the stage (w × h), then moved by
+   translate(x, y) scale(s) about its centre, so a stage point P maps back to the
+   image as (P − centre − (x, y)) / s. */
+const ZOOM_MAX = 4;
+let zoomState = null;
+
+function openZoom(urls, at, title) {
+  if (!urls.length) return;
+  zoomState = { urls, at, s: 1, x: 0, y: 0, w: 0, h: 0, down: null, back: document.activeElement };
+  tipOff();
+  $("zttl").textContent = title || "";
+  $("zoom").hidden = false;
+  zoomShow();
+  $("zclose").focus();
+}
+
+function closeZoom() {
+  const z = $("zoom");
+  if (!z || z.hidden || !zoomState) return;
+  z.hidden = true;
+  const { at, back } = zoomState;
+  zoomState = null;
+  $("zimg").removeAttribute("src");
+  // The panel picks up where the zoom view left off.
+  if (panelState && $("pgal") && at !== panelState.img) { panelState.img = at; renderPgal(); }
+  if (back && back.isConnected) back.focus();
+}
+
+function zoomShow() {
+  const z = zoomState, url = z.urls[z.at], n = z.urls.length;
+  const img = $("zimg"), stage = $("zstage");
+  z.s = 1; z.x = 0; z.y = 0;
+  let fell = false;
+  stage.classList.remove("broken");
+  stage.classList.add("busy");
+  img.onload = () => {
+    if (zoomState !== z) return;
+    stage.classList.remove("busy");
+    zoomFit();
+  };
+  // The original upload first; the stored URL once if that fails, then give up.
+  img.onerror = () => {
+    if (zoomState !== z) return;
+    if (!fell) { fell = true; img.src = url; return; }
+    stage.classList.remove("busy");
+    stage.classList.add("broken");
+  };
+  img.src = fullSize(url);
+
+  $("zcount").textContent = `${z.at + 1} / ${n}`;
+  $("zthumbs").innerHTML = z.urls.map((u, i) =>
+    `<button class="zth${i === z.at ? " on" : ""}" data-zi="${i}" aria-label="Image ${i + 1}">${thumbHtml(u)}</button>`
+  ).join("");
+  $("zprev").hidden = $("znext").hidden = n < 2;
+  $("zprev").disabled = z.at === 0;
+  $("znext").disabled = z.at === n - 1;
+  zoomApply();
+}
+
+function zoomStep(d) {
+  const to = zoomState.at + d;
+  if (to < 0 || to >= zoomState.urls.length) return;
+  zoomState.at = to;
+  zoomShow();
+}
+
+/* Fit the loaded image inside the stage, leaving room for the arrows on wide screens. */
+function zoomFit() {
+  const z = zoomState, img = $("zimg");
+  if (!z || !img.naturalWidth) return;
+  const st = $("zstage").getBoundingClientRect();
+  const padX = st.width > 520 ? 64 : 8, padY = 20;
+  const k = Math.min((st.width - 2 * padX) / img.naturalWidth, (st.height - 2 * padY) / img.naturalHeight);
+  z.w = img.naturalWidth * k;
+  z.h = img.naturalHeight * k;
+  img.style.width = z.w + "px";
+  img.style.height = z.h + "px";
+  zoomApply();
+}
+
+/* Pan is clamped so the image never leaves the stage: once it's larger than the
+   stage on an axis it may slide only as far as its overhang, otherwise it stays centred. */
+function zoomApply() {
+  const z = zoomState;
+  if (!z) return;
+  const st = $("zstage").getBoundingClientRect();
+  const mx = Math.max(0, (z.w * z.s - st.width) / 2), my = Math.max(0, (z.h * z.s - st.height) / 2);
+  z.x = Math.min(mx, Math.max(-mx, z.x));
+  z.y = Math.min(my, Math.max(-my, z.y));
+  $("zimg").style.transform = `translate(${z.x}px, ${z.y}px) scale(${z.s})`;
+  $("zstage").classList.toggle("zoomed", z.s > 1);
+  $("zin").disabled = z.s >= ZOOM_MAX - 1e-6;
+  $("zout").disabled = z.s <= 1 + 1e-6;
+}
+
+/* Zoom to `s`, holding the point under (px, py) still; the stage centre by default. */
+function zoomTo(s, px, py) {
+  const z = zoomState;
+  const st = $("zstage").getBoundingClientRect();
+  const cx = st.left + st.width / 2, cy = st.top + st.height / 2;
+  if (px == null) { px = cx; py = cy; }
+  s = Math.min(ZOOM_MAX, Math.max(1, s));
+  const k = s / z.s;
+  z.x = (px - cx) - k * (px - cx - z.x);
+  z.y = (py - cy) - k * (py - cy - z.y);
+  z.s = s;
+  zoomApply();
+}
+
+(() => {
+  const stage = $("zstage");
+  stage.addEventListener("wheel", e => {
+    if (!zoomState) return;
+    e.preventDefault();
+    const dy = e.deltaY * (e.deltaMode === 1 ? 40 : 1);
+    zoomTo(zoomState.s * Math.exp(-dy * 0.002), e.clientX, e.clientY);
+  }, { passive: false });
+
+  // Drag pans once zoomed. `down` remembers where the press began, because with
+  // pointer capture the click that follows is reported on the stage itself.
+  stage.addEventListener("pointerdown", e => {
+    const z = zoomState;
+    if (!z || e.button !== 0 || e.target.closest("button")) return;
+    z.down = { id: e.pointerId, onImg: e.target === $("zimg"), x0: e.clientX, y0: e.clientY,
+               x: z.x, y: z.y, moved: false, drag: z.s > 1 };
+    if (z.down.drag) { stage.setPointerCapture(e.pointerId); stage.classList.add("grabbing"); }
+  });
+  stage.addEventListener("pointermove", e => {
+    const z = zoomState, d = z && z.down;
+    if (!d || d.id !== e.pointerId) return;
+    const dx = e.clientX - d.x0, dy = e.clientY - d.y0;
+    if (Math.abs(dx) + Math.abs(dy) > 3) d.moved = true;
+    if (!d.drag) return;
+    z.x = d.x + dx;
+    z.y = d.y + dy;
+    zoomApply();
+  });
+  const release = () => stage.classList.remove("grabbing");
+  stage.addEventListener("pointerup", release);
+  stage.addEventListener("pointercancel", release);
+
+  // A plain click on the white around the image closes the view.
+  stage.addEventListener("click", e => {
+    const z = zoomState, d = z && z.down;
+    if (!z || e.target.closest("button")) return;
+    z.down = null;
+    z.lastOnImg = d ? d.onImg : e.target === $("zimg");
+    if (d && !d.onImg && !d.moved) closeZoom();
+  });
+  stage.addEventListener("dblclick", e => {
+    if (!zoomState || !(e.target === $("zimg") || zoomState.lastOnImg)) return;
+    if (zoomState.s > 1) zoomTo(1);
+    else zoomTo(2.5, e.clientX, e.clientY);
+  });
+
+  $("zprev").onclick = () => zoomStep(-1);
+  $("znext").onclick = () => zoomStep(1);
+  $("zin").onclick = () => zoomTo(zoomState.s * 1.5);
+  $("zout").onclick = () => zoomTo(zoomState.s / 1.5);
+  $("zclose").onclick = closeZoom;
+  $("zthumbs").addEventListener("click", e => {
+    const b = e.target.closest("[data-zi]");
+    if (!b || !zoomState) return;
+    zoomState.at = +b.dataset.zi;
+    zoomShow();
+  });
+  addEventListener("resize", () => { if (zoomState) zoomFit(); });
+})();
 
 /* ---------- settings ---------- */
 const SETTING_FIELDS = {
@@ -3735,6 +4091,16 @@ $("sveil").addEventListener("click", e => {
 });
 
 document.addEventListener("keydown", e => {
+  // The zoom view sits over everything, so it answers first: Esc closes it (the
+  // panel stays open underneath) and the arrows step its images.
+  if (!$("zoom").hidden) {
+    if (e.key === "Escape") closeZoom();
+    else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      e.preventDefault();
+      zoomStep(e.key === "ArrowLeft" ? -1 : 1);
+    }
+    return;
+  }
   if (e.key !== "Escape") return;
   if (!$("cveil").hidden) closeConfirm(false);
   else if (!$("sveil").hidden) $("sveil").hidden = true;
