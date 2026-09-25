@@ -151,6 +151,7 @@ td.nm b{font-family:var(--sans);font-weight:600;font-size:13.5px}
 .pcard .top{display:flex;gap:14px;padding:16px}
 .pcard .thumb{width:88px;height:88px;flex:0 0 auto;object-fit:contain;background:var(--porcelain);
   border:1px solid var(--rule-soft);border-radius:3px}
+.pcard img.thumb.zoomable{cursor:zoom-in}
 .pcard .thumb.none{display:flex;align-items:center;justify-content:center;font-family:var(--mono);
   font-size:9px;color:var(--muted);text-align:center}
 .pcard .meta{min-width:0;flex:1 1 auto}
@@ -485,10 +486,14 @@ section[id]{scroll-margin-top:72px}
 .gnav:disabled{opacity:.35;cursor:not-allowed}
 
 /* ---------- results: zoom view ----------
-   White full-screen overlay above the pinned card: a stage on the left holding one image
-   transformed by translate/scale, a rail on the right with the title, n / N, the
-   thumbnails and +/−. */
-.zveil{position:fixed;inset:0;z-index:90;background:#fff;display:flex;user-select:none}
+   A large white box over a dimmed page, above the pinned card: a stage on the left
+   holding one image transformed by translate/scale, a rail on the right with the
+   title, n / N, the thumbnails and +/−. A click on the dimmed area closes it. */
+.zveil{position:fixed;inset:0;z-index:90;background:rgba(19,26,42,.5);display:flex;align-items:center;justify-content:center;
+  user-select:none}
+.zveil[hidden]{display:none}
+.zbox{position:relative;display:flex;width:min(92vw,1500px);height:min(88vh,1000px);background:#fff;border-radius:3px;
+  overflow:hidden;box-shadow:0 10px 40px rgba(19,26,42,.3)}
 .zstage{flex:1 1 auto;min-width:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;
   touch-action:none}
 .zstage img{flex:0 0 auto;max-width:none;transform-origin:50% 50%;cursor:zoom-in;-webkit-user-drag:none}
@@ -505,6 +510,9 @@ section[id]{scroll-margin-top:72px}
   display:flex;flex-direction:column;gap:10px}
 .zttl{font-weight:600;font-size:13px;line-height:1.36;margin:0;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .zcount{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+/* Extract page only: which listing the keys are on, then its ASIN · price */
+.zsub{font-family:var(--mono);font-size:10.5px;line-height:1.6;color:var(--muted);margin-top:-4px}
+.zsub b{color:var(--ink);font-weight:500}
 .zthumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .zth{padding:0;border:1px solid var(--rule);background:#fff;border-radius:3px;cursor:pointer;aspect-ratio:1;overflow:hidden}
 .zth img,.zth .noimg{width:100%;height:100%;object-fit:contain;display:flex}
@@ -523,10 +531,11 @@ section[id]{scroll-margin-top:72px}
   .masthead{padding-top:30px}
   .pgrid,.cgrid,.ov,.kw{grid-template-columns:1fr}
   /* the zoom rail becomes a strip under the stage: title, then n / N, thumbnails and +/− in a row */
-  .zveil{flex-direction:column}
+  .zbox{flex-direction:column;width:calc(100vw - 16px);height:calc(100vh - 16px)}
   .zrail{flex:0 0 auto;border-left:0;border-top:1px solid var(--rule);padding:10px 12px 14px;flex-direction:row;
     flex-wrap:wrap;align-items:center;overflow:visible}
   .zttl{flex:1 0 100%;-webkit-line-clamp:1}
+  .zsub{flex:1 0 100%;margin-top:0}
   .zthumbs{flex:1 1 0;min-width:0;display:flex;overflow-x:auto;overscroll-behavior:contain}
   .zth{flex:0 0 52px;height:52px}
 }
@@ -754,6 +763,7 @@ section[id]{scroll-margin-top:72px}
 <div id="tip" role="dialog" aria-label="Tag source" aria-hidden="true"></div>
 <div class="pveil" id="pveil" hidden></div>
 <div id="zoom" class="zveil" hidden role="dialog" aria-modal="true" aria-label="Product images">
+ <div class="zbox">
   <div class="zstage" id="zstage">
     <img id="zimg" alt="" draggable="false">
     <button class="gnav prev" id="zprev" aria-label="Previous image">&lsaquo;</button>
@@ -761,6 +771,7 @@ section[id]{scroll-margin-top:72px}
   </div>
   <div class="zrail">
     <p class="zttl" id="zttl"></p>
+    <div class="zsub" id="zsub" hidden></div>
     <div class="zcount" id="zcount"></div>
     <div class="zthumbs" id="zthumbs"></div>
     <div class="zbtns">
@@ -769,6 +780,7 @@ section[id]{scroll-margin-top:72px}
     </div>
   </div>
   <button class="x zx" id="zclose" title="Close (Esc)" aria-label="Close">&times;</button>
+ </div>
 </div>
 
 <!-- ==================== NEW GROUP MODAL ==================== -->
@@ -1479,7 +1491,7 @@ function productCard(p) {
   const edits = editedFields(p);
 
   const thumb = p.main_image
-    ? `<img class="thumb" src="${esc(p.main_image)}" alt="" loading="lazy"
+    ? `<img class="thumb zoomable" src="${esc(p.main_image)}" alt="" loading="lazy" title="View images"
          onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'thumb none',textContent:'no image'}))">`
     : `<div class="thumb none">no image</div>`;
 
@@ -1666,6 +1678,8 @@ function wireCard(card) {
   });
 
   card.querySelector(".rm").onclick = () => saveField(asin, { __deleted: true });
+  const thumb = card.querySelector("img.thumb");
+  if (thumb) thumb.onclick = () => openListingZoom(asin);
   const restore = card.querySelector(".restore");
   if (restore) restore.onclick = () => restoreProduct(asin);
 
@@ -3500,6 +3514,20 @@ function gallery(p) {
   return p.images && p.images.length ? p.images : (p.main_image ? [p.main_image] : []);
 }
 
+/* The same list for a run's product, whose `images` is the gallery without the main
+   image (results.py merges the two only for the results payload). Duplicates are
+   dropped by Amazon image id, as there. */
+function listingGallery(p) {
+  const seen = new Set();
+  return [p.main_image, ...(p.images || [])].filter(u => {
+    if (!u) return false;
+    const id = String(u).split("/").pop().split(".")[0];
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+}
+
 /* Amazon's size code (`._AC_SL1500_`) dropped, which serves the original upload. */
 function fullSize(url) {
   return String(url || "").replace(/\._[^/]*_(?=\.(jpe?g|png|webp|gif)$)/i, "");
@@ -3655,19 +3683,22 @@ function pinCard(el, ev) {
   const r = el.getBoundingClientRect();
   const kb = ev.detail === 0;
   pinState = { occs: el.dataset.occs.split(" "), at: 0, img: 0, imgAsin: null, more: false,
-               x: kb ? r.right : ev.clientX, y: kb ? r.top + r.height / 2 : ev.clientY, back: el };
+               x: kb ? r.right : ev.clientX, y: kb ? r.top + r.height / 2 : ev.clientY, back: el, kb };
   const t = $("tip");
   t.classList.add("pin", "on");
   t.setAttribute("aria-hidden", "false");
   t.scrollTop = 0;
   $("pveil").hidden = false;
   renderCard();
-  t.querySelector('[data-act="close"]').focus({ preventScroll: true });
+  // Focus moves in, and back out on close, only for a card opened from the keyboard.
+  // A mouse-opened card handing focus back to its chip lit the chip's focus ring
+  // after an Esc close, since the browser then counts the page as keyboard-driven.
+  if (kb) t.querySelector('[data-act="close"]').focus({ preventScroll: true });
 }
 
 function unpin() {
   if (!pinState) return;
-  const back = pinState.back;
+  const { back, kb } = pinState;
   pinState = null;
   closeZoom();
   const t = $("tip");
@@ -3678,7 +3709,9 @@ function unpin() {
   t.classList.remove("pin");
   t.setAttribute("aria-hidden", "true");
   $("pveil").hidden = true;
-  if (back && back.isConnected) back.focus({ preventScroll: true });
+  const act = document.activeElement;
+  if (kb) { if (back && back.isConnected) back.focus({ preventScroll: true }); }
+  else if (act && act !== document.body && (act === back || t.contains(act))) act.blur();
 }
 
 function pinProduct() {
@@ -3827,11 +3860,55 @@ function closeZoom() {
   if (!z || z.hidden || !zoomState) return;
   z.hidden = true;
   const { at, back } = zoomState;
+  const list = zoomState.list;
   zoomState = null;
   $("zimg").removeAttribute("src");
+  $("zsub").hidden = true;
+  // From the Extract page, land on the listing last viewed: scroll its card in and flash it.
+  if (list) {
+    const card = document.querySelector(`.pcard[data-asin="${CSS.escape(list.asins[list.i])}"]`);
+    if (card) {
+      card.scrollIntoView({ block: "center" });
+      card.classList.add("flash");
+      setTimeout(() => card.classList.remove("flash"), 1400);
+    }
+    return;
+  }
   // The pinned card picks up where the zoom view left off.
   if (pinState && at !== pinState.img) { pinState.img = at; renderCard(); }
   if (back && back.isConnected) back.focus();
+}
+
+/* ---------- zoom view on the Extract page ----------
+   Opened from a listing card's image. The on-screen ‹ › and thumbnails step this
+   listing's images as usual; the ← / → keys step listings instead, in card order,
+   skipping any without an image and stopping at either end. */
+function openListingZoom(asin) {
+  const asins = runState.products.filter(p => !p.deleted && listingGallery(p).length).map(p => p.asin);
+  const i = asins.indexOf(asin);
+  if (i < 0) return;
+  openZoom(listingGallery(product(asin)), 0, "");
+  zoomState.list = { asins, i };
+  listingFill();
+}
+
+function listingStep(d) {
+  const list = zoomState.list, to = list.i + d;
+  if (to < 0 || to >= list.asins.length) return;
+  list.i = to;
+  zoomState.urls = listingGallery(product(list.asins[to]));
+  zoomState.at = 0;
+  listingFill();
+  zoomShow();
+}
+
+function listingFill() {
+  const { asins, i } = zoomState.list;
+  const p = product(asins[i]);
+  $("zttl").textContent = p.title || "(no title returned)";
+  $("zsub").innerHTML = `Listing <b>${i + 1}</b> of ${asins.length} &middot; &larr; &rarr; to switch<br>` +
+    `${esc(p.asin)} &middot; ${esc((p.price && p.price.raw) || "no price")}`;
+  $("zsub").hidden = false;
 }
 
 function zoomShow() {
@@ -3966,6 +4043,8 @@ function zoomTo(s, px, py) {
   $("zin").onclick = () => zoomTo(zoomState.s * 1.5);
   $("zout").onclick = () => zoomTo(zoomState.s / 1.5);
   $("zclose").onclick = closeZoom;
+  // A click on the dimmed page around the box closes the view, never the card beneath.
+  $("zoom").addEventListener("click", e => { if (e.target === $("zoom")) closeZoom(); });
   $("zthumbs").addEventListener("click", e => {
     const b = e.target.closest("[data-zi]");
     if (!b || !zoomState) return;
@@ -4090,7 +4169,9 @@ document.addEventListener("keydown", e => {
     if (e.key === "Escape") closeZoom();
     else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
       e.preventDefault();
-      zoomStep(e.key === "ArrowLeft" ? -1 : 1);
+      const d = e.key === "ArrowLeft" ? -1 : 1;
+      if (zoomState && zoomState.list) listingStep(d);
+      else zoomStep(d);
     }
     return;
   }

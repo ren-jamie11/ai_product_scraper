@@ -355,3 +355,17 @@ reduced-motion rules and the now-orphaned `.bub.plain`), `openPanel` / `closePan
     - `/` is ignored while pinned and works after.
     - Clusters, themes, keywords, the source toggle and search still render, with no page errors.
   - Screenshots are in `scratchpad/shots2/`.
+
+## Settled: round 3 touch-ups (built 2026-09-25)
+
+- **Zoom view is a box, not full screen.** `#zoom` is now a dimmed backdrop (ink at 50%) holding
+  `.zbox`, `min(92vw, 1500px)` × `min(88vh, 1000px)`; at ≤ 640 px it is the viewport less 8 px a
+  side. A click on the backdrop closes the zoom view only; the pinned card stays.
+- **Stray focus ring on a chip after closing, fixed.** The pinned card handed focus back to its
+  chip on close; after an Esc close the browser counted the page as keyboard-driven and drew the
+  cobalt `:focus-visible` ring on the chip, which stayed. Now focus moves into the card and back
+  to the chip only for a card opened from the keyboard (`pinState.kb`); a mouse-opened card
+  leaves focus alone and blurs the chip or card control on close.
+- Verified with Playwright at 1280 and 600 px (`scratchpad/r2/r3.py`, 13/13 each: no ring after
+  Esc, veil, × or zoom-then-Esc; keyboard pin still focuses × and returns to the chip; box size;
+  backdrop click; wheel zoom), and round 2's suite still passes 57/57 at both widths.
