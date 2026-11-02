@@ -521,6 +521,8 @@ section[id]{scroll-margin-top:72px}
 /* Extract page only: which listing the keys are on, then its ASIN · price */
 .zsub{font-family:var(--mono);font-size:10.5px;line-height:1.6;color:var(--muted);margin-top:-4px}
 .zsub b{color:var(--ink);font-weight:500}
+.zttl a,.zsub a{color:inherit;text-decoration:none}
+.zttl a:hover,.zsub a:hover{color:var(--cobalt);text-decoration:underline}
 .zthumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .zth{padding:0;border:1px solid var(--rule);background:#fff;border-radius:3px;cursor:pointer;aspect-ratio:1;overflow:hidden}
 .zth img,.zth .noimg{width:100%;height:100%;object-fit:contain;display:flex}
@@ -4012,9 +4014,12 @@ function listingStep(d) {
 function listingFill() {
   const { asins, i } = zoomState.list;
   const p = product(asins[i]);
-  $("zttl").textContent = p.title || "(no title returned)";
+  // Title and ASIN both open the listing on Amazon, as on the card.
+  const a = inner => `<a href="${esc(p.link || p.source_url || `https://www.amazon.com/dp/${p.asin}`)}"
+    target="_blank" rel="noopener" title="Open on Amazon">${inner}</a>`;
+  $("zttl").innerHTML = a(esc(p.title || "(no title returned)"));
   $("zsub").innerHTML = `Listing <b>${i + 1}</b> of ${asins.length} &middot; &larr; &rarr; to switch<br>` +
-    `${esc(p.asin)} &middot; ${esc((p.price && p.price.raw) || "no price")}`;
+    `${a(esc(p.asin))} &middot; ${esc((p.price && p.price.raw) || "no price")}`;
   $("zsub").hidden = false;
   $("znote").value = (runState.meta.product_notes || {})[p.asin] || "";
   $("zsaved").textContent = "";

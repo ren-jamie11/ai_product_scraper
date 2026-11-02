@@ -3,18 +3,19 @@ Export an extraction run as a PowerPoint deck.
 
 One title slide with the run's name, then one slide per live ASIN:
 
-    +-------------------------------------+
-    |                 +-----+-----+       |
-    |  +-----------+  |  1  |  2  |       |
-    |  |   main    |  +-----+-----+       |
-    |  | 6.14 in sq|  |  3  |  4  |       |
-    |  +-----------+  +-----+-----+       |
-    |                 price  ASIN·brand   |
-    |                 notes               |
-    +-------------------------------------+
+    +------------------+------------------+
+    |   +----------+   |  +-----+-----+   |
+    |   |   main   |   |  |  1  |  2  |   |
+    |   | 4.8 in sq|   |  +-----+-----+   |
+    |   +----------+   |  |  3  |  4  |   |
+    |  price           |  +-----+-----+   |
+    |  ASIN·brand      |                  |
+    |  notes           |                  |
+    +------------------+------------------+
 
-The main image is centred vertically with a margin on the left; the 2x2 grid
-of 3.2 in squares hugs the top so the price and notes fit underneath.
+Each half of the slide is laid out on its own centre line: the main image and
+the text under it on the left, the 2x2 grid of 3.2 in squares on the right.
+The main image's top and the text's bottom line up with the grid's edges.
 
 Images are fitted inside their squares, never cropped. A missing or
 unreachable image leaves its square blank rather than failing the export.
@@ -32,13 +33,16 @@ from pptx.enum.text import PP_ALIGN
 from pptx.util import Inches, Pt
 
 SLIDE_W, SLIDE_H = 13.333, 7.5
-MAIN = 6.14
+HALF = SLIDE_W / 2
+MAIN = 4.8
 SMALL = 3.2
-MARGIN = 0.3                              # left of the main image, right of the grid
-MAIN_TOP = (SLIDE_H - MAIN) / 2
-GRID_LEFT = SLIDE_W - MARGIN - 2 * SMALL
-GRID_TOP = 0.25
-TEXT_TOP = GRID_TOP + 2 * SMALL + 0.08
+TOP = (SLIDE_H - 2 * SMALL) / 2           # grid centred vertically; main image shares its top
+BOTTOM = TOP + 2 * SMALL
+GRID_LEFT = HALF + (HALF - 2 * SMALL) / 2
+MAIN_LEFT = (HALF - MAIN) / 2
+TEXT_W = 5.4
+TEXT_LEFT = (HALF - TEXT_W) / 2
+TEXT_TOP = TOP + MAIN + 0.15
 GREY = RGBColor(0x6B, 0x72, 0x80)
 
 
@@ -78,9 +82,8 @@ def _place(slide, blob: bytes | None, left: float, top: float, box: float) -> No
     pic.top = Inches(top) + (Inches(box) - pic.height) // 2
 
 
-def _line(frame, text: str, size: int, bold: bool = False, color=None, first: bool = False,
-          same_line: bool = False):
-    para = frame.paragraphs[0] if first else frame.paragraphs[-1] if same_line else frame.add_paragraph()
+def _line(frame, text: str, size: int, bold: bool = False, color=None, first: bool = False):
+    para = frame.paragraphs[0] if first else frame.add_paragraph()
     run = para.add_run()
     run.text = text
     run.font.size, run.font.bold = Pt(size), bold
@@ -113,22 +116,21 @@ def build_deck(run: dict, meta: dict) -> bytes:
         slide = deck.slides.add_slide(blank)
         images = _gallery(p)
         if images:
-            _place(slide, blobs.get(images[0]), MARGIN, MAIN_TOP, MAIN)
+            _place(slide, blobs.get(images[0]), MAIN_LEFT, TOP, MAIN)
         for i, url in enumerate(images[1:5]):
-            _place(slide, blobs.get(url), GRID_LEFT + (i % 2) * SMALL, GRID_TOP + (i // 2) * SMALL, SMALL)
+            _place(slide, blobs.get(url), GRID_LEFT + (i % 2) * SMALL, TOP + (i // 2) * SMALL, SMALL)
 
-        panel = slide.shapes.add_textbox(Inches(GRID_LEFT), Inches(TEXT_TOP),
-                                         Inches(2 * SMALL), Inches(SLIDE_H - TEXT_TOP - 0.05))
+        panel = slide.shapes.add_textbox(Inches(TEXT_LEFT), Inches(TEXT_TOP),
+                                         Inches(TEXT_W), Inches(BOTTOM - TEXT_TOP))
         frame = panel.text_frame
         frame.word_wrap = True
         frame.margin_top = frame.margin_bottom = 0
-        price = (p.get("price") or {}).get("raw") or ""
-        _line(frame, price + ("    " if price else ""), 18, bold=True, first=True)
+        _line(frame, (p.get("price") or {}).get("raw") or "", 20, bold=True, first=True)
         ident = " · ".join(x for x in (p.get("asin"), p.get("brand")) if x)
-        link = _line(frame, ident, 10, color=GREY, same_line=True)
+        link = _line(frame, ident, 10, color=GREY)
         link.hyperlink.address = p.get("link") or f"https://www.{domain}/dp/{p.get('asin')}"
         if notes.get(p.get("asin")):
-            _line(frame, notes[p["asin"]], 11)
+            _line(frame, notes[p["asin"]], 12)
 
     out = io.BytesIO()
     deck.save(out)
