@@ -81,6 +81,13 @@ section{margin-bottom:48px}
 .shead h2{font-family:var(--disp);font-weight:700;font-size:19px;letter-spacing:-.012em;margin:0}
 .shead .note{font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-left:auto;white-space:nowrap}
 .lede{color:var(--muted);font-size:13px;margin:-6px 0 16px;max-width:74ch}
+/* Run notes: reads as the section's caption until clicked, then as a field. */
+.rnotes{display:block;width:100%;max-width:74ch;margin:-6px 0 16px;padding:5px 8px;font-family:var(--sans);font-size:13px;
+  line-height:1.5;color:var(--ink);background:transparent;border:1px dashed var(--rule);border-radius:3px;resize:none;
+  overflow:hidden;cursor:text}
+.rnotes::placeholder{color:var(--muted)}
+.rnotes:hover{border-color:var(--cobalt-lt)}
+.rnotes:focus{outline:none;border-style:solid;border-color:var(--cobalt);background:var(--glaze)}
 .card{background:var(--glaze);border:1px solid var(--rule);padding:20px}
 
 /* ---------- tables ---------- */
@@ -523,6 +530,12 @@ section[id]{scroll-margin-top:72px}
   background:var(--glaze);color:var(--ink);cursor:pointer;border-radius:3px}
 .zbtns button:hover:not(:disabled){border-color:var(--cobalt);color:var(--cobalt)}
 .zbtns button:disabled{opacity:.35;cursor:not-allowed}
+.znotes{display:flex;flex-direction:column;gap:5px;flex:1 1 auto;min-height:150px;margin-top:6px}
+.znotes[hidden]{display:none}
+.znotes textarea{flex:1 1 auto;width:100%;resize:none;font-family:var(--sans);font-size:12.5px;line-height:1.5;
+  padding:8px 9px;border:1px solid var(--rule);border-radius:3px;background:var(--glaze);color:var(--ink);user-select:text}
+.znotes textarea:focus{outline:none;border-color:var(--cobalt)}
+.zsaved{font-family:var(--mono);font-size:10px;color:var(--muted);min-height:1.2em}
 .zveil .zx{position:absolute;top:12px;right:14px;font-size:22px;z-index:1;background:rgba(255,255,255,.9)}
 .zveil .zx:hover{background:var(--iron-wash)}
 
@@ -538,6 +551,8 @@ section[id]{scroll-margin-top:72px}
   .zsub{flex:1 0 100%;margin-top:0}
   .zthumbs{flex:1 1 0;min-width:0;display:flex;overflow-x:auto;overscroll-behavior:contain}
   .zth{flex:0 0 52px;height:52px}
+  .znotes{flex:1 0 100%;min-height:0;margin-top:0}
+  .znotes textarea{height:64px}
 }
 @media (prefers-reduced-motion:reduce){.zstage.busy::after{animation:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -670,10 +685,8 @@ section[id]{scroll-margin-top:72px}
       <h2>Extracted listings</h2>
       <span class="note" id="r-note"></span>
     </div>
-    <p class="lede">Everything Rainforest returned, plus the raw payloads on disk. Open
-       <b>Bullets</b> or <b>Reviews</b> on any card to read the exact text that will be tagged.
-       <b>Double-click</b> anything to correct it &mdash; your edits are kept separately, so
-       what the API returned is never overwritten.</p>
+    <textarea class="rnotes" id="r-memo" rows="1" spellcheck="true"
+              placeholder="Click to add notes about this run&hellip;" aria-label="Notes about this run"></textarea>
     <div id="r-removed"></div>
     <div class="pgrid" id="r-cards"></div>
   </section>
@@ -777,6 +790,12 @@ section[id]{scroll-margin-top:72px}
     <div class="zbtns">
       <button id="zout" title="Zoom out" aria-label="Zoom out">&minus;</button>
       <button id="zin" title="Zoom in" aria-label="Zoom in">+</button>
+    </div>
+    <!-- Extract page only: this listing's notes, saved as you type -->
+    <div class="znotes" id="znotes" hidden>
+      <label class="dt" for="znote">Notes</label>
+      <textarea id="znote" spellcheck="true" placeholder="Notes about this product&hellip;"></textarea>
+      <span class="zsaved" id="zsaved" aria-live="polite"></span>
     </div>
   </div>
   <button class="x zx" id="zclose" title="Close (Esc)" aria-label="Close">&times;</button>
@@ -1909,8 +1928,14 @@ async function renderRun(slug, runId) {
   });
 
   runState = { slug, runId, products: run.products || [], log, stats,
-               parses: parses || [] };
+               parses: parses || [], meta: { ...(meta || {}) } };
   removedOpen = false;
+
+  const memo = $("r-memo");
+  memo.value = runState.meta.notes || "";
+  memo.oninput = () => { growNote(memo); queueNote(null, memo.value); };
+  memo.onblur = () => flushNote(null);
+  requestAnimationFrame(() => growNote(memo));
 
   const notes = (log.notes || []).map(n =>
     `<div class="note-line info"><span class="ic">${
@@ -1928,6 +1953,42 @@ async function renderRun(slug, runId) {
     const newest = (runState.parses || [])[0];
     if (newest && newest.grouped) location.hash = resultsHref(slug, runId, newest.id);
   };
+}
+
+/* ---------- notes ----------
+   The run's notes and each listing's notes live in run_meta.json, apart from
+   edits.json, so nothing written here is ever tagged. They save a moment after
+   typing stops, and at once on blur or when the zoom view moves on. An empty
+   box clears the note. `asin` null means the run's own notes. */
+const notePending = {};
+
+function queueNote(asin, text, done) {
+  const key = asin || "", { slug, runId, meta } = runState;
+  if (asin) (meta.product_notes = meta.product_notes || {})[asin] = text;
+  else meta.notes = text;
+  clearTimeout((notePending[key] || {}).timer);
+  const run = async () => {
+    delete notePending[key];
+    let ok = true;
+    try {
+      await api(`/api/runs/${encodeURIComponent(slug)}/${encodeURIComponent(runId)}/notes`,
+                { method: "PUT", body: JSON.stringify({ asin, text }) });
+    } catch (e) { ok = false; showError(e.message); }
+    if (done) done(ok);
+  };
+  notePending[key] = { timer: setTimeout(run, 700), run };
+}
+
+function flushNote(asin) {
+  const p = notePending[asin || ""];
+  if (!p) return;
+  clearTimeout(p.timer);
+  p.run();
+}
+
+function growNote(el) {
+  el.style.height = "auto";
+  el.style.height = el.scrollHeight + 2 + "px";
 }
 
 /* ---------- step 2: tagging ----------
@@ -3866,6 +3927,8 @@ function closeZoom() {
   zoomState = null;
   $("zimg").removeAttribute("src");
   $("zsub").hidden = true;
+  $("znotes").hidden = true;
+  if (list) flushNote(list.asins[list.i]);
   // From the Extract page, land on the listing last viewed: scroll its card in and flash it.
   if (list) {
     const card = document.querySelector(`.pcard[data-asin="${CSS.escape(list.asins[list.i])}"]`);
@@ -3897,6 +3960,7 @@ function openListingZoom(asin) {
 function listingStep(d) {
   const list = zoomState.list, to = list.i + d;
   if (to < 0 || to >= list.asins.length) return;
+  flushNote(list.asins[list.i]);
   list.i = to;
   zoomState.urls = listingGallery(product(list.asins[to]));
   zoomState.at = 0;
@@ -3911,7 +3975,21 @@ function listingFill() {
   $("zsub").innerHTML = `Listing <b>${i + 1}</b> of ${asins.length} &middot; &larr; &rarr; to switch<br>` +
     `${esc(p.asin)} &middot; ${esc((p.price && p.price.raw) || "no price")}`;
   $("zsub").hidden = false;
+  $("znote").value = (runState.meta.product_notes || {})[p.asin] || "";
+  $("zsaved").textContent = "";
+  $("znotes").hidden = false;
 }
+
+$("znote").addEventListener("input", () => {
+  const list = zoomState && zoomState.list;
+  if (!list) return;
+  const asin = list.asins[list.i];
+  $("zsaved").textContent = "Saving…";
+  queueNote(asin, $("znote").value, ok => {
+    const now = zoomState && zoomState.list;
+    if (now && now.asins[now.i] === asin) $("zsaved").textContent = ok ? "Saved" : "Not saved";
+  });
+});
 
 function zoomShow() {
   const z = zoomState, url = z.urls[z.at], n = z.urls.length;
@@ -4168,6 +4246,11 @@ document.addEventListener("keydown", e => {
   // The zoom view sits over everything, so it answers first: Esc closes it (the
   // pinned card stays open underneath) and the arrows step its images.
   if (!$("zoom").hidden) {
+    // Typing in the notes box: arrows move the caret, Esc leaves the box first.
+    if (e.target === $("znote")) {
+      if (e.key === "Escape") e.target.blur();
+      return;
+    }
     if (e.key === "Escape") closeZoom();
     else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
       e.preventDefault();

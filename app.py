@@ -447,6 +447,14 @@ def api_set_run_label(slug: str, run_id: str):
     return jsonify({"meta": storage.set_run_label(slug, run_id, payload.get("label", ""))})
 
 
+@app.put("/api/runs/<slug>/<run_id>/notes")
+def api_set_run_notes(slug: str, run_id: str):
+    """Save `{text}` as the run's notes, or `{asin, text}` as one product's."""
+    payload = request.get_json(silent=True) or {}
+    meta = storage.set_run_notes(slug, run_id, payload.get("text", ""), payload.get("asin") or None)
+    return jsonify({"meta": meta})
+
+
 # ---------------------------------------------------------------------------
 # Editing — edits.json is an overlay, extracted.json is never touched
 # ---------------------------------------------------------------------------
