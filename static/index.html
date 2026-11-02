@@ -81,6 +81,7 @@ section{margin-bottom:48px}
 .shead h2{font-family:var(--disp);font-weight:700;font-size:19px;letter-spacing:-.012em;margin:0}
 .shead .note{font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-left:auto;white-space:nowrap}
 .lede{color:var(--muted);font-size:13px;margin:-6px 0 16px;max-width:74ch}
+.cpbar{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
 /* Run notes: reads as the section's caption until clicked, then as a field. */
 .rnotes{display:block;width:100%;max-width:74ch;margin:-6px 0 16px;padding:5px 8px;font-family:var(--sans);font-size:13px;
   line-height:1.5;color:var(--ink);background:transparent;border:1px dashed var(--rule);border-radius:3px;resize:none;
@@ -689,6 +690,10 @@ section[id]{scroll-margin-top:72px}
               placeholder="Click to add notes about this run&hellip;" aria-label="Notes about this run"></textarea>
     <div id="r-removed"></div>
     <div class="pgrid" id="r-cards"></div>
+    <div class="cpbar">
+      <button class="btn ghost" id="r-export" hidden>Export</button>
+      <button class="btn ghost" id="r-copy" hidden>Copy ASINs</button>
+    </div>
   </section>
 </div>
 
@@ -1887,7 +1892,43 @@ function renderRunBody() {
     if (openTabs[card.dataset.asin]) card.dataset.tab = openTabs[card.dataset.asin];
     wireCard(card);
   });
+  $("r-copy").hidden = $("r-export").hidden = !live.length;
 }
+
+/* Download the run as a .pptx: a title slide, then one slide per live ASIN. */
+$("r-export").onclick = async () => {
+  const btn = $("r-export");
+  await Promise.all(Object.keys(notePending).map(k => flushNote(k || null)));
+  btn.disabled = true;
+  btn.textContent = "Exporting…";
+  try {
+    const res = await fetch(runPath("/export.pptx"));
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Export failed.");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(await res.blob());
+    a.download = `${runState.meta.label || runState.runId}.pptx`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  } catch (e) {
+    showError(e.message);
+  }
+  btn.disabled = false;
+  btn.textContent = "Export";
+};
+
+/* Copy the run's live ASINs, one per line, in card order. */
+$("r-copy").onclick = async () => {
+  const btn = $("r-copy");
+  const asins = runState.products.filter(p => !p.deleted).map(p => p.asin);
+  try {
+    await navigator.clipboard.writeText(asins.join("\n"));
+    btn.textContent = `Copied ${asins.length} ASINs`;
+  } catch (e) {
+    btn.textContent = "Copy failed";
+  }
+  clearTimeout(btn.resetTimer);
+  btn.resetTimer = setTimeout(() => { btn.textContent = "Copy ASINs"; }, 1600);
+};
 
 async function renderRun(slug, runId) {
   showView("run");
@@ -1983,7 +2024,7 @@ function flushNote(asin) {
   const p = notePending[asin || ""];
   if (!p) return;
   clearTimeout(p.timer);
-  p.run();
+  return p.run();
 }
 
 function growNote(el) {

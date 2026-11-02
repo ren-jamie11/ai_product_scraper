@@ -7,14 +7,15 @@ Then: http://127.0.0.1:5000  (opened automatically)
 
 from __future__ import annotations
 
+import io
 import sys
 import threading
 import webbrowser
 
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_file, send_from_directory
 
 import config
-from pipeline import (asins, compact, extract, grouping, jobs, normalize, results,
+from pipeline import (asins, compact, export, extract, grouping, jobs, normalize, results,
                       settings, storage, tagging, themes)
 
 app = Flask(__name__, static_folder="static", static_url_path="/static")
@@ -453,6 +454,17 @@ def api_set_run_notes(slug: str, run_id: str):
     payload = request.get_json(silent=True) or {}
     meta = storage.set_run_notes(slug, run_id, payload.get("text", ""), payload.get("asin") or None)
     return jsonify({"meta": meta})
+
+
+@app.get("/api/runs/<slug>/<run_id>/export.pptx")
+def api_export_run(slug: str, run_id: str):
+    """The run as a deck: a title slide, then one slide per live ASIN."""
+    run = storage.load_run(slug, run_id)
+    meta = storage.read_run_meta(slug, run_id)
+    return send_file(
+        io.BytesIO(export.build_deck(run, meta)), as_attachment=True,
+        download_name=f"{meta.get('label') or run_id}.pptx",
+        mimetype="application/vnd.openxmlformats-officedocument.presentationml.presentation")
 
 
 # ---------------------------------------------------------------------------
