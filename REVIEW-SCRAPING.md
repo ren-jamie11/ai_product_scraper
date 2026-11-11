@@ -117,3 +117,34 @@ A click on a cluster chip opens the white image view directly; the dark pinned c
 - Verified with Playwright at 1280 and 600 px (33/33 each) on decorative-books, plus an older
   parse with no scraped photos opening in the listing-image form.
 - **Known:** some scraped review text carries Amazon's "The media could not be loaded." line.
+
+## Customer photos on the Extracted listings page (built 2026-11-11)
+
+A **Customer photos** section under the listing cards (below Export / Copy ASINs), so photos can
+be browsed straight after extraction, before any parse.
+
+- **Data.** `GET /api/runs/<slug>/<run>` gains a top-level `media: {asin: {review_id: {photos,
+  author, url}}}`, built by `results.review_media(raw_dir, asin)` (the raw-reading half of
+  `_attach_review_media`, now shared). It sits beside `run`, never in it, so `extracted.json`,
+  `edits.json` and edit payloads never carry it. Only reviews with photos are listed.
+- **Rows.** One per live product with photos, in card order: product thumbnail, title, counts,
+  six tiles and `See all N`. Reviews are ordered by helpful votes, then number of photos, then as
+  scraped; a review's photos sit together with no marker. Every tile carries its review's stars.
+  A product with no photos has no row; a run with none has no section. A deleted review or a
+  removed ASIN drops out at once (`renderRunPhotos` runs from `renderRunBody`).
+- **See all.** A white overlay grid (`#pall`) of every photo for that product. It stays open under
+  the photo view, so Esc returns to the grid and Esc again closes it.
+- **Click.** Any tile opens the photo view on that photo, over every product in the run
+  (`buildRunPhotoScope`): Products strip, ‹ › images, ← → reviews, ↑ ↓ products, as on Results.
+  Nothing is tagged yet, so there is no highlight and no tag chip. The listing-image view opened
+  from a card's product image is unchanged (← → there still switch listings).
+- **One list feeds everything.** `runPhotoRows()` is read by the preview, the counts, See all and
+  the scope. The photo view no longer reads `resultsState` itself: a scope carries `photos(item)`,
+  `detail(item)` and `product(asin)`, supplied by `buildPhotoScope` or `buildRunPhotoScope`.
+- **Thumbnails are sized copies.** Tiles and the photo view's thumbnails load
+  `<id>._SL320_.<ext>` (about a tenth of the upload); `data-url` holds the photo they stand for,
+  which is what `photoChecked` drops when one fails.
+- **Layout trap.** The See-all scroller and its grid are two boxes: a grid with a fixed height
+  squeezed its rows and the square tiles overlapped.
+- Verified with Playwright at 1280 and 600 px (25/25 each, images stubbed locally), the Results
+  photo-view checks re-run (33/33 each), and one live load of the section and a See-all grid.

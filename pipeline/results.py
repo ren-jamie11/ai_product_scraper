@@ -390,18 +390,34 @@ def _attach_review_media(raw_dir, bodies: dict) -> None:
             continue
         asin = body.get("asin")
         if asin not in media:
-            payload = storage.read_json(raw_dir / f"{asin}.amazon_reviews.json", {}) or {}
-            media[asin] = {"site": payload.get("domain"),
-                           "reviews": {r.get("review_id"): r for r in payload.get("reviews") or []
-                                       if r.get("review_id")}}
-        review_id = body_id.split(":", 2)[-1]
-        raw = media[asin]["reviews"].get(review_id)
-        review["photos"] = _photos((raw or {}).get("image_urls"))
-        review["author"] = (raw or {}).get("username") or None
-        # The review's permanent page, not the scraper's link, which carries the
-        # listing-page context it was found in.
-        site = media[asin]["site"]
-        review["url"] = f"https://www.{site}/gp/customer-reviews/{review_id}" if raw and site else None
+            media[asin] = review_media(raw_dir, asin)
+        found = media[asin].get(body_id.split(":", 2)[-1]) or {}
+        review["photos"] = found.get("photos") or []
+        review["author"] = found.get("author")
+        review["url"] = found.get("url")
+
+
+def review_media(raw_dir, asin: str) -> dict[str, dict]:
+    """What the scrape holds for one listing's reviews beyond their text, by review id:
+    `photos`, the reviewer's name as `author`, and the review's own page as `url`.
+
+    Shared by the results view and the run view; {} when the listing was never scraped.
+    """
+    payload = storage.read_json(raw_dir / f"{asin}.amazon_reviews.json", {}) or {}
+    site = payload.get("domain")
+    out = {}
+    for raw in payload.get("reviews") or []:
+        review_id = raw.get("review_id")
+        if not review_id:
+            continue
+        out[review_id] = {
+            "photos": _photos(raw.get("image_urls")),
+            "author": raw.get("username") or None,
+            # The review's permanent page, not the scraper's link, which carries the
+            # listing-page context it was found in.
+            "url": f"https://www.{site}/gp/customer-reviews/{review_id}" if site else None,
+        }
+    return out
 
 
 def _photos_first(sections: list[dict], occurrences: dict, bodies: dict) -> None:

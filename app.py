@@ -482,9 +482,20 @@ def api_run(slug: str, run_id: str):
     run = storage.load_run(slug, run_id, include_deleted=True)
     live = [p for p in run["products"] if not p.get("deleted")]
 
+    # Customer photos, the reviewer and the review's page, by ASIN then review id.
+    # Beside `run` and never in it: it is read from the raw scrape for display only,
+    # and must not ride along in an edit.
+    media = {}
+    for p in run["products"]:
+        found = {rid: m for rid, m in results.review_media(directory / "raw", p["asin"]).items()
+                 if m["photos"]}
+        if found:
+            media[p["asin"]] = found
+
     return jsonify({
         "group": {"name": group.get("name", slug), "slug": slug},
         "run": run,
+        "media": media,
         "stats": normalize.summarize(live),
         "log": storage.read_json(directory / "run_log.json", {}) or {},
         "meta": storage.read_run_meta(slug, run_id),

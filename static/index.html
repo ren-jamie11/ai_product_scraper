@@ -518,6 +518,38 @@ section[id]{scroll-margin-top:72px}
 .zveil .zx{position:absolute;top:12px;right:14px;font-size:22px;z-index:1;background:rgba(255,255,255,.9)}
 .zveil .zx:hover{background:var(--iron-wash)}
 
+/* ---------- run: customer photos ----------
+   Under the listing cards: one row per product that has customer photos, six tiles and
+   See all. A tile is a square crop with the review's stars over its foot. See all is a
+   white overlay grid of every tile for that product, one layer under the image view. */
+.cprow{padding:14px 0 16px;border-bottom:1px solid var(--rule-soft)}
+.cprow:last-child{border-bottom:0}
+.cph{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.cph > img,.cph > .noimg,.pallhd > img,.pallhd > .noimg{flex:0 0 44px;width:44px;height:44px;object-fit:contain;background:#fff;border:1px solid var(--rule);border-radius:3px}
+.cpt{min-width:0;flex:1 1 auto;display:flex;flex-direction:column;gap:2px}
+.cpt a{font-weight:600;font-size:13.5px;color:var(--ink);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cpt a:hover{color:var(--cobalt);text-decoration:underline}
+.cpm{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.cpall{flex:0 0 auto;font-family:var(--mono);font-size:11px;white-space:nowrap}
+.cptiles{display:grid;grid-template-columns:repeat(6,minmax(0,168px));gap:8px}
+.cptile{position:relative;padding:0;border:1px solid var(--rule);background:var(--porcelain);border-radius:3px;overflow:hidden;
+  aspect-ratio:1;cursor:zoom-in}
+.cptile:hover{border-color:var(--cobalt)}
+/* out of flow, so the tile's height comes from its width alone (a grid row would
+   otherwise size itself from the image and squeeze) */
+.cptile img,.cptile .noimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cpstars{position:absolute;left:0;right:0;bottom:0;padding:14px 7px 5px;text-align:left;font-size:12px;letter-spacing:1px;line-height:1;
+  color:#F5B942;background:linear-gradient(transparent,rgba(19,26,42,.72));pointer-events:none}
+.pallveil{position:fixed;inset:0;z-index:88;background:rgba(19,26,42,.5);display:flex;align-items:center;justify-content:center}
+.pallveil[hidden]{display:none}
+.pallbox{position:relative;display:flex;flex-direction:column;width:min(92vw,1320px);height:min(88vh,1000px);background:#fff;
+  border-radius:3px;overflow:hidden;box-shadow:0 10px 40px rgba(19,26,42,.3)}
+.pallhd{flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:12px 52px 12px 16px;border-bottom:1px solid var(--rule)}
+.pallbox > .x{position:absolute;top:10px;right:12px;font-size:22px}
+/* the scroller and the grid are two boxes: a grid with a fixed height squeezes its rows */
+.pallscroll{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:16px}
+.pallgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+
 /* ---------- results: photo view ----------
    The zoom view opened from a chip. Left of the stage, a strip of the products that
    have photo reviews in the chip's cluster: thumbnails only until hovered (or
@@ -565,6 +597,12 @@ section[id]{scroll-margin-top:72px}
   .zttl{flex:1 0 100%;-webkit-line-clamp:1}
   .zsub{flex:1 0 100%;margin-top:0}
   .zthumbs{flex:1 1 0;min-width:0;display:flex;overflow-x:auto;overscroll-behavior:contain}
+  /* customer photos: the six tiles scroll sideways; See all is three across */
+  .cptiles{display:flex;overflow-x:auto;overscroll-behavior-x:contain}
+  .cptile{flex:0 0 112px}
+  .pallbox{width:calc(100vw - 16px);height:calc(100vh - 16px)}
+  .pallscroll{padding:10px}
+  .pallgrid{grid-template-columns:repeat(3,1fr)}
   .zth{flex:0 0 52px;height:52px}
   /* photo view: the product strip runs across the top, and opens downwards over the stage;
      the rail scrolls, since it now holds a whole review */
@@ -727,6 +765,14 @@ section[id]{scroll-margin-top:72px}
       <button class="btn ghost" id="r-copy" hidden>Copy ASINs</button>
     </div>
   </section>
+  <!-- Customer photos by product, read from the review scrape; hidden when there are none -->
+  <section id="r-photos" style="margin-top:38px" hidden>
+    <div class="shead">
+      <h2>Customer photos</h2>
+      <span class="note" id="rp-note"></span>
+    </div>
+    <div id="rp-rows"></div>
+  </section>
 </div>
 
 <!-- ==================== RESULTS VIEW ==================== -->
@@ -811,6 +857,14 @@ section[id]{scroll-margin-top:72px}
 
 <!-- ==================== HOVER CARD / IMAGE VIEW ==================== -->
 <div id="tip" role="tooltip" aria-hidden="true"></div>
+<!-- Run page: every customer photo of one product (See all) -->
+<div id="pall" class="pallveil" hidden role="dialog" aria-modal="true" aria-label="Customer photos">
+  <div class="pallbox">
+    <div class="pallhd" id="pallhd"></div>
+    <div class="pallscroll"><div class="pallgrid" id="pallgrid"></div></div>
+    <button class="x" id="pallclose" title="Close (Esc)" aria-label="Close">&times;</button>
+  </div>
+</div>
 <div id="zoom" class="zveil" hidden role="dialog" aria-modal="true" aria-label="Product images">
  <div class="zbox" id="zbox">
   <!-- Results page only: the products with photo reviews in the chip's cluster -->
@@ -1135,6 +1189,7 @@ function showView(which) {
   // view opened it.
   tipOff();
   closeZoom();
+  closeAllPhotos();
 }
 
 function resultsHref(slug, runId, parseId) {
@@ -2016,7 +2071,135 @@ function renderRunBody() {
     wireCard(card);
   });
   $("r-copy").hidden = $("r-export").hidden = !live.length;
+  renderRunPhotos();
 }
+
+/* ---------- customer photos ----------
+   `runState.media` is { asin: { review_id: { photos, author, url } } }, read from the
+   review scrape by the server. A product's reviews are ordered by helpful votes,
+   then by how many photos they carry, then as scraped; a review's photos stay
+   together. Everything here — the six-tile preview, See all, the photo view's
+   scope — reads the one list this returns, so they can never disagree. */
+const PHOTO_PREVIEW = 6;
+
+function runPhotoRows() {
+  const media = (runState && runState.media) || {};
+  return runState.products.filter(p => !p.deleted).map(p => {
+    const m = media[p.asin] || {};
+    const reviews = (p.reviews || [])
+      .map((r, at) => ({ r, at, photos: ((m[r.id] || {}).photos || []).filter(u => !badPhotos.has(u)) }))
+      .filter(x => x.photos.length)
+      .sort((a, b) => (b.r.helpful_votes || 0) - (a.r.helpful_votes || 0) ||
+                      b.photos.length - a.photos.length || a.at - b.at);
+    const tiles = [].concat(...reviews.map(x => x.photos.map(url => ({ id: x.r.id, url, rating: x.r.rating }))));
+    return { p, reviews, tiles };
+  }).filter(row => row.tiles.length);
+}
+
+/* Amazon serves any photo at a given longest side; a tile needs a fraction of the upload. */
+function photoThumb(url, px) {
+  return String(url).replace(/\.(jpe?g|png|webp|gif)$/i, `._SL${px}_.$1`);
+}
+
+function photoTileHtml(asin, t) {
+  return `<button class="cptile" data-asin="${esc(asin)}" data-rid="${esc(t.id)}" data-url="${esc(t.url)}"
+            aria-label="Customer photo${t.rating != null ? `, ${esc(t.rating)} stars` : ""}">
+    <img src="${esc(photoThumb(t.url, 320))}" data-url="${esc(t.url)}" alt="" loading="lazy" draggable="false"
+         onload="photoChecked(this, true)" onerror="photoChecked(this, false)">${
+    t.rating != null ? `<span class="cpstars">${esc(stars(t.rating))}</span>` : ""}</button>`;
+}
+
+function renderRunPhotos() {
+  const rows = runPhotoRows();
+  const live = runState.products.filter(p => !p.deleted).length;
+  $("r-photos").hidden = !rows.length;
+  if (!rows.length) { $("rp-rows").innerHTML = ""; closeAllPhotos(); return; }
+  const total = rows.reduce((n, row) => n + row.tiles.length, 0);
+  $("rp-note").textContent = `${plural(total, "photo", "photos")} · ${rows.length} of ${plural(live, "product", "products")}`;
+  $("rp-rows").innerHTML = rows.map(({ p, reviews, tiles }) => `
+    <div class="cprow" data-asin="${esc(p.asin)}">
+      <div class="cph">${thumbHtml(p.main_image)}
+        <div class="cpt">
+          <a href="${esc(p.link || p.source_url || "#")}" target="_blank" rel="noopener"
+             title="Open on Amazon">${esc(p.title || "(no title returned)")}</a>
+          <span class="cpm">${esc(p.asin)} &middot; ${plural(tiles.length, "photo", "photos")} &middot; ${
+            plural(reviews.length, "review", "reviews")}</span>
+        </div>
+        ${tiles.length > PHOTO_PREVIEW
+          ? `<button class="lnk cpall" data-all="${esc(p.asin)}">See all ${tiles.length} &rsaquo;</button>` : ""}
+      </div>
+      <div class="cptiles">${tiles.slice(0, PHOTO_PREVIEW).map(t => photoTileHtml(p.asin, t)).join("")}</div>
+    </div>`).join("");
+  if (pallAsin) fillAllPhotos();
+}
+
+/* See all: one product's every photo. Stays open under the photo view, so closing
+   that lands back on the grid. */
+let pallAsin = null;
+
+function openAllPhotos(asin) {
+  pallAsin = asin;
+  fillAllPhotos();
+  if (!pallAsin) return;
+  $("pall").hidden = false;
+  $("pallgrid").parentNode.scrollTop = 0;
+  $("pallclose").focus({ preventScroll: true });
+}
+
+function fillAllPhotos() {
+  const row = runPhotoRows().find(x => x.p.asin === pallAsin);
+  if (!row) { closeAllPhotos(); return; }
+  $("pallhd").innerHTML = `${thumbHtml(row.p.main_image)}
+    <div class="cpt"><a href="${esc(row.p.link || row.p.source_url || "#")}" target="_blank" rel="noopener"
+         title="Open on Amazon">${esc(row.p.title || "(no title returned)")}</a>
+      <span class="cpm">${esc(row.p.asin)} &middot; ${plural(row.tiles.length, "customer photo", "customer photos")} &middot; ${
+        plural(row.reviews.length, "review", "reviews")}</span></div>`;
+  $("pallgrid").innerHTML = row.tiles.map(t => photoTileHtml(row.p.asin, t)).join("");
+}
+
+function closeAllPhotos() {
+  pallAsin = null;
+  $("pall").hidden = true;
+  $("pallgrid").innerHTML = "";
+}
+
+/* The photo view over the whole run: every product's photo reviews in the section's
+   order, opened on the photo clicked. Nothing is tagged yet, so no sentence is marked. */
+function buildRunPhotoScope(asin, reviewId, url) {
+  const media = runState.media || {};
+  const items = [];
+  runPhotoRows().forEach(row => row.reviews.forEach(x => items.push({
+    asin: row.p.asin, body_id: `${row.p.asin}:review:${x.r.id}`, r: x.r, all: x.photos })));
+  const i = items.findIndex(it => it.asin === asin && it.r.id === reviewId);
+  if (i < 0) return null;
+  const photos = it => it.all.filter(u => !badPhotos.has(u));
+  return {
+    listing: false, items, i, at: Math.max(0, photos(items[i]).indexOf(url)), tone: "",
+    photos,
+    detail: it => {
+      const m = (media[it.asin] || {})[it.r.id] || {};
+      return { text: [it.r.title, it.r.body].filter(Boolean).join("\n"), match: null, tag: null,
+               review: { title: it.r.title, rating: it.r.rating, date: it.r.date,
+                         verified_purchase: it.r.verified_purchase, author: m.author, url: m.url } };
+    },
+    product: a => { const p = product(a) || {}; return { ...p, link: p.link || p.source_url }; },
+  };
+}
+
+(() => {
+  const onTile = e => {
+    const all = e.target.closest("[data-all]");
+    if (all) { openAllPhotos(all.dataset.all); return; }
+    const tile = e.target.closest(".cptile");
+    if (!tile || zoomState) return;
+    const rv = buildRunPhotoScope(tile.dataset.asin, tile.dataset.rid, tile.dataset.url);
+    if (rv) openPhotoView(rv, tile, e.detail === 0);
+  };
+  $("rp-rows").addEventListener("click", onTile);
+  $("pallgrid").addEventListener("click", onTile);
+  $("pallclose").onclick = closeAllPhotos;
+  $("pall").addEventListener("click", e => { if (e.target === $("pall")) closeAllPhotos(); });
+})();
 
 /* Download the run as a .pptx: a title slide, then one slide per live ASIN. */
 $("r-export").onclick = async () => {
@@ -2066,7 +2249,7 @@ async function renderRun(slug, runId) {
     return;
   }
 
-  const { group, run, log, stats, meta, parses } = data;
+  const { group, run, log, stats, meta, parses, media } = data;
   const label = (meta || {}).label || "";
   setHeader({
     eyebrow: `${group.name} · extraction run`,
@@ -2092,7 +2275,7 @@ async function renderRun(slug, runId) {
   });
 
   runState = { slug, runId, products: run.products || [], log, stats,
-               parses: parses || [], meta: { ...(meta || {}) },
+               parses: parses || [], meta: { ...(meta || {}) }, media: media || {},
                site: run.amazon_domain || log.amazon_domain || "" };
   removedOpen = false;
 
@@ -3780,7 +3963,7 @@ function bodyPhotos(b) {
 }
 
 function photoChecked(img, ok) {
-  const url = img.getAttribute("src");
+  const url = img.dataset.url || img.getAttribute("src");
   if (ok && img.naturalWidth >= PHOTO_MIN_PX) { photoFails = []; return true; }
   // Loaded but tiny is Amazon's placeholder; an error may be the photo or the connection.
   if (ok) dropPhoto(url);
@@ -3812,6 +3995,8 @@ function photoFailed(url) {
 function dropPhoto(url) {
   if (!url || badPhotos.has(url)) return;
   badPhotos.add(url);
+  // The run page's rows and See-all grid lose the tile too.
+  if (runState && !$("view-run").hidden) renderRunPhotos();
   const z = zoomState, rv = z && z.rv;
   if (!rv || rv.listing) return;
   const cur = rv.items[rv.i];
@@ -3924,7 +4109,8 @@ document.addEventListener("click", e => {
   const bub = e.target.closest(".bub[data-occs]");
   if (!bub || !resultsState || zoomState) return;
   e.stopPropagation();
-  openPhotoView(bub, e);
+  const rv = buildPhotoScope(bub);
+  if (rv) openPhotoView(rv, bub, e.detail === 0);
 });
 
 /* ---------- photo view ----------
@@ -3987,12 +4173,22 @@ function buildPhotoScope(el) {
       .sort((a, b) => own(b.g) - own(a.g) || b.g.length - a.g.length || a.at - b.at)
       .map(x => x.g.filter(it => it.mine).concat(x.g.filter(it => !it.mine)));
   }
-  return { listing, items: [].concat(...order), i: 0, tone: LIST_TONE[el.dataset.sec] || "" };
+  return {
+    listing, items: [].concat(...order), i: 0, at: 0, tone: LIST_TONE[el.dataset.sec] || "",
+    photos: it => (listing ? gallery(d.products[it.asin] || {}) : bodyPhotos(d.bodies[it.body_id])),
+    detail: it => {
+      const o = d.occurrences[it.ref], b = d.bodies[it.body_id];
+      return { text: b.text, match: o.match, tag: o.text, review: (o.body_type === "review" && b.review) || null };
+    },
+    product: asin => d.products[asin] || {},
+  };
 }
 
+/* A scope carries its own lookups, so the view works the same over a parse's results
+   and over a run's reviews: `photos(item)`, `detail(item)` → { text, match, tag, review }
+   (match and tag null where nothing is tagged), and `product(asin)`. */
 function rvPhotos(rv, it) {
-  const d = resultsState.data;
-  return rv.listing ? gallery(d.products[it.asin] || {}) : bodyPhotos(d.bodies[it.body_id]);
+  return rv.photos(it);
 }
 
 /* The scope's products in order: [{ asin, start, n }], `start` the first item's index. */
@@ -4006,13 +4202,11 @@ function rvProducts(rv) {
   return out;
 }
 
-function openPhotoView(el, ev) {
-  const rv = buildPhotoScope(el);
-  if (!rv) return;
+/* `back` is what was clicked and `kb` whether the keyboard clicked it (a click with
+   detail 0): only then does focus go back to it on close. */
+function openPhotoView(rv, back, kb) {
   tipOff();
-  // A keyboard click has detail 0; only then does focus go back to the chip on close.
-  zoomState = { urls: [], at: 0, s: 1, x: 0, y: 0, w: 0, h: 0, down: null,
-                back: el, kb: ev.detail === 0, rv };
+  zoomState = { urls: [], at: rv.at || 0, s: 1, x: 0, y: 0, w: 0, h: 0, down: null, back, kb, rv };
   $("zprod").hidden = $("zrv").hidden = $("zrvpos").hidden = false;
   $("zoom").hidden = false;
   rvShow();
@@ -4029,12 +4223,10 @@ function rvShow() {
 }
 
 function rvFill() {
-  const z = zoomState, rv = z.rv, d = resultsState.data;
+  const z = zoomState, rv = z.rv;
   const it = rv.items[rv.i];
-  const o = d.occurrences[it.ref];
-  const b = d.bodies[it.body_id];
-  const p = d.products[it.asin] || {};
-  const r = (o.body_type === "review" && b.review) || null;
+  const { text: body, match: m, tag, review: r } = rv.detail(it);
+  const p = rv.product(it.asin);
   const products = rvProducts(rv);
   const pi = products.findIndex(g => rv.i >= g.start && rv.i < g.start + g.n);
   const link = (href, inner) => href
@@ -4052,20 +4244,20 @@ function rvFill() {
     : "Listing";
   // A review's text opens with its title. It is shown once, as the bold line, unless
   // the marked sentence is the title itself, in which case the text is left whole.
-  const m = o.match;
-  let skip = r && r.title && b.text.startsWith(r.title) ? r.title.length : 0;
-  if (skip && m.confident && m.unit[0] < skip) skip = 0;
-  while (skip && /\s/.test(b.text[skip] || "")) skip += 1;
-  const text = !skip ? markedBody(b.text, m)
-    : !m.confident ? esc(b.text.slice(skip))
-    : esc(b.text.slice(skip, m.unit[0])) +
-      `<span class="hit">${markRange(b.text, m.unit[0], m.unit[1], m.spans)}</span>` + esc(b.text.slice(m.unit[1]));
+  const marked = !!(m && m.confident);
+  let skip = r && r.title && body.startsWith(r.title) ? r.title.length : 0;
+  if (skip && marked && m.unit[0] < skip) skip = 0;
+  while (skip && /\s/.test(body[skip] || "")) skip += 1;
+  const text = !marked ? esc(body.slice(skip))
+    : !skip ? markedBody(body, m)
+    : esc(body.slice(skip, m.unit[0])) +
+      `<span class="hit">${markRange(body, m.unit[0], m.unit[1], m.spans)}</span>` + esc(body.slice(m.unit[1]));
   $("zrv").innerHTML = `
     <div class="rvmeta">${meta || "Review"}</div>
     ${skip ? `<div class="rvttl">${esc(r.title)}</div>` : ""}
-    <div><span class="bub ${rv.tone}">${esc(o.text)}</span></div>
+    ${tag ? `<div><span class="bub ${rv.tone}">${esc(tag)}</span></div>` : ""}
     <div class="rvtext">${text}</div>
-    ${o.match.confident ? "" : `<div class="rvnote">No exact sentence found</div>`}
+    ${m && !m.confident ? `<div class="rvnote">No exact sentence found</div>` : ""}
     ${r && r.url ? `<a class="rvlink" href="${esc(r.url)}" target="_blank" rel="noopener">view on Amazon</a>` : ""}`;
 
   const unit = rv.listing ? ["Source", "sources"] : ["Review", "reviews"];
@@ -4074,7 +4266,7 @@ function rvFill() {
     `<br>&larr; &rarr; ${rv.listing ? "source" : "review"} &middot; &uarr; &darr; product`;
 
   $("zplist").innerHTML = products.map((g, at) => {
-    const q = d.products[g.asin] || {};
+    const q = rv.product(g.asin);
     return `<button class="zprow${at === pi ? " on" : ""}" data-zp="${at}" ${at === pi ? 'aria-current="true"' : ""}
               title="${esc(q.title || g.asin)}">${thumbHtml(q.main_image)}
       <span class="zpt"><span class="zpn">${esc(q.title || g.asin)}</span>
@@ -4160,6 +4352,7 @@ function containWheel(root) {
   }, { passive: false });
 }
 containWheel($("zoom"));
+containWheel($("pall"));
 
 /* ---------- zoom view ----------
    Opened from a listing card's image on the Extract page (`list`) or from a chip on
@@ -4304,7 +4497,7 @@ function zoomShow() {
   // A customer photo's thumbnail is also where a broken or placeholder one shows itself.
   $("zthumbs").innerHTML = z.urls.map((u, i) =>
     `<button class="zth${i === z.at ? " on" : ""}" data-zi="${i}" aria-label="Image ${i + 1}">${
-      cphoto ? `<img src="${esc(u)}" alt="" loading="lazy"
+      cphoto ? `<img src="${esc(photoThumb(u, 320))}" data-url="${esc(u)}" alt="" loading="lazy"
                      onload="photoChecked(this, true)" onerror="photoChecked(this, false)">`
              : thumbHtml(u)}</button>`).join("");
   // In the photo view the arrows roll on into the next review, so they stop only at
@@ -4618,7 +4811,8 @@ document.addEventListener("keydown", e => {
     return;
   }
   if (e.key !== "Escape") return;
-  if (!$("cveil").hidden) closeConfirm(false);
+  if (!$("pall").hidden) closeAllPhotos();
+  else if (!$("cveil").hidden) closeConfirm(false);
   else if (!$("sveil").hidden) $("sveil").hidden = true;
   else if (!$("veil").hidden) closeModal();
 });
