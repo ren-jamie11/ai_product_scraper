@@ -182,3 +182,15 @@ These supersede the matching lines in the two sections above.
   ← → keys do the same: Results walks the Products-panel order, Extracted listings the card
   order. See all is fed by a source (`RUN_PHOTOS`, or `scopePhotos(rv)` over a photo-view scope)
   held in `pallState`. Verified with Playwright at 1280 and 600 px: Results 45/45, run page 35/35.
+- **See all is one scrolling page (same day; a trial, replaces the ‹ › buttons and
+  `Product 2 of 5` above).** Every product in the source is a section, header then grid, one
+  after another; the header sticks to the top while its photos scroll under it. It opens
+  scrolled to the product asked for (and the last-seen photo, outlined). ← → still jump a
+  product at a time, worked from scroll positions capped at the page's end so they never stick
+  on a short page. To go back to one product per screen with buttons, revert `fillAllPhotos`,
+  `stepAllPhotos`, `openAllPhotos` and the `#pall` markup/CSS. Verified with Playwright at 1280
+  and 600 px: Results 45/45, run page 36/36.
+- **Correction (same day): the scrolling page is for Results only.** On Extracted listings
+  See all is back to one product at a time with ‹ › and `Product 2 of 5` (and ← →). A source
+  marked `paged` (`RUN_PHOTOS`) gets that; `scopePhotos(rv)` is not paged and gets the scrolling
+  page. One `fillAllPhotos` / `stepAllPhotos` serves both.

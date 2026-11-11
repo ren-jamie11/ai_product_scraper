@@ -546,11 +546,13 @@ section[id]{scroll-margin-top:72px}
 .pallveil[hidden]{display:none}
 .pallbox{position:relative;display:flex;flex-direction:column;width:min(92vw,1320px);height:min(88vh,1000px);background:#fff;
   border-radius:3px;overflow:hidden;box-shadow:0 10px 40px rgba(19,26,42,.3)}
-.pallhd{flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:12px 52px 12px 16px;border-bottom:1px solid var(--rule)}
-.pallbox > .x{position:absolute;top:10px;right:12px;font-size:22px}
+/* a product's header sticks to the top of the scroller while its photos pass under it */
+.pallhd{position:sticky;top:0;z-index:1;background:#fff;display:flex;align-items:center;gap:12px;
+  padding:12px 44px 12px 0;border-bottom:1px solid var(--rule)}
+.pallbox > .x{position:absolute;top:10px;right:18px;font-size:22px;z-index:2}
 /* the scroller and the grid are two boxes: a grid with a fixed height squeezes its rows */
-.pallscroll{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:16px}
-.pallgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.pallscroll{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:0 16px 8px}
+.pallgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;padding:14px 0 26px}
 .pallft{flex:0 0 auto;display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:9px 16px;
   border-top:1px solid var(--rule);font-family:var(--mono);font-size:10.5px;color:var(--muted)}
 .pallft[hidden]{display:none}
@@ -616,7 +618,7 @@ section[id]{scroll-margin-top:72px}
   .cptiles{display:flex;overflow-x:auto;overscroll-behavior-x:contain}
   .cptile{flex:0 0 112px}
   .pallbox{width:calc(100vw - 16px);height:calc(100vh - 16px)}
-  .pallscroll{padding:10px}
+  .pallscroll{padding:0 10px 6px}
   .pallgrid{grid-template-columns:repeat(3,1fr)}
   .zth{flex:0 0 52px;height:52px}
   /* photo view: the Products label sits in a bar across the top, and a tap opens the list
@@ -871,12 +873,13 @@ section[id]{scroll-margin-top:72px}
 
 <!-- ==================== HOVER CARD / IMAGE VIEW ==================== -->
 <div id="tip" role="tooltip" aria-hidden="true"></div>
-<!-- See all: one product's customer photos, with previous / next product (both pages) -->
+<!-- See all: customer photos by product. One product at a time with previous / next on the
+     run page; product after product in one scrolling page on the results page. -->
 <div id="pall" class="pallveil" hidden role="dialog" aria-modal="true" aria-label="Customer photos">
   <div class="pallbox">
-    <div class="pallhd" id="pallhd"></div>
-    <div class="pallscroll"><div class="pallgrid" id="pallgrid"></div></div>
-    <div class="pallft" id="pallft">
+    <div class="pallscroll" id="pallscroll"></div>
+    <!-- Extracted listings only: previous / next product -->
+    <div class="pallft" id="pallft" hidden>
       <span id="pallpos"></span>
       <button id="pallprev" title="Previous product (&larr;)" aria-label="Previous product">&lsaquo;</button>
       <button id="pallnext" title="Next product (&rarr;)" aria-label="Next product">&rsaquo;</button>
@@ -2206,18 +2209,21 @@ function renderRunPhotos() {
 }
 
 /* ---------- See all ----------
-   One product's every customer photo, in a grid, with ‹ › (and the ← → keys) to
-   move to the previous or next product. It stays open under the photo view, and
-   leaving the photo view lands here, on the product and photo it was showing.
+   Customer photos by product. On the run page (`paged`) it shows one product at a
+   time, with ‹ › and the ← → keys to move to the previous or next. On the results
+   page it is one scrolling page: each product a header and a grid, one after another,
+   and ← → jump a product at a time. It stays open under the photo view, and leaving
+   the photo view lands here, on the product and photo it was showing.
 
    It is fed by a source, so both pages use it: `rows()` gives
    [{ p, reviews, tiles: [{ id, url, rating }] }] in display order, `open(asin, id,
    url, tile, kb)` opens the photo view for a clicked tile, and `note` is an optional
    tail for the header (the cluster's title on the results page). `pallState` is the
-   source plus the `asin` on show. */
+   source plus the `asin` it was opened on. */
 let pallState = null;
 
 const RUN_PHOTOS = {
+  paged: true,
   rows: () => runPhotoRows(),
   open: (asin, id, url, tile, kb) => {
     const rv = buildRunPhotoScope(asin, id, url);
@@ -2248,55 +2254,94 @@ function scopePhotos(rv) {
   };
 }
 
-/* `seen` is the photo to scroll to and outline: the one the photo view was on. */
+/* Opens on `asin`'s section. `seen` is the photo to scroll to and outline: the one
+   the photo view was on. */
 function openAllPhotos(source, asin, seen) {
   pallState = { ...source, asin };
   fillAllPhotos();
   if (!pallState) return;
   $("pall").hidden = false;
-  $("pallgrid").parentNode.scrollTop = 0;
-  const tile = seen && [...$("pallgrid").querySelectorAll(".cptile")].find(t => t.dataset.url === seen);
+  const box = $("pallscroll");
+  const tile = seen && [...box.querySelectorAll(".cptile")].find(
+    t => t.dataset.url === seen && t.dataset.asin === asin);
+  pallScrollTo(asin);
   if (tile) {
-    tile.scrollIntoView({ block: "center" });
     tile.classList.add("seen");
+    // Only if the section's top doesn't already show it; its header stays in view above.
+    const r = tile.getBoundingClientRect(), v = box.getBoundingClientRect();
+    if (r.bottom > v.bottom) box.scrollTop += r.top - v.top - (v.height - r.height) / 2;
   }
   $("pallclose").focus({ preventScroll: true });
 }
 
+function pallSections() {
+  return [...$("pallscroll").querySelectorAll(".pallsec")];
+}
+
+function pallScrollTo(asin) {
+  const box = $("pallscroll");
+  const sec = pallSections().find(x => x.dataset.asin === asin);
+  if (sec) box.scrollTop += sec.getBoundingClientRect().top - box.getBoundingClientRect().top;
+}
+
+/* A section is a product's header (it sticks to the top while the photos scroll under
+   it) and its grid. A paged source shows the one section for `pallState.asin`, with
+   ‹ › and `Product 2 of 5` in the footer; otherwise every product is a section, one
+   after another, in one scrolling page. Re-filling (a photo dropped, a review
+   deleted) keeps the scroll position. */
 function fillAllPhotos() {
   const rows = pallState.rows();
   const at = rows.findIndex(x => x.p.asin === pallState.asin);
-  if (at < 0) { closeAllPhotos(); return; }
-  const row = rows[at];
-  $("pallhd").innerHTML = `${thumbHtml(row.p.main_image)}
-    <div class="cpt"><a href="${esc(row.p.link || row.p.source_url || "#")}" target="_blank" rel="noopener"
-         title="Open on Amazon">${esc(row.p.title || "(no title returned)")}</a>
-      <span class="cpm">${esc(row.p.asin)} &middot; ${productFacts(row.p).join(" &middot; ")} &middot; ${
-        plural(row.tiles.length, "customer photo", "customer photos")} from ${
-        plural(row.reviews.length, "review", "reviews")}${
-        pallState.note ? ` in &ldquo;${esc(pallState.note)}&rdquo;` : ""}</span></div>`;
-  $("pallgrid").innerHTML = row.tiles.map(t => photoTileHtml(row.p.asin, t)).join("");
-  $("pallft").hidden = rows.length < 2;
+  if (!rows.length || (pallState.paged && at < 0)) { closeAllPhotos(); return; }
+  const box = $("pallscroll"), top = box.scrollTop;
+  box.innerHTML = (pallState.paged ? [rows[at]] : rows).map(row => `
+    <section class="pallsec" data-asin="${esc(row.p.asin)}">
+      <div class="pallhd">${thumbHtml(row.p.main_image)}
+        <div class="cpt"><a href="${esc(row.p.link || row.p.source_url || "#")}" target="_blank" rel="noopener"
+             title="Open on Amazon">${esc(row.p.title || "(no title returned)")}</a>
+          <span class="cpm">${esc(row.p.asin)} &middot; ${productFacts(row.p).join(" &middot; ")} &middot; ${
+            plural(row.tiles.length, "customer photo", "customer photos")} from ${
+            plural(row.reviews.length, "review", "reviews")}${
+            pallState.note ? ` in &ldquo;${esc(pallState.note)}&rdquo;` : ""}</span></div>
+      </div>
+      <div class="pallgrid">${row.tiles.map(t => photoTileHtml(row.p.asin, t)).join("")}</div>
+    </section>`).join("");
+  box.scrollTop = top;
+  $("pallft").hidden = !pallState.paged || rows.length < 2;
+  if (!pallState.paged) return;
   $("pallpos").textContent = `Product ${at + 1} of ${rows.length}`;
   $("pallprev").disabled = at === 0;
   $("pallnext").disabled = at === rows.length - 1;
 }
 
-/* ‹ › and the ← → keys: the previous or next product's photos, from the top. */
+/* ‹ › and the ← → keys. Paged: the previous or next product, from the top. Scrolling:
+   the next product's section top below where the page is, or the nearest one above —
+   worked from scroll positions, each capped at how far the page can scroll, so the
+   keys never stick on a short page whose last sections cannot reach the top. */
 function stepAllPhotos(d) {
   if (!pallState) return;
-  const rows = pallState.rows();
-  const to = rows.findIndex(x => x.p.asin === pallState.asin) + d;
-  if (to < 0 || to >= rows.length) return;
-  pallState.asin = rows[to].p.asin;
-  fillAllPhotos();
-  $("pallgrid").parentNode.scrollTop = 0;
+  const box = $("pallscroll");
+  if (pallState.paged) {
+    const rows = pallState.rows();
+    const to = rows.findIndex(x => x.p.asin === pallState.asin) + d;
+    if (to < 0 || to >= rows.length) return;
+    pallState.asin = rows[to].p.asin;
+    fillAllPhotos();
+    box.scrollTop = 0;
+    return;
+  }
+  const now = box.scrollTop, max = box.scrollHeight - box.clientHeight;
+  const edge = box.getBoundingClientRect().top;
+  const stops = pallSections().map(x => Math.min(max, Math.round(now + x.getBoundingClientRect().top - edge)));
+  const to = d > 0 ? stops.find(y => y > now + 2) : stops.filter(y => y < now - 2).pop();
+  if (to != null) box.scrollTop = to;
 }
 
 function closeAllPhotos() {
   pallState = null;
   $("pall").hidden = true;
-  $("pallgrid").innerHTML = "";
+  $("pallscroll").innerHTML = "";
+  $("pallscroll").scrollTop = 0;
 }
 
 /* The photo view over the whole run: every product's photo reviews in the section's
@@ -2331,11 +2376,11 @@ function buildRunPhotoScope(asin, reviewId, url) {
     const tile = e.target.closest(".cptile");
     if (!tile || zoomState) return;
     // A tile in See all belongs to whichever source filled it; one in the page's rows, to the run.
-    const source = tile.closest("#pallgrid") && pallState ? pallState : RUN_PHOTOS;
+    const source = tile.closest("#pallscroll") && pallState ? pallState : RUN_PHOTOS;
     source.open(tile.dataset.asin, tile.dataset.rid, tile.dataset.url, tile, e.detail === 0);
   };
   $("rp-rows").addEventListener("click", onTile);
-  $("pallgrid").addEventListener("click", onTile);
+  $("pallscroll").addEventListener("click", onTile);
   $("pallprev").onclick = () => stepAllPhotos(-1);
   $("pallnext").onclick = () => stepAllPhotos(1);
   $("pallclose").onclick = closeAllPhotos;
@@ -4952,7 +4997,7 @@ document.addEventListener("keydown", e => {
     }
     return;
   }
-  // See all, when nothing is over it: Esc closes it and ← → change product.
+  // See all, when nothing is over it: Esc closes it and ← → move a product.
   if (!$("pall").hidden) {
     if (e.key === "Escape") closeAllPhotos();
     else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
