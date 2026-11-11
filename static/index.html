@@ -134,6 +134,17 @@ td.nm b{font-family:var(--sans);font-weight:600;font-size:13.5px}
 .modal .sd{color:var(--muted);font-size:12.5px;margin:0 0 18px}
 .mbar{display:flex;gap:9px;justify-content:flex-end;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--rule)}
 /* model and effort belong together, so they sit on one line and wrap as a pair */
+.modal h4{font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+  font-weight:500;margin:0 0 6px}
+.ssign{margin:-2px 0 20px}
+.ssign .row{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:10.5px;color:var(--muted);padding:5px 0;
+  border-top:1px solid var(--rule-soft)}
+.ssign .row b{color:var(--ink);font-weight:500;flex:0 0 150px}
+.ssign .row .st{flex:1 1 auto;min-width:0}
+.ssign .row .st.ok{color:var(--celadon)}
+.ssign .row .st.no{color:var(--iron)}
+.note-line .acts{margin-left:auto;display:flex;gap:8px;flex:0 0 auto}
+.note-line .btn{padding:3px 10px}
 .spair{display:flex;gap:14px}
 .spair .fld{flex:1 1 0;min-width:0}
 @media (max-width:520px){.spair{display:block}}
@@ -681,6 +692,7 @@ section[id]{scroll-margin-top:72px}
   <div class="err" id="r-err" hidden></div>
   <div class="sumstrip" id="r-sum"></div>
   <div id="r-notes"></div>
+  <div id="r-rvbar"></div>
   <div id="r-parses"></div>
 
   <section style="margin-top:6px">
@@ -845,7 +857,25 @@ section[id]{scroll-margin-top:72px}
 <!-- ==================== SETTINGS MODAL ==================== -->
 <div class="veil" id="sveil" hidden>
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="stitle">
-    <h3 id="stitle">Models &amp; reasoning</h3>
+    <h3 id="stitle" style="margin-bottom:16px">Settings</h3>
+
+    <h4>Amazon</h4>
+    <p class="sd">Listings and reviews are both read from this site, for new extractions.
+       Reviews come straight from Amazon with your saved sign-in, taken evenly across
+       star ratings; every one is tagged, so more reviews means a longer, costlier parse.</p>
+    <div class="spair">
+      <div class="fld">
+        <label for="s-site">Amazon site</label>
+        <select id="s-site"></select>
+      </div>
+      <div class="fld">
+        <label for="s-reviews">Reviews per listing</label>
+        <select id="s-reviews"></select>
+      </div>
+    </div>
+    <div class="ssign" id="s-amazon"></div>
+
+    <h4>Models &amp; reasoning</h4>
     <p class="sd">Tagging makes one call per text body, so it runs on a cheaper model.
        Grouping makes one call per tag list and is pure judgement, so it's worth more.
        Changes apply to the next run, never to one already in flight.</p>
@@ -1462,8 +1492,7 @@ async function pollJob(jobId, slug, runId) {
     return;
   }
 
-  const label = snap.total ? `${snap.label} (${snap.done}/${snap.total})` : snap.label;
-  setProgress(snap.pct, label);
+  setProgress(snap.pct, snap.label);
 
   if (snap.state === "running") {
     setTimeout(() => pollJob(jobId, slug, runId), 700);
@@ -1831,6 +1860,71 @@ function wireReviews(card, p, panel) {
 }
 
 /* ---------- rendering ---------- */
+/* ---------- reviews still missing ----------
+   Listings that were fetched but have no reviews: the Amazon sign-in had lapsed,
+   Amazon asked for a robot check, or the run predates reviews coming from Amazon.
+   Fetch reviews fills them in from the run's own site and costs no credits. */
+let fetchingReviews = false;
+
+function renderReviewBar(say) {
+  const bar = $("r-rvbar");
+  const missing = runState.products.filter(p => !p.deleted && p.fetch_ok && !(p.reviews || []).length);
+  if (!missing.length || !runState.site) { bar.innerHTML = ""; return; }
+  const stopped = ((runState.log || {}).reviews || {}).stopped;
+  const text = say || `${plural(missing.length, "listing has", "listings have")} no reviews. ` +
+    `Fetch them from ${runState.site} — no Rainforest credits are used.`;
+  bar.innerHTML = `
+    <div class="note-line${stopped === "signin" ? "" : " info"}">
+      <span class="ic">Reviews</span><span>${esc(text)}</span>
+      <span class="acts">
+        <button class="btn ghost" id="r-signin">Sign in to Amazon</button>
+        <button class="btn" id="r-fetchrv">Fetch reviews</button>
+      </span>
+    </div>`;
+  $("r-fetchrv").disabled = $("r-signin").disabled = fetchingReviews || signingIn;
+  $("r-fetchrv").onclick = startFetchReviews;
+  $("r-signin").onclick = () => {
+    const site = runState.site;
+    amazonSignIn(site, t => renderReviewBar(t),
+      () => renderReviewBar(`Signed in to ${site}. Press Fetch reviews.`));
+  };
+}
+
+async function startFetchReviews() {
+  if (fetchingReviews) return;
+  const { slug, runId } = runState;
+  $("r-err").hidden = true;
+  fetchingReviews = true;
+  renderReviewBar();
+  const fail = msg => {
+    fetchingReviews = false;
+    $("r-prog").hidden = true;
+    $("r-err").textContent = msg;
+    $("r-err").hidden = false;
+    if (runState.slug === slug && runState.runId === runId) renderReviewBar();
+  };
+  let job;
+  try {
+    job = await api(runPath("/fetch-reviews"), { method: "POST" });
+  } catch (e) { return fail(e.message); }
+
+  setParseProgress(0, `Reviews 0/${job.count}`);
+  for (;;) {
+    await new Promise(r => setTimeout(r, 700));
+    let snap;
+    try { snap = await api("/api/jobs/" + encodeURIComponent(job.job_id)); }
+    catch (e) { return fail(e.message); }
+    setParseProgress(snap.pct, snap.label);
+    if (snap.state === "running") continue;
+    if (snap.state === "error") return fail(snap.error || "Fetching reviews failed.");
+    break;
+  }
+  fetchingReviews = false;
+  $("r-prog").hidden = true;
+  // Reload the run: its notes say what happened, and the cards show the reviews.
+  if (runState.slug === slug && runState.runId === runId) renderRun(slug, runId);
+}
+
 function renderRunBody() {
   const live = runState.products.filter(p => !p.deleted);
   const removed = runState.products.filter(p => p.deleted);
@@ -1889,6 +1983,7 @@ function renderRunBody() {
     if (c.dataset.tab) openTabs[c.dataset.asin] = c.dataset.tab;
   });
 
+  renderReviewBar();
   $("r-cards").innerHTML = live.map(productCard).join("");
   $("r-cards").querySelectorAll(".pcard").forEach(card => {
     if (openTabs[card.dataset.asin]) card.dataset.tab = openTabs[card.dataset.asin];
@@ -1971,7 +2066,8 @@ async function renderRun(slug, runId) {
   });
 
   runState = { slug, runId, products: run.products || [], log, stats,
-               parses: parses || [], meta: { ...(meta || {}) } };
+               parses: parses || [], meta: { ...(meta || {}) },
+               site: run.amazon_domain || log.amazon_domain || "" };
   removedOpen = false;
 
   const memo = $("r-memo");
@@ -1982,7 +2078,7 @@ async function renderRun(slug, runId) {
 
   const notes = (log.notes || []).map(n =>
     `<div class="note-line info"><span class="ic">${
-      log.compacted_from ? "Compacted" : "Rainforest"}</span><span>${esc(n)}</span></div>`).join("");
+      log.compacted_from ? "Compacted" : "Fetch"}</span><span>${esc(n)}</span></div>`).join("");
   const fails = (log.failures || []).map(f =>
     `<div class="note-line"><span class="ic">${esc(f.item)}</span><span>${esc(f.reason)}</span></div>`).join("");
   $("r-notes").innerHTML = notes + fails;
@@ -4186,6 +4282,8 @@ const SETTING_FIELDS = {
   "s-tag-reasoning": ["tag_reasoning", "efforts"],
   "s-group-model": ["group_model", "models"],
   "s-group-reasoning": ["group_reasoning", "efforts"],
+  "s-site": ["amazon_site", "sites"],
+  "s-reviews": ["reviews_per_asin", "review_caps"],
 };
 
 async function openSettings() {
@@ -4202,17 +4300,70 @@ async function openSettings() {
   }
 
   for (const [id, [key, listName]] of Object.entries(SETTING_FIELDS)) {
-    $(id).innerHTML = data.options[listName]
-      .map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
+    // An option is a bare value, or { value, label } where the two differ.
+    $(id).innerHTML = data.options[listName].map(v => {
+      const o = typeof v === "object" ? v : { value: v, label: v };
+      return `<option value="${esc(o.value)}">${esc(o.label)}</option>`;
+    }).join("");
     $(id).value = data.settings[key];
   }
   $("s-auto-themes").checked = data.settings.auto_themes !== false;
-  $("s-tag-model").focus();
+  renderAmazonSites();
+  $("s-site").focus();
+}
+
+/* ---------- Amazon sign-in ----------
+   Reviews are read with a login saved per site. A saved login can still have
+   expired, which only a fetch finds out, so the row says when it was saved and
+   always offers to sign in again. */
+async function renderAmazonSites(note) {
+  let sites = [];
+  try { sites = (await api("/api/amazon/status")).sites; } catch (e) { return; }
+  $("s-amazon").innerHTML = sites.map(x => `
+    <div class="row">
+      <b>${esc(x.label)}</b>
+      <span class="st ${x.signed_in ? "ok" : "no"}">${
+        note && note.site === x.site ? esc(note.text)
+        : x.signed_in ? `signed in &middot; saved ${esc(x.updated)}` : "not signed in"}</span>
+      <button class="btn ghost" data-signin="${esc(x.site)}">${x.signed_in ? "Sign in again" : "Sign in"}</button>
+    </div>`).join("");
+  $("s-amazon").querySelectorAll("[data-signin]").forEach(btn => {
+    btn.onclick = () => amazonSignIn(btn.dataset.signin,
+      text => renderAmazonSites({ site: btn.dataset.signin, text }),
+      () => renderAmazonSites());
+  });
+}
+
+/* Opens the sign-in window (a real browser, on this machine) and waits for it.
+   `say(text)` reports progress and failure; `done()` fires once the login is saved. */
+let signingIn = false;
+
+async function amazonSignIn(site, say, done) {
+  if (signingIn) return;
+  signingIn = true;
+  say("A browser window is opening — sign in to Amazon there…");
+  try {
+    const job = await api("/api/amazon/login", { method: "POST", body: JSON.stringify({ site }) });
+    for (;;) {
+      await new Promise(r => setTimeout(r, 1000));
+      const snap = await api("/api/jobs/" + encodeURIComponent(job.job_id));
+      if (snap.state === "running") continue;
+      if (snap.state === "error") throw new Error(snap.error || "Sign-in didn't complete.");
+      break;
+    }
+    signingIn = false;
+    done();
+  } catch (e) {
+    signingIn = false;
+    // The scraper's own messages are in Chinese; say the same thing plainly.
+    say(/[\u4e00-\u9fff]/.test(e.message) ? "Sign-in didn't complete. Try again." : e.message);
+  }
 }
 
 async function saveSettings() {
   const patch = {};
   for (const [id, [key]] of Object.entries(SETTING_FIELDS)) patch[key] = $(id).value;
+  patch.reviews_per_asin = Number(patch.reviews_per_asin);
   patch.auto_themes = $("s-auto-themes").checked;
 
   $("ssave").disabled = true;

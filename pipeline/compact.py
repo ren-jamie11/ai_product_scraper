@@ -253,7 +253,8 @@ def copy_raw(slug: str, raw_from: dict[str, str], target_raw) -> None:
     """Bring each carried ASIN's raw payload into the new run's raw/."""
     for asin, run_id in raw_from.items():
         source = storage.run_dir(slug, run_id) / "raw"
-        for name in (f"{asin}.product.json", f"{asin}.reviews.json"):
+        for name in (f"{asin}.product.json", f"{asin}.reviews.json",
+                     f"{asin}.amazon_reviews.json"):
             if (source / name).exists():
                 shutil.copy2(source / name, target_raw / name)
 
@@ -366,7 +367,8 @@ def compact(slug: str) -> dict:
             edits[entry["asin"]] = override
 
         raw_src = storage.run_dir(slug, winner["run_id"]) / "raw"
-        for name in (f"{entry['asin']}.product.json", f"{entry['asin']}.reviews.json"):
+        for name in (f"{entry['asin']}.product.json", f"{entry['asin']}.reviews.json",
+                     f"{entry['asin']}.amazon_reviews.json"):
             if (raw_src / name).exists():
                 shutil.copy2(raw_src / name, directory / "raw" / name)
 

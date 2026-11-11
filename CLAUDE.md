@@ -579,3 +579,18 @@ Three things about Rainforest that only showed up by asking it (all measured 202
 3. **A dead ASIN does not 404.** Rainforest answers HTTP 200 with `success: true` and an empty `product` object. Detected via a missing title and reported as a failed fetch, so a phantom competitor can't quietly inflate the success count.
 
 **Review depth verdict:** 8–13 reviews per ASIN, which is what the product call carries. `REVIEW_TARGET` stays as an upper bound that self-limits. This makes Phase 2's manual review-paste more valuable than originally expected — for the handful of listings Rainforest never yields reviews for, pasting is the only route. Re-run `probe_reviews.py` occasionally to see whether the reviews endpoint has come back.
+
+---
+
+## Reviews now come from Amazon directly (built 2026-11-11)
+
+This supersedes what the sections above say about Rainforest and reviews (`REVIEW_TARGET`,
+`PRODUCT_ATTEMPTS = 4`, "no BeautifulSoup anywhere", the 8–13 review ceiling). Rainforest stopped
+returning reviews in November 2026 and now supplies the listing only: one call per ASIN, retried
+only when it fails or comes back empty. Reviews are read from Amazon's review pages by
+`amazon_reviews_new.py` (root, imported untouched) through `pipeline/amazon_reviews.py`, with the
+login saved in `amazon_cookies.<site>.txt`: up to 50 per listing, ten at a time from 1★ to 5★,
+Top-reviews order, one ASIN at a time alongside the listing fetch. The Amazon site (Canada by
+default, or USA) and the cap are Settings. A lapsed sign-in or a robot check leaves listings
+without reviews and a **Fetch reviews** / **Sign in to Amazon** bar on the run page. Decisions,
+structure and measurements are in `REVIEW-SCRAPING.md`.

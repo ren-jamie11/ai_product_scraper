@@ -31,6 +31,14 @@ MODELS = ("gpt-5.6-luna", "gpt-5.6-terra", "gpt-5.6-sol")
 # span for this pipeline sits inside these three.
 EFFORTS = ("low", "medium", "high")
 
+# The Amazon sites a login can be saved for (amazon_cookies.<site>.txt). The site
+# decides where both the listing and its reviews are read from.
+SITES = ("amazon.ca", "amazon.com")
+SITE_NAMES = {"amazon.ca": "Canada (amazon.ca)", "amazon.com": "USA (amazon.com)"}
+
+# Reviews collected per listing. Every one is tagged, so this is a cost dial too.
+REVIEW_CAPS = (20, 50, 100)
+
 # Each setting maps to the config attribute it overrides, and to the whitelist its
 # value must appear in. Adding a knob means adding a row here and nothing else.
 # A boolean setting lists (True, False) and is checked by type as well as value,
@@ -42,6 +50,8 @@ KEYS = {
     "group_model":     ("OPENAI_GROUP_MODEL", MODELS),
     "group_reasoning": ("OPENAI_GROUP_REASONING", EFFORTS),
     "auto_themes":     ("AUTO_THEMES", (True, False)),
+    "amazon_site":     ("AMAZON_DOMAIN", SITES),
+    "reviews_per_asin": ("REVIEWS_PER_ASIN", REVIEW_CAPS),
 }
 
 
@@ -103,7 +113,7 @@ def write(patch: dict) -> dict:
                 raise SettingsError(f"{key} must be true or false.")
             raise SettingsError(
                 f'"{value}" is not a valid {key.replace("_", " ")}. '
-                f"Choose one of: {', '.join(allowed)}."
+                f"Choose one of: {', '.join(map(str, allowed))}."
             )
 
     storage.write_json(_path(), {**read(), **patch})
@@ -112,4 +122,6 @@ def write(patch: dict) -> dict:
 
 def options() -> dict:
     """What the Settings panel draws its dropdowns from."""
-    return {"models": list(MODELS), "efforts": list(EFFORTS)}
+    return {"models": list(MODELS), "efforts": list(EFFORTS),
+            "sites": [{"value": s, "label": SITE_NAMES[s]} for s in SITES],
+            "review_caps": list(REVIEW_CAPS)}

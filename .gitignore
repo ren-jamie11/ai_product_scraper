@@ -4,6 +4,8 @@
 config.py
 config.local.py
 rainforest_api.txt
+# Amazon login cookies used by the review scraper
+amazon_cookies*.txt
 
 # Env files (all variants: .env, .env.local, .env.production, ...)
 .env

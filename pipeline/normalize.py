@@ -461,11 +461,16 @@ def normalize_product(fetched: dict) -> dict:
         if review and review["id"] not in seen_ids:
             seen_ids.add(review["id"])
             reviews.append(review)
-    for raw in (fetched.get("extra_reviews") or []):
-        review = normalize_review(raw, "product-retry")
-        if review and review["id"] not in seen_ids:
-            seen_ids.add(review["id"])
-            reviews.append(review)
+    # Reviews read from Amazon directly arrive already in this shape
+    # (amazon_reviews.to_reviews); the ids are the same ones Rainforest uses.
+    seen_bodies = {body_key(r["body"]) for r in reviews}
+    for review in (fetched.get("amazon_reviews") or []):
+        key = body_key(review["body"])
+        if review["id"] in seen_ids or key in seen_bodies:
+            continue
+        seen_ids.add(review["id"])
+        seen_bodies.add(key)
+        reviews.append(review)
 
     bullets = _feature_bullets(product)
     if not bullets:
@@ -473,7 +478,7 @@ def normalize_product(fetched: dict) -> dict:
     if not reviews:
         # storage.load_run drops this note once any reviews exist; keep the two
         # strings identical (storage.NO_REVIEWS_WARNING).
-        warnings.append("Rainforest returned no reviews for this listing.")
+        warnings.append("No reviews were fetched for this listing.")
 
     return {
         "asin": asin,
