@@ -148,3 +148,28 @@ be browsed straight after extraction, before any parse.
   squeezed its rows and the square tiles overlapped.
 - Verified with Playwright at 1280 and 600 px (25/25 each, images stubbed locally), the Results
   photo-view checks re-run (33/33 each), and one live load of the section and a See-all grid.
+
+## Photo view and customer photos: follow-up changes (2026-11-11)
+
+These supersede the matching lines in the two sections above.
+
+- **Products panel.** Only the `Products` label shows until the panel is hovered (or tapped at
+  phone width); the thumbnails are hidden. Open, each row adds the price after rating and ratings
+  count (`productFacts`, which reads `price` as a string on results and `{raw}` on a run).
+- **Arrow keys.** ← → step images, exactly like the on-screen ‹ ›: through a review's photos,
+  into the next review, into the next product. ↑ ↓ still step products. `rvStepReview` is gone.
+- **Extracted listings are sorted by rating**, best first, then by number of ratings, then fetch
+  order; unrated last (`sortProducts`, on load and after every edit). Cards, customer photos,
+  Copy ASINs and both image views follow it. The .pptx export is built by the server and keeps
+  fetch order.
+- **Customer photos header** reads `ASIN · 4.7★ · 497 ratings · $19.99 · 39 photos from 24
+  reviews`, in the row and in See all.
+- **Leaving the photo view on the run page** (Esc, ×, or a click outside) lands on See all for
+  the product it was on, scrolled to and outlining the photo last seen; Esc again closes it.
+  On Results there is no See all, so closing returns to the page as before.
+- Verified with Playwright at 1280 and 600 px: run page 29/29, Results 34/34.
+- **"Best rated" allows for the number of ratings** (same day, replaces the raw-rating sort
+  above): `score = (n × R + m × C) / (n + m)`, a Bayesian average with `C` the run's mean rating
+  and `m = RATING_PRIOR = 50` imaginary ratings at that mean. 5.0★ from 1 rating scores about
+  the run average; 4.6★ from 10,000 keeps its 4.6. Only the order uses it; the real rating is
+  always what is shown, and the card's rating pill gives the score on hover.
