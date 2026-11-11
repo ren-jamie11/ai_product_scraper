@@ -149,6 +149,9 @@ def build(slug: str, run_id: str, parse_id: str) -> dict:
 
     live_products = [p for p in products.values() if not p.get("deleted")]
 
+    _attach_review_media(storage.run_dir(slug, run_id) / "raw", bodies)
+    _photos_first(sections, occurrences, bodies)
+
     return {
         "slug": slug,
         "run_id": run_id,
@@ -348,3 +351,80 @@ def _review_meta(product: dict | None, body_id: str) -> dict | None:
                 "source": review.get("source"),
             }
     return None
+
+
+# A customer photo's address on Amazon's image host. Anything else the scraper saved
+# under a review's images is not a photo: mostly the grey pixel Amazon lazy-loads
+# behind, which would otherwise show up as an empty frame.
+_PHOTO = re.compile(r"/images/I/([^./]+)\.[^/]*?(jpe?g|png|webp|gif)$", re.IGNORECASE)
+
+
+def _photos(urls) -> list[str]:
+    """A review's photos, one address each.
+
+    The scraper keeps the same photo under more than one address (a size variant, a
+    measurement prefix in the path); the id is what identifies it, so each is rewritten
+    to its plain form and kept once.
+    """
+    photos, seen = [], set()
+    for url in urls or []:
+        match = _PHOTO.search(str(url).split("?")[0])
+        if not match or match.group(1) in seen:
+            continue
+        seen.add(match.group(1))
+        photos.append(f"https://m.media-amazon.com/images/I/{match.group(1)}.{match.group(2).lower()}")
+    return photos
+
+
+def _attach_review_media(raw_dir, bodies: dict) -> None:
+    """Give each review body its customer photos and its own page on Amazon.
+
+    Read from the raw scrape (raw/<ASIN>.amazon_reviews.json) rather than the run, so
+    a parse made before this existed gets them too. Reviews from Rainforest or pasted
+    by hand have neither, and say so with an empty list and no link.
+    """
+    media: dict[str, dict] = {}
+    for body_id, body in bodies.items():
+        review = body.get("review")
+        if not review:
+            continue
+        asin = body.get("asin")
+        if asin not in media:
+            payload = storage.read_json(raw_dir / f"{asin}.amazon_reviews.json", {}) or {}
+            media[asin] = {"site": payload.get("domain"),
+                           "reviews": {r.get("review_id"): r for r in payload.get("reviews") or []
+                                       if r.get("review_id")}}
+        review_id = body_id.split(":", 2)[-1]
+        raw = media[asin]["reviews"].get(review_id)
+        review["photos"] = _photos((raw or {}).get("image_urls"))
+        # The review's permanent page, not the scraper's link, which carries the
+        # listing-page context it was found in.
+        site = media[asin]["site"]
+        review["url"] = f"https://www.{site}/gp/customer-reviews/{review_id}" if raw and site else None
+
+
+def _photos_first(sections: list[dict], occurrences: dict, bodies: dict) -> None:
+    """Put what a customer photographed where it is seen first.
+
+    Within a review chip, the mentions whose review has photos lead, so a click opens
+    on one. Within a cluster, the chips that have any lead, then by count as before.
+    `photos` on a chip is how many of its mentions carry photos.
+
+    A collapsed card's preview stays the three things said most; among those three
+    the ones with photos lead, and their mentions are ordered the same way.
+    """
+    def has_photos(ref: str) -> bool:
+        review = (bodies.get((occurrences.get(ref) or {}).get("body_id")) or {}).get("review")
+        return bool(review and review.get("photos"))
+
+    for section in sections:
+        for cluster in section.get("clusters") or []:
+            for name in ("review_tags", "preview"):
+                tags = cluster.get(name) or []
+                for tag in tags:
+                    with_photos = [ref for ref in tag["occ_ids"] if has_photos(ref)]
+                    tag["photos"] = len(with_photos)
+                    if with_photos:
+                        lead = set(with_photos)
+                        tag["occ_ids"] = with_photos + [r for r in tag["occ_ids"] if r not in lead]
+                tags.sort(key=lambda t: (not t["photos"], -t["count"], t["display"].lower()))

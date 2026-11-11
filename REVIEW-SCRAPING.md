@@ -62,3 +62,30 @@ pages, read with a saved login; Rainforest supplies the listing only.
   reviews through OpenAI.
 - **Cost to know:** reviews per listing went from ~9 to ~45, and every review is one tagging
   call, so a parse costs about five times what it did. `Reviews per listing` in Settings is the dial.
+
+## Customer photos in the results view (built 2026-11-11)
+
+- **Where they come from.** `results.py` reads each review's `image_urls` from
+  `raw/<ASIN>.amazon_reviews.json` when the results are built (`_attach_review_media`), so parses
+  made before this get them with no re-extract. `bodies[id].review` gains `photos` and `url`
+  (`https://www.<site>/gp/customer-reviews/<id>`). Rainforest and pasted reviews have neither.
+- **Why saved links looked broken.** 136 of 838 saved links were Amazon's lazy-load placeholder
+  (`grey-pixel.gif`), and many photos were saved under two addresses. A photo is kept only if it
+  matches `/images/I/<id>.<ext>`, rewritten to its plain address and kept once per id. After that,
+  all 408 photos in the decorative-books parse returned a real JPEG. In the browser, a customer
+  photo that errors or is under 40 px wide is dropped for the session (`badPhotos`, `dropPhoto`).
+- **Chips.** `_photos_first` sets `photos` on each review chip (mentions whose review has photos),
+  puts those mentions first in the chip, and sorts a cluster's review chips photos-first, then by
+  count. The chip shows a small outline camera in its own text colour. A collapsed card's preview
+  stays the three most-said tags, ordered the same way. 574 of 971 review chips in decorative-books
+  carry the marker.
+- **Pinned card.** The carousel is the review's photos, then the listing images; the counter reads
+  `Customer photo 1 / 3`, then `Listing image 1 / 9`. A new source opens on its first customer
+  photo; without any it keeps the listing image on the same product. `view on Amazon` sits beside
+  `read more` for reviews that have a page.
+- **Image view.** `openZoom(urls, at, title, customer)`: with a customer count the rail shows
+  **Customer Reviews** then **Listing** over one flat index, so arrows, keys and close-sync are
+  unchanged. The Extract-page view passes no count and is as before.
+- **Not shown:** review videos (2.5% of reviews); the review link covers them.
+- Verified with Playwright at 1280 and 600 px (21/21 each), including a photo forced to fail and
+  an older parse rendering unchanged.

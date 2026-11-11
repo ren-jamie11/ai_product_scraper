@@ -296,6 +296,8 @@ a.pill:hover{text-decoration:underline}
 .bub i{font-style:normal;font-family:var(--mono);font-size:10px;opacity:.7}
 /* the label is one flex item, so a <mark> from the filter stays inline in it */
 .bub .lbl{min-width:0}
+/* a review chip some of whose sources carry customer photos */
+.bub .cam{width:11px;height:11px;flex:0 0 auto;opacity:.75}
 .bub.soft{text-decoration:underline dotted;text-underline-offset:3px}
 mark{background:#F2D06B;color:var(--ink);padding:0 1px;border-radius:2px}
 
@@ -477,6 +479,7 @@ section[id]{scroll-margin-top:72px}
 #tip .sent .hit{color:#fff;background:rgba(242,208,107,.14);box-shadow:0 0 0 2px rgba(242,208,107,.14);border-radius:2px}
 #tip .tbtn{border:0;background:none;padding:0;margin-left:6px;font-family:var(--mono);font-size:10px;color:#9FB8E8;cursor:pointer;
   white-space:nowrap;text-decoration:underline;text-decoration-color:rgba(159,184,232,.45);text-underline-offset:2px}
+#tip a.tbtn{text-decoration:underline;text-decoration-color:rgba(159,184,232,.45);text-underline-offset:2px}
 #tip .tbtn:hover{color:#fff;text-decoration-color:currentColor}
 #tip .cimg{position:relative;margin-top:6px}
 #tip .cimg .bigimg{--cap:55vh;cursor:zoom-in}
@@ -535,6 +538,9 @@ section[id]{scroll-margin-top:72px}
 .zttl a,.zsub a{color:inherit;text-decoration:none}
 .zttl a:hover,.zsub a:hover{color:var(--cobalt);text-decoration:underline}
 .zthumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+/* results page: customer photos, then the listing's own images, each under its heading */
+.zsec{grid-column:1/-1;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.zsec + .zth ~ .zsec{margin-top:8px}
 .zth{padding:0;border:1px solid var(--rule);background:#fff;border-radius:3px;cursor:pointer;aspect-ratio:1;overflow:hidden}
 .zth img,.zth .noimg{width:100%;height:100%;object-fit:contain;display:flex}
 .zth:hover{border-color:var(--cobalt-lt)}
@@ -564,6 +570,8 @@ section[id]{scroll-margin-top:72px}
   .zttl{flex:1 0 100%;-webkit-line-clamp:1}
   .zsub{flex:1 0 100%;margin-top:0}
   .zthumbs{flex:1 1 0;min-width:0;display:flex;overflow-x:auto;overscroll-behavior:contain}
+  .zsec{flex:0 0 auto;align-self:center;margin:0 2px 0 6px}
+  .zsec + .zth ~ .zsec{margin-top:0}
   .zth{flex:0 0 52px;height:52px}
   .znotes{flex:1 0 100%;min-height:0;margin-top:0}
   .znotes textarea{height:64px}
@@ -3380,13 +3388,17 @@ function clusterHtml(s, v) {
    The label is wrapped in one .lbl span so a <mark> inside it stays inline: the
    chip is an inline-flex box with a gap, and bare hilite() fragments would each
    become their own flex item and drift apart. */
+const CAMERA = `<svg class="cam" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"
+  stroke-linejoin="round" role="img" aria-label="Has customer photos"><title>Has customer photos</title>
+  <path d="M1.7 5.2h2.6l1.1-1.7h5.2l1.1 1.7h2.6v7.6H1.7z"/><circle cx="8" cy="8.9" r="2.4"/></svg>`;
+
 function chipHtml(t, clusterTitle, listKey) {
   const first = resultsState.data.occurrences[t.occ_ids[0]];
   const soft = !(first && first.match.confident);
   const tone = LIST_TONE[listKey] ? ` ${LIST_TONE[listKey]}` : "";
   return `<button class="bub${tone}${soft ? " soft" : ""}" data-occs="${esc(t.occ_ids.join(" "))}"
             data-cluster="${esc(clusterTitle)}"><span class="lbl">${
-            hilite(t.display, resultsState.terms)}</span>${
+            hilite(t.display, resultsState.terms)}</span>${t.photos ? CAMERA : ""}${
             t.count > 1 ? `<i>&times;${t.count}</i>` : ""}</button>`;
 }
 
@@ -3735,9 +3747,46 @@ function fullSize(url) {
   return String(url || "").replace(/\._[^/]*_(?=\.(jpe?g|png|webp|gif)$)/i, "");
 }
 
-function bigImgHtml(src, cls) {
-  return `<div class="bigimg wait ${cls || ""}"><img src="${esc(src)}" alt="" draggable="false"
+function bigImgHtml(src, cls, customer) {
+  return `<div class="bigimg wait ${cls || ""}"><img src="${esc(src)}" alt="" draggable="false"${
+            customer ? " data-cphoto" : ""}
             onload="bigImgDone(this, true)" onerror="bigImgDone(this, false)"></div>`;
+}
+
+/* ---------- customer photos ----------
+   A review's own photos (results.py: bodies[id].review.photos). The server has
+   already dropped Amazon's placeholder pixel and duplicate addresses; a photo
+   that still fails to load, or loads as something tiny, is dropped here the
+   moment that shows, and stays dropped for the session. */
+const badPhotos = new Set();
+const PHOTO_MIN_PX = 40;
+
+function bodyPhotos(b) {
+  return ((b && b.review && b.review.photos) || []).filter(u => !badPhotos.has(u));
+}
+
+function photoChecked(img, ok) {
+  if (ok && img.naturalWidth >= PHOTO_MIN_PX) return true;
+  dropPhoto(img.getAttribute("src"));
+  return false;
+}
+
+function dropPhoto(url) {
+  if (!url || badPhotos.has(url)) return;
+  badPhotos.add(url);
+  if (!pinState) return;
+  const z = zoomState;
+  if (z && z.customer) {
+    const at = z.urls.indexOf(url);
+    const { photos, all } = cardImages();
+    z.urls = all;
+    z.customer = photos.length;
+    if (at >= 0 && at < z.at) z.at -= 1;
+    z.at = Math.max(0, Math.min(all.length - 1, z.at));
+    pinState.img = z.at;
+    if (all.length) zoomShow(); else closeZoom();
+  }
+  renderCard();
 }
 
 /* Clears the reserved square once the image is in (or swaps in the placeholder),
@@ -3745,6 +3794,7 @@ function bigImgHtml(src, cls) {
 function bigImgDone(img, ok) {
   const frame = img.parentNode;
   if (!frame) return;
+  if (img.hasAttribute("data-cphoto") && !photoChecked(img, ok)) return;
   frame.classList.remove("wait");
   if (!ok) img.replaceWith(Object.assign(document.createElement("div"),
                                          { className: "noimg", textContent: "no image" }));
@@ -3923,6 +3973,15 @@ function pinProduct() {
 
 /* Header (thumb, ASIN · source, title, ×), review title, sentence + read more,
    `n / N images`, the big image with ‹ ›, then the sources pager bottom right. */
+/* What the card's carousel holds for the source on show: the review's own photos,
+   then the listing's images. */
+function cardImages() {
+  const d = resultsState.data;
+  const o = d.occurrences[pinState.occs[pinState.at]];
+  const photos = bodyPhotos(d.bodies[o.body_id]);
+  return { photos, all: photos.concat(gallery(d.products[o.asin] || {})) };
+}
+
 function cardHtml() {
   const s = pinState;
   const d = resultsState.data;
@@ -3930,9 +3989,22 @@ function cardHtml() {
   const b = d.bodies[o.body_id];
   const p = d.products[o.asin] || {};
   const m = o.match;
-  const imgs = gallery(p), n = imgs.length;
-  if (s.imgAsin !== o.asin) { s.img = 0; s.imgAsin = o.asin; }
+  const { photos, all: imgs } = cardImages(), n = imgs.length, np = photos.length;
+  // A new source opens on its first customer photo. Without any, it keeps the
+  // listing image that was showing when the product is the same, else the main one.
+  if (s.imgBody !== o.body_id) {
+    const listingAt = s.imgAsin === o.asin ? Math.max(0, s.img - (s.imgPhotos || 0)) : 0;
+    s.img = np ? 0 : listingAt;
+    s.imgBody = o.body_id;
+    s.imgAsin = o.asin;
+  }
+  s.imgPhotos = np;
   s.img = Math.max(0, Math.min(n - 1, s.img));
+  const onPhoto = s.img < np;
+  const count = !np ? `${s.img + 1} / ${n} images`
+    : onPhoto ? `Customer photo ${s.img + 1} / ${np}`
+    : `Listing image ${s.img - np + 1} / ${n - np}`;
+  const rurl = o.body_type === "review" && b.review && b.review.url;
   const link = inner => p.link
     ? `<a href="${esc(p.link)}" target="_blank" rel="noopener">${inner}</a>` : inner;
   const rt = o.body_type === "review" && b.review && b.review.title;
@@ -3948,10 +4020,11 @@ function cardHtml() {
     </div>
     ${rt ? `<div class="rvt">${esc(rt)}</div>` : ""}
     <div class="sent${s.more ? " full" : ""}">${s.more ? markedBody(b.text, m) : sentenceHtml(b, m)}${
-      more ? `<button class="tbtn" data-act="more">${s.more ? "show less" : "read more"}</button>` : ""}</div>
+      more ? `<button class="tbtn" data-act="more">${s.more ? "show less" : "read more"}</button>` : ""}${
+      rurl ? `<a class="tbtn" href="${esc(rurl)}" target="_blank" rel="noopener">view on Amazon</a>` : ""}</div>
     ${m.confident ? "" : `<div class="foot">No exact sentence found</div>`}
-    ${n > 1 ? `<div class="foot">${s.img + 1} / ${n} images</div>` : ""}
-    ${n ? `<div class="cimg">${bigImgHtml(imgs[s.img])}${n > 1 ? `
+    ${n > 1 ? `<div class="foot">${count}</div>` : ""}
+    ${n ? `<div class="cimg">${bigImgHtml(imgs[s.img], "", onPhoto)}${n > 1 ? `
       <button class="gnav prev" data-gstep="-1" aria-label="Previous image" ${s.img === 0 ? "disabled" : ""}>&lsaquo;</button>
       <button class="gnav next" data-gstep="1" aria-label="Next image" ${s.img === n - 1 ? "disabled" : ""}>&rsaquo;</button>` : ""}</div>` : ""}
     ${s.occs.length > 1 ? `
@@ -4010,8 +4083,8 @@ $("tip").addEventListener("click", e => {
     return;
   }
   if (e.target.closest(".bigimg")) {
-    const p = pinProduct();
-    openZoom(gallery(p), pinState.img, p.title);
+    const { photos, all } = cardImages();
+    openZoom(all, pinState.img, pinProduct().title, photos.length);
   }
 });
 
@@ -4047,9 +4120,11 @@ containWheel($("zoom"));
 const ZOOM_MAX = 4;
 let zoomState = null;
 
-function openZoom(urls, at, title) {
+function openZoom(urls, at, title, customer) {
   if (!urls.length) return;
-  zoomState = { urls, at, s: 1, x: 0, y: 0, w: 0, h: 0, down: null, back: document.activeElement };
+  // `customer` is how many of `urls`, from the front, are a review's own photos.
+  zoomState = { urls, at, customer: customer || 0, s: 1, x: 0, y: 0, w: 0, h: 0, down: null,
+                back: document.activeElement };
   tipOff();
   $("zttl").textContent = title || "";
   $("zoom").hidden = false;
@@ -4154,10 +4229,18 @@ function zoomShow() {
   };
   img.src = fullSize(url);
 
-  $("zcount").textContent = `${z.at + 1} / ${n}`;
-  $("zthumbs").innerHTML = z.urls.map((u, i) =>
-    `<button class="zth${i === z.at ? " on" : ""}" data-zi="${i}" aria-label="Image ${i + 1}">${thumbHtml(u)}</button>`
-  ).join("");
+  const nc = z.customer;
+  $("zcount").textContent = !nc ? `${z.at + 1} / ${n}`
+    : z.at < nc ? `Customer photo ${z.at + 1} / ${nc}`
+    : `Listing image ${z.at - nc + 1} / ${n - nc}`;
+  const thumb = (u, i) => `<button class="zth${i === z.at ? " on" : ""}" data-zi="${i}" aria-label="Image ${i + 1}">${
+    i < nc ? `<img src="${esc(u)}" alt="" loading="lazy" data-cphoto
+                   onload="photoChecked(this, true)" onerror="photoChecked(this, false)">`
+           : thumbHtml(u)}</button>`;
+  $("zthumbs").innerHTML = !nc ? z.urls.map(thumb).join("")
+    : `<div class="zsec">Customer Reviews</div>` + z.urls.slice(0, nc).map(thumb).join("") +
+      (n > nc ? `<div class="zsec">Listing</div>` +
+                z.urls.slice(nc).map((u, i) => thumb(u, i + nc)).join("") : "");
   $("zprev").hidden = $("znext").hidden = n < 2;
   $("zprev").disabled = z.at === 0;
   $("znext").disabled = z.at === n - 1;
