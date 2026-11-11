@@ -173,3 +173,12 @@ These supersede the matching lines in the two sections above.
   and `m = RATING_PRIOR = 50` imaginary ratings at that mean. 5.0★ from 1 rating scores about
   the run average; 4.6★ from 10,000 keeps its 4.6. Only the order uses it; the real rating is
   always what is shown, and the card's rating pill gives the score on hover.
+- **See all on the Results page, and previous / next product (same day).** Leaving the photo
+  view on Results (Esc, ×, click outside) now lands on See all too: the product on show, with
+  only the photos from that product's reviews in the clicked chip's cluster, the last-seen photo
+  outlined, and the cluster's title in the header. A tile reopens the same scope on that photo;
+  Esc from See all returns to the page. A chip with no customer photos still closes straight to
+  the page. On both pages See all has ‹ › buttons bottom-right with `Product 2 of 5`, and the
+  ← → keys do the same: Results walks the Products-panel order, Extracted listings the card
+  order. See all is fed by a source (`RUN_PHOTOS`, or `scopePhotos(rv)` over a photo-view scope)
+  held in `pallState`. Verified with Playwright at 1280 and 600 px: Results 45/45, run page 35/35.

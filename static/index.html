@@ -551,6 +551,13 @@ section[id]{scroll-margin-top:72px}
 /* the scroller and the grid are two boxes: a grid with a fixed height squeezes its rows */
 .pallscroll{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:16px}
 .pallgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.pallft{flex:0 0 auto;display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:9px 16px;
+  border-top:1px solid var(--rule);font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.pallft[hidden]{display:none}
+.pallft button{font-family:var(--mono);font-size:18px;line-height:1;padding:6px 15px;border:1px solid var(--rule);
+  background:var(--glaze);color:var(--ink);cursor:pointer;border-radius:3px}
+.pallft button:hover:not(:disabled){border-color:var(--cobalt);color:var(--cobalt)}
+.pallft button:disabled{opacity:.35;cursor:not-allowed}
 
 /* ---------- results: photo view ----------
    The zoom view opened from a chip or a customer-photo tile. Left of the stage, a
@@ -864,11 +871,16 @@ section[id]{scroll-margin-top:72px}
 
 <!-- ==================== HOVER CARD / IMAGE VIEW ==================== -->
 <div id="tip" role="tooltip" aria-hidden="true"></div>
-<!-- Run page: every customer photo of one product (See all) -->
+<!-- See all: one product's customer photos, with previous / next product (both pages) -->
 <div id="pall" class="pallveil" hidden role="dialog" aria-modal="true" aria-label="Customer photos">
   <div class="pallbox">
     <div class="pallhd" id="pallhd"></div>
     <div class="pallscroll"><div class="pallgrid" id="pallgrid"></div></div>
+    <div class="pallft" id="pallft">
+      <span id="pallpos"></span>
+      <button id="pallprev" title="Previous product (&larr;)" aria-label="Previous product">&lsaquo;</button>
+      <button id="pallnext" title="Next product (&rarr;)" aria-label="Next product">&rsaquo;</button>
+    </div>
     <button class="x" id="pallclose" title="Close (Esc)" aria-label="Close">&times;</button>
   </div>
 </div>
@@ -2190,36 +2202,99 @@ function renderRunPhotos() {
       </div>
       <div class="cptiles">${tiles.slice(0, PHOTO_PREVIEW).map(t => photoTileHtml(p.asin, t)).join("")}</div>
     </div>`).join("");
-  if (pallAsin) fillAllPhotos();
+  if (pallState) fillAllPhotos();
 }
 
-/* See all: one product's every photo. Stays open under the photo view, so closing
-   that lands back on the grid. */
-let pallAsin = null;
+/* ---------- See all ----------
+   One product's every customer photo, in a grid, with ‹ › (and the ← → keys) to
+   move to the previous or next product. It stays open under the photo view, and
+   leaving the photo view lands here, on the product and photo it was showing.
 
-function openAllPhotos(asin) {
-  pallAsin = asin;
+   It is fed by a source, so both pages use it: `rows()` gives
+   [{ p, reviews, tiles: [{ id, url, rating }] }] in display order, `open(asin, id,
+   url, tile, kb)` opens the photo view for a clicked tile, and `note` is an optional
+   tail for the header (the cluster's title on the results page). `pallState` is the
+   source plus the `asin` on show. */
+let pallState = null;
+
+const RUN_PHOTOS = {
+  rows: () => runPhotoRows(),
+  open: (asin, id, url, tile, kb) => {
+    const rv = buildRunPhotoScope(asin, id, url);
+    if (rv) openPhotoView(rv, tile, kb);
+  },
+};
+
+/* The same over a photo-view scope: each product's photos from the reviews the view
+   was paging through, in the view's own product order. A tile reopens that scope. */
+function scopePhotos(rv) {
+  return {
+    note: rv.title || "",
+    rows: () => rvProducts(rv).map(g => {
+      const items = rv.items.slice(g.start, g.start + g.n);
+      const tiles = [].concat(...items.map(it => {
+        const r = rv.detail(it).review || {};
+        return rv.photos(it).map(url => ({ id: it.body_id, url, rating: r.rating }));
+      }));
+      return { p: { asin: g.asin, ...rv.product(g.asin) }, reviews: items, tiles };
+    }).filter(row => row.tiles.length),
+    open: (asin, id, url, tile, kb) => {
+      const i = rv.items.findIndex(it => it.body_id === id);
+      if (i < 0) return;
+      rv.i = i;
+      rv.at = Math.max(0, rv.photos(rv.items[i]).indexOf(url));
+      openPhotoView(rv, tile, kb);
+    },
+  };
+}
+
+/* `seen` is the photo to scroll to and outline: the one the photo view was on. */
+function openAllPhotos(source, asin, seen) {
+  pallState = { ...source, asin };
   fillAllPhotos();
-  if (!pallAsin) return;
+  if (!pallState) return;
   $("pall").hidden = false;
   $("pallgrid").parentNode.scrollTop = 0;
+  const tile = seen && [...$("pallgrid").querySelectorAll(".cptile")].find(t => t.dataset.url === seen);
+  if (tile) {
+    tile.scrollIntoView({ block: "center" });
+    tile.classList.add("seen");
+  }
   $("pallclose").focus({ preventScroll: true });
 }
 
 function fillAllPhotos() {
-  const row = runPhotoRows().find(x => x.p.asin === pallAsin);
-  if (!row) { closeAllPhotos(); return; }
+  const rows = pallState.rows();
+  const at = rows.findIndex(x => x.p.asin === pallState.asin);
+  if (at < 0) { closeAllPhotos(); return; }
+  const row = rows[at];
   $("pallhd").innerHTML = `${thumbHtml(row.p.main_image)}
     <div class="cpt"><a href="${esc(row.p.link || row.p.source_url || "#")}" target="_blank" rel="noopener"
          title="Open on Amazon">${esc(row.p.title || "(no title returned)")}</a>
       <span class="cpm">${esc(row.p.asin)} &middot; ${productFacts(row.p).join(" &middot; ")} &middot; ${
         plural(row.tiles.length, "customer photo", "customer photos")} from ${
-        plural(row.reviews.length, "review", "reviews")}</span></div>`;
+        plural(row.reviews.length, "review", "reviews")}${
+        pallState.note ? ` in &ldquo;${esc(pallState.note)}&rdquo;` : ""}</span></div>`;
   $("pallgrid").innerHTML = row.tiles.map(t => photoTileHtml(row.p.asin, t)).join("");
+  $("pallft").hidden = rows.length < 2;
+  $("pallpos").textContent = `Product ${at + 1} of ${rows.length}`;
+  $("pallprev").disabled = at === 0;
+  $("pallnext").disabled = at === rows.length - 1;
+}
+
+/* ‹ › and the ← → keys: the previous or next product's photos, from the top. */
+function stepAllPhotos(d) {
+  if (!pallState) return;
+  const rows = pallState.rows();
+  const to = rows.findIndex(x => x.p.asin === pallState.asin) + d;
+  if (to < 0 || to >= rows.length) return;
+  pallState.asin = rows[to].p.asin;
+  fillAllPhotos();
+  $("pallgrid").parentNode.scrollTop = 0;
 }
 
 function closeAllPhotos() {
-  pallAsin = null;
+  pallState = null;
   $("pall").hidden = true;
   $("pallgrid").innerHTML = "";
 }
@@ -2245,27 +2320,24 @@ function buildRunPhotoScope(asin, reviewId, url) {
     },
     product: a => { const p = product(a) || {}; return { ...p, link: p.link || p.source_url }; },
     // Leaving the view lands on See all for the product it was on, at the photo last seen.
-    onClose: (it, url) => {
-      openAllPhotos(it.asin);
-      const tile = [...$("pallgrid").querySelectorAll(".cptile")].find(t => t.dataset.url === url);
-      if (!tile) return;
-      tile.scrollIntoView({ block: "center" });
-      tile.classList.add("seen");
-    },
+    onClose: (it, url) => openAllPhotos(RUN_PHOTOS, it.asin, url),
   };
 }
 
 (() => {
   const onTile = e => {
     const all = e.target.closest("[data-all]");
-    if (all) { openAllPhotos(all.dataset.all); return; }
+    if (all) { openAllPhotos(RUN_PHOTOS, all.dataset.all); return; }
     const tile = e.target.closest(".cptile");
     if (!tile || zoomState) return;
-    const rv = buildRunPhotoScope(tile.dataset.asin, tile.dataset.rid, tile.dataset.url);
-    if (rv) openPhotoView(rv, tile, e.detail === 0);
+    // A tile in See all belongs to whichever source filled it; one in the page's rows, to the run.
+    const source = tile.closest("#pallgrid") && pallState ? pallState : RUN_PHOTOS;
+    source.open(tile.dataset.asin, tile.dataset.rid, tile.dataset.url, tile, e.detail === 0);
   };
   $("rp-rows").addEventListener("click", onTile);
   $("pallgrid").addEventListener("click", onTile);
+  $("pallprev").onclick = () => stepAllPhotos(-1);
+  $("pallnext").onclick = () => stepAllPhotos(1);
   $("pallclose").onclick = closeAllPhotos;
   $("pall").addEventListener("click", e => { if (e.target === $("pall")) closeAllPhotos(); });
 })();
@@ -3157,7 +3229,7 @@ $("res-q").addEventListener("keydown", e => {
 });
 $("res-qx").onclick = () => { clearQuery(); $("res-q").focus(); };
 document.addEventListener("keydown", e => {
-  if (e.key !== "/" || !resultsState || $("view-results").hidden || zoomState) return;
+  if (e.key !== "/" || !resultsState || $("view-results").hidden || zoomState || pallState) return;
   if (e.target.closest("input, textarea, select, [contenteditable]")) return;
   e.preventDefault();
   $("res-q").focus();
@@ -4065,8 +4137,9 @@ function photoFailed(url) {
 function dropPhoto(url) {
   if (!url || badPhotos.has(url)) return;
   badPhotos.add(url);
-  // The run page's rows and See-all grid lose the tile too.
+  // The run page's rows and an open See-all grid lose the tile too.
   if (runState && !$("view-run").hidden) renderRunPhotos();
+  else if (pallState) fillAllPhotos();
   const z = zoomState, rv = z && z.rv;
   if (!rv || rv.listing) return;
   const cur = rv.items[rv.i];
@@ -4243,8 +4316,9 @@ function buildPhotoScope(el) {
       .sort((a, b) => own(b.g) - own(a.g) || b.g.length - a.g.length || a.at - b.at)
       .map(x => x.g.filter(it => it.mine).concat(x.g.filter(it => !it.mine)));
   }
-  return {
+  const rv = {
     listing, items: [].concat(...order), i: 0, at: 0, tone: LIST_TONE[el.dataset.sec] || "",
+    title: el.dataset.cluster || "",
     photos: it => (listing ? gallery(d.products[it.asin] || {}) : bodyPhotos(d.bodies[it.body_id])),
     detail: it => {
       const o = d.occurrences[it.ref], b = d.bodies[it.body_id];
@@ -4252,6 +4326,10 @@ function buildPhotoScope(el) {
     },
     product: asin => d.products[asin] || {},
   };
+  // Leaving the view lands on See all: this product's photos from the cluster's reviews.
+  // A chip with no customer photos has nothing to show there, and just closes.
+  if (!listing) rv.onClose = (it, url) => openAllPhotos(scopePhotos(rv), it.asin, url);
+  return rv;
 }
 
 /* A scope carries its own lookups, so the view works the same over a parse's results
@@ -4874,9 +4952,17 @@ document.addEventListener("keydown", e => {
     }
     return;
   }
+  // See all, when nothing is over it: Esc closes it and ← → change product.
+  if (!$("pall").hidden) {
+    if (e.key === "Escape") closeAllPhotos();
+    else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      e.preventDefault();
+      stepAllPhotos(e.key === "ArrowLeft" ? -1 : 1);
+    }
+    return;
+  }
   if (e.key !== "Escape") return;
-  if (!$("pall").hidden) closeAllPhotos();
-  else if (!$("cveil").hidden) closeConfirm(false);
+  if (!$("cveil").hidden) closeConfirm(false);
   else if (!$("sveil").hidden) $("sveil").hidden = true;
   else if (!$("veil").hidden) closeModal();
 });
