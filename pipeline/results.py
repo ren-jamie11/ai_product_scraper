@@ -207,12 +207,31 @@ def _register(ref: str, occ: dict, occurrences: dict, bodies: dict, used_product
             "title": p.get("title"),
             "brand": p.get("brand"),
             "main_image": p.get("main_image"),
+            "images": _gallery(p),
             "link": p.get("link") or p.get("source_url"),
             "price": (p.get("price") or {}).get("raw") if isinstance(p.get("price"), dict) else None,
             "rating": p.get("rating"),
             "ratings_total": p.get("ratings_total"),
             "deleted": bool(p.get("deleted")),
         }
+
+
+def _gallery(p: dict) -> list[str]:
+    """The main image, then the stored gallery, for the hover card, panel and zoom view.
+
+    Deduped by Amazon image id (the filename up to its first "."), so the same
+    picture at two size codes shows once. A manual product with no images gives [].
+    """
+    out, seen = [], set()
+    for url in [p.get("main_image")] + list(p.get("images") or []):
+        if not isinstance(url, str) or not url:
+            continue
+        key = url.rsplit("/", 1)[-1].split(".", 1)[0]
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(url)
+    return out
 
 
 _ARTICLE = re.compile(r"^(?:the|a|an)\s+")

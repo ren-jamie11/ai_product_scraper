@@ -407,6 +407,37 @@ def set_run_label(slug: str, run_id: str, label: str) -> dict:
     return meta
 
 
+def set_run_notes(slug: str, run_id: str, text: str, asin: str | None = None) -> dict:
+    """Save the run's notes, or one product's notes when `asin` is given.
+
+    Notes live in run_meta.json, never in edits.json, so they are never tagged.
+    An empty text clears them.
+    """
+    directory = run_dir(slug, run_id)
+    if not directory.is_dir() or is_hidden(run_id):
+        raise StorageError("That run no longer exists.")
+
+    meta = read_run_meta(slug, run_id)
+    text = (text or "").strip()[:5000]
+    if asin:
+        product_notes = dict(meta.get("product_notes") or {})
+        if text:
+            product_notes[asin] = text
+        else:
+            product_notes.pop(asin, None)
+        if product_notes:
+            meta["product_notes"] = product_notes
+        else:
+            meta.pop("product_notes", None)
+    elif text:
+        meta["notes"] = text
+    else:
+        meta.pop("notes", None)
+
+    write_json(directory / "run_meta.json", meta)
+    return meta
+
+
 # ---------------------------------------------------------------------------
 # Deleting — into _trash/, never gone
 # ---------------------------------------------------------------------------
