@@ -397,6 +397,7 @@ def _attach_review_media(raw_dir, bodies: dict) -> None:
         review_id = body_id.split(":", 2)[-1]
         raw = media[asin]["reviews"].get(review_id)
         review["photos"] = _photos((raw or {}).get("image_urls"))
+        review["author"] = (raw or {}).get("username") or None
         # The review's permanent page, not the scraper's link, which carries the
         # listing-page context it was found in.
         site = media[asin]["site"]

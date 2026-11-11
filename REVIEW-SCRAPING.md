@@ -79,13 +79,41 @@ pages, read with a saved login; Rainforest supplies the listing only.
   count. The chip shows a small outline camera in its own text colour. A collapsed card's preview
   stays the three most-said tags, ordered the same way. 574 of 971 review chips in decorative-books
   carry the marker.
-- **Pinned card.** The carousel is the review's photos, then the listing images; the counter reads
-  `Customer photo 1 / 3`, then `Listing image 1 / 9`. A new source opens on its first customer
-  photo; without any it keeps the listing image on the same product. `view on Amazon` sits beside
-  `read more` for reviews that have a page.
-- **Image view.** `openZoom(urls, at, title, customer)`: with a customer count the rail shows
-  **Customer Reviews** then **Listing** over one flat index, so arrows, keys and close-sync are
-  unchanged. The Extract-page view passes no count and is as before.
 - **Not shown:** review videos (2.5% of reviews); the review link covers them.
-- Verified with Playwright at 1280 and 600 px (21/21 each), including a photo forced to fail and
-  an older parse rendering unchanged.
+- The pinned dark card and the two-step route to the image view that this section first shipped
+  with were replaced the same day by the photo view below.
+
+## Photo view: a chip click opens the customer photos (built 2026-11-11)
+
+A click on a cluster chip opens the white image view directly; the dark pinned card is gone
+(hover tooltip unchanged, keywords still hover-only, Extract-page image view untouched).
+
+- **Scope is the chip's cluster.** Every review in the cluster with at least one photo, one item
+  per review (`buildPhotoScope`, from the cluster's full `review_tags`, whatever the source toggle
+  or search shows). Chips carry `data-sec` + `data-cid` to find their cluster.
+- **Order.** Grouped by product: products with the most photo reviews for the clicked chip first,
+  then by photo reviews in the cluster; inside a product the clicked chip's reviews lead. The
+  view opens on the first.
+- **Navigation.** On-screen ‹ › step images and roll into the neighbouring review; ← → step
+  reviews and flow into the next product; ↑ ↓ step products (the list opens for a moment).
+- **Layout.** A strip of product thumbnails left of the stage under a `Products` label; hover (or
+  a tap on the label at phone width) opens it into a list with title, rating, ratings count and
+  photo-review count. The rail holds the product title and rating, reviewer · stars · date ·
+  verified, the review title, the tag being marked, the full text with its sentence highlighted,
+  `view on Amazon`, and that review's thumbnails only. No listing images are mixed in.
+- **Which sentence.** The clicked chip's if the review has it, else the review's first tag in the
+  cluster; the tag is named in a chip above the text.
+- **A chip with no photos** (listing chips, review chips without the camera) opens the same view
+  over its own sources only, with the product's listing images on the stage.
+- **Code.** A third mode of the `#zoom` shell (`zoomState.rv`, beside the Extract page's `list`):
+  `openPhotoView`, `rvShow` / `rvFill`, `rvStepImage` / `rvStepReview` / `rvStepProduct`.
+  `dropPhoto` removes a broken photo from the open view, and a review left with none.
+- **A failing connection is not bad photos.** Amazon's image host fails requests in bursts when
+  hit hard (seen while testing), and dropping each failure emptied the view review by review
+  until it closed. `photoFailed` drops the first two failures in a row; from the third, with no
+  photo loading in between, nothing is dropped and those two are forgiven. The stage then says
+  "image didn't load" and paging carries on.
+  `results.py` adds `review.author` from the scrape's `username`; nothing else changed there.
+- Verified with Playwright at 1280 and 600 px (33/33 each) on decorative-books, plus an older
+  parse with no scraped photos opening in the listing-image form.
+- **Known:** some scraped review text carries Amazon's "The media could not be loaded." line.
