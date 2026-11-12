@@ -3090,7 +3090,9 @@ async function renderResults(slug, runId, parseId) {
     return;
   }
   const groupName = runData.group.name;
-  setHeader({ eyebrow: `${groupName} · results`, title: esc(groupName),
+  // The run's own name, as on the run page; a run never named falls back to the group's.
+  const runName = (runData.meta || {}).label || groupName;
+  setHeader({ eyebrow: `${groupName} · results`, title: esc(runName),
               back: true, backHref: runHref });
 
   const parses = runData.parses || [];
