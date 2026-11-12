@@ -149,6 +149,30 @@ OPENAI_LONG_CALL_TIMEOUT = int(os.getenv("OPENAI_LONG_CALL_TIMEOUT", "1800"))
 
 
 # ---------------------------------------------------------------------------
+# Parse results — tagging, then clustering and themes, as one job
+# ---------------------------------------------------------------------------
+
+# Clustering starts as soon as tagging ends, unless more than this share of the
+# bodies failed to tag. A few failures are noted and carried; past this the tags
+# are kept, clustering is not started, and the run says why.
+PARSE_MAX_FAILED_SHARE = float(os.getenv("PARSE_MAX_FAILED_SHARE", "0.10"))
+
+# The cost shown before a parse includes clustering, which depends on tag counts
+# that don't exist yet. These project them: distinct tags per tagged body, and
+# clusters per distinct tag (which decides whether a list is long enough for
+# themes). Medians over the 20 parses on disk, 2026-11-12; a category can sit at
+# half or double the features figure, so that part of the estimate is a guess.
+PARSE_EST_UNIQUE_TAGS_PER_BODY = {"features": 1.8, "complaints": 0.5,
+                                  "assembly_maintenance": 0.05}
+PARSE_EST_CLUSTERS_PER_TAG = {"features": 0.12, "complaints": 0.21,
+                              "assembly_maintenance": 0.5}
+
+# Seconds one tagging call takes, for the "about N min" on the confirm dialog.
+# Measured 2026-11-12: 325 bodies in 52 s on 24 workers.
+TAG_SECONDS_PER_CALL = float(os.getenv("TAG_SECONDS_PER_CALL", "3.8"))
+
+
+# ---------------------------------------------------------------------------
 # Grouping
 # ---------------------------------------------------------------------------
 

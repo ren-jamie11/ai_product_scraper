@@ -2526,15 +2526,18 @@ function growNote(el) {
   el.style.height = el.scrollHeight + 2 + "px";
 }
 
-/* ---------- step 2: tagging ----------
-   A parse never alters the run it reads: each one writes its own parse-<ts>/
-   folder, so re-parsing after a prompt change keeps the earlier output to
-   compare against. Phase 5 renders the tags; here we only run them and report. */
+/* ---------- step 2: parse results ----------
+   One job: tag every body, then cluster the tags and group the clusters into
+   themes. A parse never alters the run it reads: each one writes its own
+   parse-<ts>/ folder, so re-parsing after a prompt change keeps the earlier
+   output to compare against. */
 let parsing = false;
 
 async function renderParses() {
   const list = runState.parses || [];
-  $("group").hidden = !list.length;
+  // Parse results clusters as it goes, so Group tags is only the way back in
+  // when that stopped short: the newest parse has tags and no clusters.
+  $("group").hidden = !(list[0] && !list[0].grouped);
   $("results").hidden = !(list[0] && list[0].grouped);
   if (!list.length) {
     $("r-parses").innerHTML = "";
@@ -2543,12 +2546,21 @@ async function renderParses() {
 
   // Only the newest parse's log is worth loading — it's the one the summary
   // describes, and each fetch reads a file off disk.
-  let log = {}, clusterLog = {};
+  let log = {}, clusterLog = {}, themesLog = {};
   try {
     const result = await api(runPath(`/parses/${encodeURIComponent(list[0].id)}`));
     log = result.log || {};
     clusterLog = result.cluster_log || {};
+    themesLog = result.themes_log || {};
   } catch (e) { /* a half-written parse folder: show the pills, skip the stats */ }
+
+  // One cost for the whole parse: tagging, clustering and themes each log their
+  // own, and the split goes in the sub-line.
+  const money = n => `$${n.toFixed(2)}`;
+  const costParts = [["tagging", log.cost_usd], ["clustering", clusterLog.cost_usd],
+                     ["themes", themesLog.cost_usd]].filter(([, c]) => c != null);
+  const totalCost = costParts.length ? costParts.reduce((n, [, c]) => n + c, 0) : null;
+  const costSplit = costParts.map(([name, c]) => `${name} ${money(c)}`).join(" · ");
 
   const pills = list.map((p, i) => parsePill(runState.slug, runState.runId, p, i === 0)).join(" ");
 
@@ -2565,10 +2577,8 @@ async function renderParses() {
       ${stat("Skipped", log.skipped, `under ${log.min_tag_chars} chars`,
              log.skipped ? "warn" : "")}
       ${stat("Nothing found", log.empty ?? "—", "tagged but empty")}
-      ${stat("Cost", log.cost_usd == null ? "—" : `$${log.cost_usd.toFixed(4)}`,
-             log.estimated_cost_usd == null
-               ? `${log.elapsed_seconds}s`
-               : `est. $${log.estimated_cost_usd.toFixed(4)} · ${log.elapsed_seconds}s`)}
+      ${stat("Cost", totalCost == null ? "—" : `$${totalCost.toFixed(4)}`,
+             costParts.length > 1 ? costSplit : `${log.elapsed_seconds}s`)}
     </div>` : "";
 
   // Step 3's own strip, shown only once a grouping has run. Phase 5 renders the
@@ -2609,8 +2619,9 @@ async function renderParses() {
              clusterLog.repairs ? "see cluster_log.json" : "every tag placed once",
              clusterLog.repairs ? "warn" : "good")}
       ${themeStat}
-      ${stat("Cost", clusterLog.cost_usd == null ? "—" : `$${clusterLog.cost_usd.toFixed(4)}`,
-             `${clusterLog.elapsed_seconds}s`)}
+      ${stat("Time", about((log.elapsed_seconds || 0) + (clusterLog.elapsed_seconds || 0)),
+             `tagging ${Math.round(log.elapsed_seconds || 0)}s · clustering ${
+               Math.round(clusterLog.elapsed_seconds || 0)}s`)}
     </div>` : "";
 
   $("r-parses").innerHTML = `
@@ -2638,6 +2649,8 @@ async function startParse() {
   }
 
   const est = info.estimate;
+  const all = info.combined;
+  const groupModel = (all.grouping || {}).model || "the grouping model";
   if (!est.to_tag) {
     $("r-err").textContent =
       "There is nothing long enough to tag in this run. Add bullets or reviews first.";
@@ -2656,24 +2669,32 @@ async function startParse() {
       ? line(est.to_skip, `skipped <span class="d">&mdash; under ${info.min_tag_chars}
           characters, too short to hold a concrete benefit</span>`, "warn")
       : "") +
-    (est.cost_known
-      ? line(`$${est.cost_usd.toFixed(3)}`, `estimated <span class="d">&mdash; the real figure is
-          written to parse_log.json</span>`)
+    line("then", `tags are clustered${info.auto_themes ? " and grouped into themes" : ""}
+      <span class="d">&mdash; ${esc(about(all.seconds))} in all, no second click</span>`) +
+    (all.cost_known
+      ? line(`$${all.cost_usd.toFixed(2)}`, `estimated for the whole parse
+          <span class="d">&mdash; tagging $${all.tagging_cost_usd.toFixed(2)}, clustering${
+          info.auto_themes ? " and themes" : ""} about $${all.grouping_cost_usd.toFixed(2)}
+          (a projection: tag counts aren't known yet)</span>`)
       : line("?", `cost unknown <span class="d">&mdash; no pricing set for
-          ${esc(est.model)} in config.py</span>`, "warn"));
+          ${esc(est.model)} or ${esc(groupModel)} in config.py</span>`, "warn"));
 
+  plan += `<div class="asins">Clustering starts by itself once tagging ends, unless more than
+    ${Math.round(info.max_failed_share * 100)}% of the bodies fail to tag or no tags are found.
+    The tags are kept either way.</div>`;
   if ((runState.parses || []).length) {
     plan += `<div class="asins">Parsed before &mdash; this writes a new
-      <code>parse-&lt;time&gt;</code> folder and leaves the earlier tags untouched.</div>`;
+      <code>parse-&lt;time&gt;</code> folder and leaves the earlier results untouched.</div>`;
   }
   plan += `</div>`;
 
   const ok = await confirmModal({
     title: "Parse this run?",
-    confirmLabel: "Parse",
+    confirmLabel: "Parse results",
     body: `<p class="sd">One call per text body to <b>${esc(est.model)}</b>, extracting search
              terms, features, complaints, assembly &amp; care instructions and usage
-             keywords.</p>${plan}`,
+             keywords. Then <b>${esc(groupModel)}</b> sorts the tags into clusters${
+             info.auto_themes ? " and the clusters into themes" : ""}.</p>${plan}`,
   });
   if (!ok) return;
 
@@ -2709,8 +2730,9 @@ async function pollParse(jobId, slug, runId) {
     return endParse(slug, runId, e.message);
   }
 
-  setParseProgress(snap.pct, snap.total ? `${snap.label} (${snap.done}/${snap.total})`
-                                        : snap.label);
+  // The label alone: the job runs tagging, clustering and themes back to back,
+  // so its done/total is a share of the whole, not a count of anything.
+  setParseProgress(snap.pct, snap.label);
 
   if (snap.state === "running") {
     setTimeout(() => pollParse(jobId, slug, runId), 700);
@@ -2721,10 +2743,13 @@ async function pollParse(jobId, slug, runId) {
   }
 
   setParseProgress(100, "Done");
-  setTimeout(() => endParse(slug, runId, null), 500);
+  setTimeout(() => endParse(slug, runId, null, snap.result), 500);
 }
 
-function endParse(slug, runId, error) {
+/* A finished parse opens its results. One that stopped before clustering (too
+   many bodies failed to tag, nothing found, or clustering itself failed) stays
+   here with the reason, where Group tags is now showing. */
+async function endParse(slug, runId, error, result) {
   parsing = false;
   $("parse").disabled = false;
   $("r-prog").hidden = true;
@@ -2734,14 +2759,23 @@ function endParse(slug, runId, error) {
     $("r-err").hidden = false;
     return;
   }
-  renderRun(slug, runId);
+  if (result && result.grouped) {
+    location.hash = resultsHref(slug, runId, result.parse_id);
+    return;
+  }
+  await renderRun(slug, runId);
+  if (result && result.stopped) {
+    $("r-err").textContent = result.stopped;
+    $("r-err").hidden = false;
+  }
 }
 
-/* ---------- step 3: grouping ----------
-   Separate from parsing on purpose. Re-tagging costs about four times what
-   re-grouping does, so keeping them apart means the clustering prompt can be
-   tuned against a parse you already paid for. Writes clusters.json, clusters.md
-   and cluster_log.json into the same parse-<ts>/ folder the tags came from. */
+/* ---------- step 3: grouping, on its own ----------
+   Parse results runs this by itself right after tagging. The button is the way
+   back in when that stopped short — the newest parse has tags and no clusters —
+   so tags already paid for can be clustered without tagging again. Writes
+   clusters.json, clusters.md and cluster_log.json into the same parse-<ts>/
+   folder the tags came from. */
 let grouping = false;
 
 /* A list past the single-call size is clustered in parallel partitions and then

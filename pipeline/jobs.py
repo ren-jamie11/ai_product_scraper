@@ -74,6 +74,61 @@ class Job:
             }
 
 
+class Phase:
+    """One stretch of a job that runs several steps back to back.
+
+    The pipeline's steps each count their own work (`set_total`, `step`), which
+    would overshoot the bar if two of them shared a job. A Phase gives a step
+    the same surface and maps its progress onto a slice of the parent — `start`
+    to `end`, as fractions of the whole. Notes and failures go straight to the
+    parent. The bar never moves backwards, even when a step raises its own total
+    part-way through.
+    """
+
+    SCALE = 1000
+
+    def __init__(self, job: Job, start: float, end: float):
+        self.job, self.start, self.end = job, start, end
+        self.total = 0
+        self.done = 0
+        self._lock = threading.Lock()
+        with job._lock:
+            job.total = self.SCALE
+            job.done = max(job.done, round(start * self.SCALE))
+
+    @property
+    def notes(self) -> list[str]:
+        return self.job.notes
+
+    @property
+    def failures(self) -> list[dict]:
+        return self.job.failures
+
+    def _push(self, label: str | None = None) -> None:
+        share = min(1.0, self.done / self.total) if self.total else 0.0
+        at = round((self.start + (self.end - self.start) * share) * self.SCALE)
+        with self.job._lock:
+            self.job.done = max(self.job.done, at)
+            if label:
+                self.job.label = label
+
+    def set_total(self, total: int) -> None:
+        with self._lock:
+            self.total = total
+            self._push()
+
+    def step(self, label: str | None = None, count: int = 1) -> None:
+        with self._lock:
+            self.done += count
+            self._push(label)
+
+    def note(self, message: str) -> None:
+        self.job.note(message)
+
+    def fail_item(self, name: str, reason: str) -> None:
+        self.job.fail_item(name, reason)
+
+
 _JOBS: dict[str, Job] = {}
 _JOBS_LOCK = threading.Lock()
 

@@ -630,3 +630,29 @@ This supersedes the model names and `PRICE_PER_1M` placeholders in the sections 
   4M limit.
 - **The tagging estimate assumes a cold cache** (the first wave of workers writes the prompt),
   so it runs high when the prompt is already cached: $0.54 estimated vs $0.35 actual on the trial.
+
+---
+
+## One-step Parse results (built 2026-11-12)
+
+This supersedes the separate "Parse" and "Group tags" steps described above.
+
+- **One button, one job.** `POST …/parse` now runs `pipeline/parse.py`'s `run_parse`: tagging,
+  a check, then clustering and themes, back to back. `run_tagging` and `run_grouping` are
+  unchanged and still write `parse_log.json`, `cluster_log.json` and `themes_log.json`; the job
+  shares one progress bar through `jobs.Phase`, which maps each step onto a slice of it.
+- **The check between the steps** (`parse.check_tagging`): clustering does not start when more
+  than `PARSE_MAX_FAILED_SHARE` (10%) of bodies failed to tag, or when no features, complaints
+  or care tags were found. The tags are kept, the job ends as done with the reason, and the run
+  page shows it. A clustering error is handled the same way rather than failing the job.
+- **Group tags is a fallback.** The button shows only when the newest parse has tags and no
+  clusters. The per-list re-run on the results page and its endpoints are untouched.
+- **One cost.** The confirm dialog shows a single estimate (`parse.estimate`): tagging priced
+  from the text, clustering and themes priced from projected tag counts
+  (`PARSE_EST_UNIQUE_TAGS_PER_BODY`, medians over the 20 parses on disk). It runs high: $1.54
+  estimated vs $0.97 actual on Gold Figurines, $1.00 vs $0.53 on Stone Statue. The time
+  estimate was close (about 7 min vs 436 s). The run page shows one Cost with the split beneath.
+- **On success the page opens the results.**
+- **Verified live on Gold Figurines** (565 bodies, 2026-11-12): 0 failed bodies, 0 repairs,
+  bar never moved backwards, landed on results. This was also the first partitioned run on
+  `gpt-6.1-sol` with the merge at `high`: 3 partitions, 89 partial clusters joined to 72.

@@ -651,6 +651,22 @@ def estimate(tagged: dict, prompt: str | None = None, only: list[str] | None = N
 
     `only` narrows it to the lists a partial re-run would group.
     """
+    sizes = {}
+    for key in which_lists(only):
+        occurrences, uniques = collect(tagged, key)
+        if uniques:
+            sizes[key] = {"unique_tags": len(uniques), "occurrences": len(occurrences),
+                          "tag_tokens": sum(len(u["display"]) + 6 for u in uniques) // 4}
+    return estimate_sizes(sizes, prompt)
+
+
+def estimate_sizes(sizes: dict, prompt: str | None = None) -> dict:
+    """The cost and time of grouping lists of the given sizes.
+
+    `sizes` maps a list key to `{unique_tags, occurrences, tag_tokens}`. Split
+    out of `estimate` so the one-step parse can price clustering from projected
+    tag counts, before any tag exists.
+    """
     if prompt is None:
         prompt, _ = load_prompt()
 
@@ -659,16 +675,16 @@ def estimate(tagged: dict, prompt: str | None = None, only: list[str] | None = N
     merge_prompt_tokens = None
     lists, input_tokens, output_tokens, embed_tokens = [], 0, 0, 0
 
-    for key in which_lists(only):
-        occurrences, uniques = collect(tagged, key)
-        if not uniques:
+    for key in LISTS:
+        size = sizes.get(key)
+        if not size or not size["unique_tags"]:
             continue
-        count = len(uniques)
-        tag_tokens = sum(len(u["display"]) + 6 for u in uniques) // 4
+        count = size["unique_tags"]
+        tag_tokens = size["tag_tokens"]
         entry = {
             "key": key,
             "title": TITLES[key],
-            "occurrences": len(occurrences),
+            "occurrences": size["occurrences"],
             "unique_tags": count,
         }
 
@@ -680,16 +696,16 @@ def estimate(tagged: dict, prompt: str | None = None, only: list[str] | None = N
             # Partitions run in parallel, then one merge call sees every tag again.
             if merge_prompt_tokens is None:
                 merge_prompt_tokens = len(load_merge_prompt()[0]) // 4
-            sizes = [len(p) for p in partition.slices(count, config.GROUP_PARTITION_TARGET)]
-            part_outputs = [expected_output_tokens(s) for s in sizes]
+            parts = [len(p) for p in partition.slices(count, config.GROUP_PARTITION_TARGET)]
+            part_outputs = [expected_output_tokens(s) for s in parts]
             clusters_guess = max(1, count // 8)      # ~1 cluster per 8 tags on disk
             merge_output = (config.GROUP_MERGE_EST_OUTPUT_BASE
                             + config.GROUP_MERGE_EST_OUTPUT_PER_CLUSTER * clusters_guess)
-            list_input = (len(sizes) * (prompt_tokens + 60) + tag_tokens
+            list_input = (len(parts) * (prompt_tokens + 60) + tag_tokens
                           + merge_prompt_tokens + tag_tokens + clusters_guess * 20)
             list_output = sum(part_outputs) + merge_output
             embed_tokens += tag_tokens
-            entry.update(mode="partitioned", partitions=len(sizes),
+            entry.update(mode="partitioned", partitions=len(parts),
                          seconds=expected_seconds(max(part_outputs))
                                  + expected_seconds(merge_output))
 
@@ -835,7 +851,9 @@ def run_grouping(job, slug: str, run_id: str, parse_id: str,
              if biggest["mode"] == "partitioned" else f"{biggest['unique_tags']} tags")
     verb = "Re-grouping" if partial else "Grouping"
     total_units = sum(units.values())
-    job.set_total(total_units)
+    # Themes follow as one more unit; counting it from the start keeps the bar
+    # from reading "finished" while they are still being built.
+    job.set_total(total_units + (1 if settings.resolve("auto_themes") else 0))
     job.step(label=f"{verb} {len(collected)} tag {'list' if len(collected) == 1 else 'lists'} "
                    f"with {choice['model']}… (largest has {shape}, {eta})", count=0)
 

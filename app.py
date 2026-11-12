@@ -16,8 +16,8 @@ from datetime import datetime
 from flask import Flask, jsonify, request, send_file, send_from_directory
 
 import config
-from pipeline import (amazon_reviews, asins, compact, export, extract, grouping, jobs, normalize, results,
-                      settings, storage, tagging, themes)
+from pipeline import (amazon_reviews, asins, compact, export, extract, grouping, jobs, normalize, parse,
+                      results, settings, storage, tagging, themes)
 
 app = Flask(__name__, static_folder="static", static_url_path="/static")
 
@@ -259,18 +259,24 @@ def api_amazon_login():
 
 @app.get("/api/runs/<slug>/<run_id>/parse-estimate")
 def api_parse_estimate(slug: str, run_id: str):
-    """Body count and cost, for the confirm dialog. Spends nothing."""
+    """Body count and the cost of the whole parse — tagging, clustering and
+    themes — for the confirm dialog. Spends nothing."""
     products = storage.load_run(slug, run_id).get("products", [])
+    combined = parse.estimate(normalize.build_bodies(products))
     return jsonify({
-        "estimate": tagging.estimate(normalize.build_bodies(products)),
+        "estimate": combined["tagging"],
+        "combined": combined,
         "openai_key_set": bool(config.OPENAI_API_KEY),
         "min_tag_chars": config.MIN_TAG_CHARS,
+        "auto_themes": bool(settings.resolve("auto_themes")),
+        "max_failed_share": config.PARSE_MAX_FAILED_SHARE,
     })
 
 
 @app.post("/api/runs/<slug>/<run_id>/parse")
 def api_parse(slug: str, run_id: str):
-    """Kick off tagging in the background and hand back a job id."""
+    """Kick off the whole parse — tagging, then clustering and themes — in the
+    background and hand back a job id."""
     if not config.OPENAI_API_KEY:
         raise storage.StorageError("OPENAI_API_KEY is empty in config.py.")
 
@@ -286,8 +292,8 @@ def api_parse(slug: str, run_id: str):
     to_tag = len(tagging.partition(bodies)[0])
     job = jobs.start(
         f"Tagging {to_tag} bodies…",
-        lambda j: tagging.run_tagging(j, slug, run_id),
-        total=to_tag,
+        lambda j: parse.run_parse(j, slug, run_id, bodies),
+        total=jobs.Phase.SCALE,
     )
     return jsonify({"job_id": job.id, "run_id": run_id, "to_tag": to_tag}), 202
 
@@ -318,6 +324,7 @@ def api_parse_result(slug: str, run_id: str, parse_id: str):
         "log": storage.read_json(directory / "parse_log.json", {}) or {},
         "clusters": storage.read_json(directory / "clusters.json"),
         "cluster_log": storage.read_json(directory / "cluster_log.json", {}) or {},
+        "themes_log": storage.read_json(directory / "themes_log.json", {}) or {},
     })
 
 
