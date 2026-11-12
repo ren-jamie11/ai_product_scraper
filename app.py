@@ -11,11 +11,12 @@ import io
 import sys
 import threading
 import webbrowser
+from datetime import datetime
 
 from flask import Flask, jsonify, request, send_file, send_from_directory
 
 import config
-from pipeline import (asins, compact, export, extract, grouping, jobs, normalize, results,
+from pipeline import (amazon_reviews, asins, compact, export, extract, grouping, jobs, normalize, results,
                       settings, storage, tagging, themes)
 
 app = Flask(__name__, static_folder="static", static_url_path="/static")
@@ -82,8 +83,8 @@ def health():
     """What the app can and cannot do right now, so the UI can say so plainly."""
     return jsonify({
         "ok": True,
-        "amazon_domain": config.AMAZON_DOMAIN,
-        "review_target": config.REVIEW_TARGET,
+        "amazon_domain": settings.resolve("amazon_site"),
+        "reviews_per_asin": settings.resolve("reviews_per_asin"),
         "tag_model": config.OPENAI_TAG_MODEL,
         "group_model": config.OPENAI_GROUP_MODEL,
         "rainforest_key_set": bool(config.RAINFOREST_API_KEY),
@@ -151,7 +152,7 @@ def _split_work(slug: str, items: list[dict], refetch) -> dict:
 
 @app.post("/api/groups/<slug>/extract")
 def api_extract(slug: str):
-    """Kick off a Rainforest run in the background and hand back a job id."""
+    """Kick off an extraction in the background and hand back a job id."""
     payload = request.get_json(silent=True) or {}
     parsed = asins.parse_input_block(payload.get("text", ""))
     items = parsed["items"]
@@ -173,7 +174,7 @@ def api_extract(slug: str):
     if to_fetch and not config.RAINFOREST_API_KEY:
         raise storage.StorageError("RAINFOREST_API_KEY is empty in config.py.")
 
-    domain = payload.get("domain") or config.AMAZON_DOMAIN
+    domain = payload.get("domain") or settings.resolve("amazon_site")
     run_id = storage.create_run(slug, items)
 
     jobs.prune()
@@ -181,7 +182,7 @@ def api_extract(slug: str):
         f"Fetching {len(to_fetch)} listings…" if to_fetch
         else "Collecting listings you already have…",
         lambda j: extract.run_extraction(j, slug, run_id, items, domain, to_fetch),
-        total=len(to_fetch),
+        total=2 * len(to_fetch),
     )
     return jsonify({
         "job_id": job.id,
@@ -190,6 +191,62 @@ def api_extract(slug: str):
         "fetch_count": len(to_fetch),
         "held_count": len(items) - len(to_fetch),
     }), 202
+
+
+@app.post("/api/runs/<slug>/<run_id>/fetch-reviews")
+def api_fetch_reviews(slug: str, run_id: str):
+    """Read reviews from Amazon for the listings in a run that have none."""
+    missing = extract.missing_reviews(slug, run_id)
+    if not missing:
+        raise storage.StorageError("Every listing in this run already has reviews.")
+
+    jobs.prune()
+    job = jobs.start(
+        f"Fetching reviews for {len(missing)} listings…",
+        lambda j: extract.fetch_missing_reviews(j, slug, run_id),
+        total=len(missing),
+    )
+    return jsonify({"job_id": job.id, "count": len(missing)}), 202
+
+
+# ---------------------------------------------------------------------------
+# The Amazon sign-in the review fetch relies on
+# ---------------------------------------------------------------------------
+
+def _amazon_status() -> list[dict]:
+    sites = []
+    for site in settings.SITES:
+        path = amazon_reviews.cookies_path(site)
+        saved = amazon_reviews.signed_in(site)
+        sites.append({
+            "site": site,
+            "label": settings.SITE_NAMES[site],
+            "signed_in": saved,
+            "updated": (datetime.fromtimestamp(path.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
+                        if saved else None),
+        })
+    return sites
+
+
+@app.get("/api/amazon/status")
+def api_amazon_status():
+    """Which sites have a saved login. A saved login can still have expired."""
+    return jsonify({"sites": _amazon_status()})
+
+
+@app.post("/api/amazon/login")
+def api_amazon_login():
+    """Open a browser window to sign in to Amazon; the job ends when the login is saved."""
+    site = (request.get_json(silent=True) or {}).get("site")
+    if site not in settings.SITES:
+        raise storage.StorageError("Choose amazon.ca or amazon.com to sign in to.")
+
+    jobs.prune()
+    job = jobs.start(
+        f"Waiting for you to sign in to {site} in the browser window…",
+        lambda j: (amazon_reviews.sign_in(site), {"site": site})[1],
+    )
+    return jsonify({"job_id": job.id}), 202
 
 
 # ---------------------------------------------------------------------------
@@ -425,9 +482,20 @@ def api_run(slug: str, run_id: str):
     run = storage.load_run(slug, run_id, include_deleted=True)
     live = [p for p in run["products"] if not p.get("deleted")]
 
+    # Customer photos, the reviewer and the review's page, by ASIN then review id.
+    # Beside `run` and never in it: it is read from the raw scrape for display only,
+    # and must not ride along in an edit.
+    media = {}
+    for p in run["products"]:
+        found = {rid: m for rid, m in results.review_media(directory / "raw", p["asin"]).items()
+                 if m["photos"]}
+        if found:
+            media[p["asin"]] = found
+
     return jsonify({
         "group": {"name": group.get("name", slug), "slug": slug},
         "run": run,
+        "media": media,
         "stats": normalize.summarize(live),
         "log": storage.read_json(directory / "run_log.json", {}) or {},
         "meta": storage.read_run_meta(slug, run_id),

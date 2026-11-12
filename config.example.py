@@ -48,31 +48,27 @@ MODEL_PRICING = {
 # Extraction
 # ---------------------------------------------------------------------------
 
-AMAZON_DOMAIN = os.getenv("AMAZON_DOMAIN", "amazon.com")
+AMAZON_DOMAIN = os.getenv("AMAZON_DOMAIN", "amazon.ca")
 
-# How many reviews to try to collect per ASIN.
+# Reviews come from Amazon's own review pages (pipeline/amazon_reviews.py), read
+# with the login saved in amazon_cookies.<site>.txt. Rainforest stopped returning
+# them in November 2026 and now supplies the listing only.
 #
-# Reality check (probe_reviews.py, 2026-09-10): Rainforest's `type=reviews`
-# request answers HTTP 503 "temporarily unavailable", so the only reviews we can
-# get are the ~9 that come free with each product call. This target is an upper
-# bound, not a promise — the run stops as soon as the API has no more to give.
-# Re-run probe_reviews.py now and then to see whether the endpoint has returned.
-REVIEW_TARGET = int(os.getenv("REVIEW_TARGET", "30"))
+# How many to collect per ASIN. They are taken ten at a time from each star
+# rating, 1 star first, so a listing with plenty of every rating yields an even
+# spread and the cap costs cap / 10 page requests.
+REVIEWS_PER_ASIN = int(os.getenv("REVIEWS_PER_ASIN", "50"))
 
-# Whether to try the extra reviews endpoint at all. Checked once per run, not
-# once per ASIN. Leave it on: the failed check is free and costs one round trip.
-TRY_REVIEWS_ENDPOINT = os.getenv("TRY_REVIEWS_ENDPOINT", "1") == "1"
+# Order within a star rating: "helpful" is Amazon's Top reviews, "recent" the newest.
+AMAZON_REVIEW_SORT = os.getenv("AMAZON_REVIEW_SORT", "helpful")
 
-# Rainforest's product call includes `top_reviews` only intermittently. Measured
-# 2026-09-10 over 8 calls to one ASIN: reviews arrived 5 times, i.e. a ~62% hit
-# rate, and every hit returned the identical review set. So retrying is the only
-# way to get dependable coverage, and there is nothing to gain past the first
-# hit. At 62%, 3 attempts cover ~94% of listings and 4 cover ~98%, for an
-# average of ~1.6 credits per ASIN.
-#
-# We only retry when it can help: the listing has ratings but this response had
-# no reviews. Dead ASINs and genuinely review-less listings stop after one call.
-PRODUCT_ATTEMPTS = int(os.getenv("PRODUCT_ATTEMPTS", "4"))
+# Seconds between requests to Amazon, plus a little jitter. One ASIN at a time
+# on one session: going faster is what brings on the robot check.
+AMAZON_DELAY = float(os.getenv("AMAZON_DELAY", "1.0"))
+
+# Rainforest calls per ASIN. One is enough in practice; another is made only when
+# the call fails or comes back without a listing, never for missing reviews.
+PRODUCT_ATTEMPTS = int(os.getenv("PRODUCT_ATTEMPTS", "3"))
 
 # Reviews shorter than this yield no concrete benefit and are not worth a call.
 MIN_REVIEW_CHARS = int(os.getenv("MIN_REVIEW_CHARS", "1"))

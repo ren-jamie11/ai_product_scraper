@@ -1,12 +1,10 @@
 """
 Rainforest API client.
 
-Two request types matter here:
-
-  type=product  Always works. Returns the listing plus ~8-9 `top_reviews`.
-  type=reviews  Returns HTTP 503 "temporarily unavailable" as of 2026-09-10.
-                We still check once per run in case it comes back, then fall
-                back to the product call's reviews and say so.
+Rainforest supplies the listing: title, bullets, images, price, specifications.
+It no longer returns reviews (measured 2026-11-10: 45 calls, 0 reviews), so those
+come from Amazon directly — see pipeline/amazon_reviews.py. Any `top_reviews` a
+product call does carry are still kept by the normalizer.
 
 Built on the request shape in amazon_web_scrape.py, with failures reported
 per-ASIN instead of printed and dropped.
@@ -89,112 +87,56 @@ def fetch_product(asin: str, domain: str) -> dict:
     return request({"type": "product", "asin": asin}, asin=asin, domain=domain)
 
 
-def reviews_endpoint_status(asin: str, domain: str) -> tuple[bool, str]:
+def fetch_product_persistent(asin: str, domain: str) -> tuple[dict, int]:
     """
-    Ask once per run whether type=reviews is usable.
+    Fetch a listing, asking again only when the call fails or comes back empty.
 
-    Rainforest does not charge for the 503, so this check is free when the
-    endpoint is down and costs one credit when it works.
+    One call is enough almost every time. A dead ASIN answers with an empty
+    product rather than an error, so it uses every attempt before being reported
+    — the price of not mistaking a blip for a dead listing.
+
+    Returns (payload, attempts_used). Raises the last error if every attempt failed.
     """
-    if not config.TRY_REVIEWS_ENDPOINT:
-        return False, "Extra review pages are turned off in config.py."
-    try:
-        body = request({"type": "reviews", "asin": asin}, asin=asin, domain=domain)
-    except RainforestError as exc:
-        return False, f"Rainforest's reviews endpoint is unavailable ({exc}). Using the reviews from each listing instead."
-    if not (body.get("reviews") or []):
-        return False, "Rainforest's reviews endpoint returned nothing. Using the reviews from each listing instead."
-    return True, "Rainforest's reviews endpoint is available."
+    attempts = max(1, config.PRODUCT_ATTEMPTS)
+    body: dict = {}
+    error: RainforestError | None = None
 
-
-def fetch_review_pages(asin: str, domain: str, target: int) -> list[dict]:
-    """Page through type=reviews until we hit `target` or stop getting new ones."""
-    collected: list[dict] = []
-    seen: set[str] = set()
-
-    for page in range(1, 11):  # Amazon itself never goes past 10 pages
-        if len(collected) >= target:
-            break
+    for attempt in range(1, attempts + 1):
         try:
-            body = request({"type": "reviews", "asin": asin, "page": page}, asin=asin, domain=domain)
-        except RainforestError:
-            break
+            body, error = fetch_product(asin, domain), None
+        except RainforestError as exc:
+            error = exc
+            # A bad key or spent credits won't improve by asking again.
+            if "API key" in str(exc) or "credits" in str(exc):
+                raise
+        else:
+            if (body.get("product") or {}).get("title"):
+                return body, attempt
+        if attempt < attempts:
+            time.sleep(0.6 * attempt)
 
-        fresh = [r for r in (body.get("reviews") or [])
-                 if isinstance(r, dict) and r.get("id") and r["id"] not in seen]
-        if not fresh:
-            break
-        for review in fresh:
-            seen.add(review["id"])
-        collected.extend(fresh)
-
-    return collected[:target]
-
-
-def fetch_product_persistent(asin: str, domain: str) -> tuple[dict, list[dict], int]:
-    """
-    Fetch a product, asking again if the reviews didn't come through.
-
-    Rainforest's product call includes `top_reviews` only some of the time — the
-    same ASIN answers with 9 reviews on one call and 0 on the next. Retrying is
-    the only way to get reliable review coverage, so we retry precisely when it
-    can help: the listing has ratings, but this call returned no reviews.
-
-    Returns (best_payload, extra_reviews_from_retries, attempts_used).
-    """
-    best: dict | None = None
-    best_keys = -1
-    reviews: dict[str, dict] = {}
-    attempts = 0
-
-    for _ in range(max(1, config.PRODUCT_ATTEMPTS)):
-        attempts += 1
-        body = fetch_product(asin, domain)
-        product = body.get("product") or {}
-
-        # Keep the richest payload we've seen, not necessarily the last.
-        if len(product.keys()) > best_keys:
-            best, best_keys = body, len(product.keys())
-
-        for raw in (product.get("top_reviews") or []):
-            if isinstance(raw, dict) and raw.get("id"):
-                reviews.setdefault(raw["id"], raw)
-
-        if reviews:
-            break                       # got what we came for
-        if not product.get("title"):
-            break                       # dead ASIN; retrying won't conjure one
-        if not product.get("ratings_total"):
-            break                       # genuinely has no reviews to return
-        time.sleep(0.4)
-
-    in_best = {r.get("id") for r in ((best or {}).get("product") or {}).get("top_reviews") or []}
-    extra = [r for rid, r in reviews.items() if rid not in in_best]
-    return best or {}, extra, attempts
+    if error:
+        raise error
+    return body, attempts
 
 
-def _fetch_one(item: dict, domain: str, use_reviews_endpoint: bool) -> dict:
-    """Fetch everything for a single ASIN. Never raises — failure is data."""
+def _fetch_one(item: dict, domain: str) -> dict:
+    """Fetch the listing for a single ASIN. Never raises — failure is data."""
     asin = item["asin"]
     started = time.perf_counter()
     result = {
         "asin": asin,
         "source_url": item.get("source_url"),
         "product": None,
-        "extra_reviews": [],
         "attempts": 0,
         "error": None,
         "seconds": 0.0,
     }
     try:
-        product, extra, attempts = fetch_product_persistent(asin, domain)
-        result["product"] = product
-        result["extra_reviews"] = extra
-        result["attempts"] = attempts
-        if use_reviews_endpoint:
-            result["extra_reviews"] += fetch_review_pages(asin, domain, config.REVIEW_TARGET)
+        result["product"], result["attempts"] = fetch_product_persistent(asin, domain)
     except RainforestError as exc:
         result["error"] = str(exc)
+        result["attempts"] = max(1, config.PRODUCT_ATTEMPTS)
     except Exception as exc:  # noqa: BLE001 - one bad ASIN must not end the run
         result["error"] = f"Unexpected problem fetching {asin}: {exc}"
 
@@ -202,33 +144,28 @@ def _fetch_one(item: dict, domain: str, use_reviews_endpoint: bool) -> dict:
     return result
 
 
-def fetch_all(items: list[dict], domain: str, on_result=None, on_note=None) -> list[dict]:
+def fetch_all(items: list[dict], domain: str, on_result=None) -> list[dict]:
     """
-    Fetch every ASIN in parallel.
+    Fetch every ASIN's listing in parallel.
 
-    `on_result(result)` fires as each one lands so the UI can count up;
-    `on_note(text)` reports run-wide observations such as the reviews endpoint
-    being down. Results come back in the same order as `items`.
+    `on_result(result)` fires as each one lands so the UI can count up. Results
+    come back in the same order as `items`.
     """
     if not items:
         return []
-
-    available, note = reviews_endpoint_status(items[0]["asin"], domain)
-    if on_note:
-        on_note(note)
 
     results: dict[str, dict] = {}
     workers = max(1, min(len(items), config.RAINFOREST_WORKERS))
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = {pool.submit(_fetch_one, item, domain, available): item for item in items}
+        futures = {pool.submit(_fetch_one, item, domain): item for item in items}
         for future in as_completed(futures):
             item = futures[future]
             try:
                 result = future.result()
             except Exception as exc:  # noqa: BLE001
                 result = {"asin": item["asin"], "source_url": item.get("source_url"),
-                          "product": None, "extra_reviews": [],
+                          "product": None, "attempts": 1,
                           "error": f"Unexpected problem: {exc}", "seconds": 0.0}
             results[result["asin"]] = result
             if on_result:
