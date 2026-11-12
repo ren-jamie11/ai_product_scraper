@@ -108,6 +108,7 @@ td.nm b{font-family:var(--sans);font-weight:600;font-size:13.5px}
 .pill.bad{background:var(--iron-wash);color:var(--iron)}
 .pill.warn{background:var(--amber-wash);color:var(--amber)}
 .pill.na{background:var(--rule-soft);color:var(--muted)}
+.pill.behind{background:none;border:1px dashed var(--rule);font-size:10px}
 .empty{padding:30px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:12px}
 
 /* ---------- empty state ---------- */
@@ -756,6 +757,8 @@ section[id]{scroll-margin-top:72px}
       <div class="lb" id="r-proglb"></div>
     </div>
     <button class="btn ghost" id="r-reload">Reload</button>
+    <button class="btn ghost" id="reparse" hidden
+            title="Tag and cluster this run again, as a new parse">Parse again</button>
     <button class="btn ghost" id="group" hidden>Group tags</button>
     <button class="btn" id="results" hidden>View results</button>
     <button class="btn" id="parse">Parse results</button>
@@ -765,6 +768,7 @@ section[id]{scroll-margin-top:72px}
   <div class="sumstrip" id="r-sum"></div>
   <div id="r-notes"></div>
   <div id="r-rvbar"></div>
+  <div id="r-behind"></div>
   <div id="r-parses"></div>
 
   <section style="margin-top:6px">
@@ -777,6 +781,7 @@ section[id]{scroll-margin-top:72px}
     <div id="r-removed"></div>
     <div class="pgrid" id="r-cards"></div>
     <div class="cpbar">
+      <button class="btn ghost" id="r-add">Add listings</button>
       <button class="btn ghost" id="r-export" hidden>Export</button>
       <button class="btn ghost" id="r-copy" hidden>Copy ASINs</button>
     </div>
@@ -1671,6 +1676,15 @@ function productCard(p) {
   if (edits.length) facts.push(`<span class="pill" style="background:var(--cobalt-wash);color:var(--cobalt)"
     title="Edited: ${esc(edits.join(", "))}">edited</span>`);
 
+  // Added since the results were made: said quietly, where the listing is.
+  const pend = ((runState.pending || {}).by_asin || {})[p.asin];
+  if (pend && pend.listing) {
+    facts.push(`<span class="pill na behind" title="Added after the results were made. Parse again to include it.">not in results</span>`);
+  } else if (pend && pend.reviews) {
+    facts.push(`<span class="pill na behind" title="Added after the results were made. Parse again to include them.">+${
+      plural(pend.reviews, "review", "reviews")} not in results</span>`);
+  }
+
   const warnings = (p.warnings || []).map(w =>
     `<div class="note-line"><span class="ic">Note</span><span>${esc(w)}</span></div>`).join("");
 
@@ -2022,31 +2036,149 @@ function wireReviews(card, p, panel) {
    Fetch reviews fills them in from the run's own site and costs no credits. */
 let fetchingReviews = false;
 
+/* Two states. Listings with no reviews at all come first. Once those are dealt
+   with, listings whose reviews were never read from Amazon — a run from before
+   customer photos were collected — can be read now: reviews the run already has
+   gain their photos, and the ones it doesn't have are added. */
 function renderReviewBar(say) {
   const bar = $("r-rvbar");
-  const missing = runState.products.filter(p => !p.deleted && p.fetch_ok && !(p.reviews || []).length);
-  if (!missing.length || !runState.site) { bar.innerHTML = ""; return; }
+  const fetched = runState.products.filter(p => !p.deleted && p.fetch_ok);
+  const missing = fetched.filter(p => !(p.reviews || []).length);
+  const old = fetched.filter(p => !p.scraped);
+  if ((!missing.length && !old.length) || !runState.site) { bar.innerHTML = ""; return; }
+  const photos = !missing.length;
+  const verb = photos ? "Fetch reviews & photos" : "Fetch reviews";
   const stopped = ((runState.log || {}).reviews || {}).stopped;
-  const text = say || `${plural(missing.length, "listing has", "listings have")} no reviews. ` +
-    `Fetch them from ${runState.site} — no Rainforest credits are used.`;
+  const text = say || (photos
+    ? `${plural(old.length, "listing was", "listings were")} fetched before customer photos ` +
+      `were collected. Read their reviews and photos from ${runState.site} — no Rainforest ` +
+      `credits are used. Reviews already here gain their photos; new ones are added.`
+    : `${plural(missing.length, "listing has", "listings have")} no reviews. ` +
+      `Fetch them from ${runState.site} — no Rainforest credits are used.`);
   bar.innerHTML = `
     <div class="note-line${stopped === "signin" ? "" : " info"}">
-      <span class="ic">Reviews</span><span>${esc(text)}</span>
+      <span class="ic">${photos ? "Photos" : "Reviews"}</span><span>${esc(text)}</span>
       <span class="acts">
         <button class="btn ghost" id="r-signin">Sign in to Amazon</button>
-        <button class="btn" id="r-fetchrv">Fetch reviews</button>
+        <button class="btn${photos ? " ghost" : ""}" id="r-fetchrv">${esc(verb)}</button>
       </span>
     </div>`;
   $("r-fetchrv").disabled = $("r-signin").disabled = fetchingReviews || signingIn;
-  $("r-fetchrv").onclick = startFetchReviews;
+  $("r-fetchrv").onclick = () => startFetchReviews(photos ? "unscraped" : "missing");
   $("r-signin").onclick = () => {
     const site = runState.site;
     amazonSignIn(site, t => renderReviewBar(t),
-      () => renderReviewBar(`Signed in to ${site}. Press Fetch reviews.`));
+      () => renderReviewBar(`Signed in to ${site}. Press ${verb}.`));
   };
 }
 
-async function startFetchReviews() {
+/* What the run holds that its results don't. Nothing when they are in step. */
+function renderBehind() {
+  const pend = runState.pending;
+  const bits = [];
+  if (pend && pend.listings) bits.push(plural(pend.listings, "listing", "listings"));
+  if (pend && pend.reviews) bits.push(plural(pend.reviews, "review", "reviews"));
+  $("r-behind").innerHTML = bits.length ? `
+    <div class="note-line info">
+      <span class="ic">Results</span>
+      <span>${esc(bits.join(" and "))} ${pend.listings + pend.reviews === 1 ? "isn't" : "aren't"}
+        in the results yet. Press <b>Parse again</b> to include ${
+        pend.listings + pend.reviews === 1 ? "it" : "them"}.</span>
+    </div>` : "";
+}
+
+/* ---------- adding listings to this run ----------
+   The same paste as a new run, but appended here: listings the group already holds
+   are carried across, the rest are fetched, and their reviews are read from the
+   run's own site. The existing results are left alone until Parse again. */
+let adding = false, addTimer = null;
+
+async function startAddListings() {
+  if (adding || parsing || fetchingReviews) return;
+  const { slug, runId } = runState;
+  $("r-err").hidden = true;
+
+  const asked = confirmModal({
+    title: "Add listings to this run",
+    confirmLabel: "Add listings",
+    body: `<p class="sd">Paste Amazon URLs or ASINs, one per line. Listings are fetched from
+             Rainforest and their reviews read from <b>${esc(runState.site || "Amazon")}</b>.${
+             (runState.parses || []).some(p => p.grouped)
+               ? " The results you have stay as they are until you parse again." : ""}</p>
+           <textarea id="addtext" rows="6" spellcheck="false"
+             style="width:100%;font-family:var(--mono);font-size:12px;padding:8px;
+                    border:1px solid var(--rule);border-radius:3px;resize:vertical"
+             placeholder="https://www.amazon.com/dp/B0XXXXXXXX"></textarea>
+           <div class="plan" id="addprev" style="margin-top:10px">
+             <div class="asins">Nothing pasted yet.</div></div>`,
+  });
+  $("cyes").disabled = true;
+  const box = $("addtext");
+  box.focus();
+  box.oninput = () => {
+    clearTimeout(addTimer);
+    addTimer = setTimeout(async () => {
+      if (!box.value.trim()) {
+        $("addprev").innerHTML = `<div class="asins">Nothing pasted yet.</div>`;
+        $("cyes").disabled = true;
+        return;
+      }
+      let r;
+      try {
+        r = await api("/api/parse-asins", {
+          method: "POST", body: JSON.stringify({ text: box.value, slug, run_id: runId }) });
+      } catch (e) { return; }
+      const line = (n, text, tone) =>
+        `<div class="ln ${tone || ""}"><b>${esc(n)}</b><span>${text}</span></div>`;
+      const fresh = (r.new || []).length, fetch = (r.to_fetch || []).length;
+      $("addprev").innerHTML =
+        line(fresh, `new to this run${fresh ? "" : ` <span class="d">&mdash; nothing to add</span>`}`,
+             fresh ? "" : "warn") +
+        (fetch ? line(fetch, `to fetch <span class="d">&mdash; ${
+          plural(fetch, "Rainforest credit", "Rainforest credits")}</span>`) : "") +
+        ((r.held || []).length ? line(r.held.length, `already complete in this group
+          <span class="d">&mdash; carried across, no credits</span>`) : "") +
+        ((r.in_run || []).length ? line(r.in_run.length, `already in this run
+          <span class="d">&mdash; left as they are</span>`, "warn") : "") +
+        ((r.removed || []).length ? line(r.removed.length, `removed from this run earlier
+          <span class="d">&mdash; restore them from the removed list instead</span>`, "warn") : "") +
+        ((r.unparsed || []).length ? line(r.unparsed.length, "unreadable lines", "warn") : "");
+      $("cyes").disabled = !fresh;
+    }, 250);
+  };
+
+  if (!(await asked)) return;
+  const text = box.value;
+
+  adding = true;
+  $("r-add").disabled = true;
+  const done = msg => {
+    adding = false;
+    $("r-add").disabled = false;
+    $("r-prog").hidden = true;
+    if (msg) { $("r-err").textContent = msg; $("r-err").hidden = false; }
+  };
+  let job;
+  try {
+    job = await api(runPath("/add"), { method: "POST", body: JSON.stringify({ text }) });
+  } catch (e) { return done(e.message); }
+
+  setParseProgress(0, `Adding ${plural(job.asin_count, "listing", "listings")}…`);
+  for (;;) {
+    await new Promise(r => setTimeout(r, 700));
+    let snap;
+    try { snap = await api("/api/jobs/" + encodeURIComponent(job.job_id)); }
+    catch (e) { return done(e.message); }
+    setParseProgress(snap.pct, snap.label);
+    if (snap.state === "running") continue;
+    if (snap.state === "error") return done(snap.error || "Adding the listings failed.");
+    break;
+  }
+  done(null);
+  if (runState.slug === slug && runState.runId === runId) renderRun(slug, runId);
+}
+
+async function startFetchReviews(scope = "missing") {
   if (fetchingReviews) return;
   const { slug, runId } = runState;
   $("r-err").hidden = true;
@@ -2061,7 +2193,8 @@ async function startFetchReviews() {
   };
   let job;
   try {
-    job = await api(runPath("/fetch-reviews"), { method: "POST" });
+    job = await api(runPath("/fetch-reviews"),
+                    { method: "POST", body: JSON.stringify({ scope }) });
   } catch (e) { return fail(e.message); }
 
   setParseProgress(0, `Reviews 0/${job.count}`);
@@ -2140,6 +2273,7 @@ function renderRunBody() {
   });
 
   renderReviewBar();
+  renderBehind();
   $("r-cards").innerHTML = live.map(productCard).join("");
   $("r-cards").querySelectorAll(".pcard").forEach(card => {
     if (openTabs[card.dataset.asin]) card.dataset.tab = openTabs[card.dataset.asin];
@@ -2409,6 +2543,8 @@ $("r-export").onclick = async () => {
 };
 
 /* Copy the run's live ASINs, one per line, in card order. */
+$("r-add").onclick = () => startAddListings();
+
 $("r-copy").onclick = async () => {
   const btn = $("r-copy");
   const asins = runState.products.filter(p => !p.deleted).map(p => p.asin);
@@ -2435,7 +2571,7 @@ async function renderRun(slug, runId) {
     return;
   }
 
-  const { group, run, log, stats, meta, parses, media } = data;
+  const { group, run, log, stats, meta, parses, media, pending } = data;
   const label = (meta || {}).label || "";
   setHeader({
     eyebrow: `${group.name} · extraction run`,
@@ -2462,6 +2598,7 @@ async function renderRun(slug, runId) {
 
   runState = { slug, runId, products: run.products || [], log, stats,
                parses: parses || [], meta: { ...(meta || {}) }, media: media || {},
+               pending: pending || null,
                site: run.amazon_domain || log.amazon_domain || "" };
   removedOpen = false;
   sortProducts();
@@ -2482,11 +2619,11 @@ async function renderRun(slug, runId) {
   renderRunBody();
   renderParses();
   $("r-reload").onclick = () => renderRun(slug, runId);
-  $("parse").onclick = startParse;
+  $("parse").onclick = $("reparse").onclick = startParse;
   $("group").onclick = startGroup;
   $("results").onclick = () => {
-    const newest = (runState.parses || [])[0];
-    if (newest && newest.grouped) location.hash = resultsHref(slug, runId, newest.id);
+    const newest = (runState.parses || []).find(p => p.grouped);
+    if (newest) location.hash = resultsHref(slug, runId, newest.id);
   };
 }
 
@@ -2538,7 +2675,12 @@ async function renderParses() {
   // Parse results clusters as it goes, so Group tags is only the way back in
   // when that stopped short: the newest parse has tags and no clusters.
   $("group").hidden = !(list[0] && !list[0].grouped);
-  $("results").hidden = !(list[0] && list[0].grouped);
+  // With results in hand, parsing again is the rare choice and an expensive slip:
+  // the black button goes, and a quiet one sits away from View results.
+  const hasResults = list.some(p => p.grouped);
+  $("parse").hidden = hasResults;
+  $("reparse").hidden = !hasResults;
+  $("results").hidden = !hasResults;
   if (!list.length) {
     $("r-parses").innerHTML = "";
     return;
@@ -2699,7 +2841,7 @@ async function startParse() {
   if (!ok) return;
 
   parsing = true;
-  $("parse").disabled = true;
+  $("parse").disabled = $("reparse").disabled = true;
 
   let job;
   try {
@@ -2708,7 +2850,7 @@ async function startParse() {
     $("r-err").textContent = err.message;
     $("r-err").hidden = false;
     parsing = false;
-    $("parse").disabled = false;
+    $("parse").disabled = $("reparse").disabled = false;
     return;
   }
 
@@ -2751,7 +2893,7 @@ async function pollParse(jobId, slug, runId) {
    here with the reason, where Group tags is now showing. */
 async function endParse(slug, runId, error, result) {
   parsing = false;
-  $("parse").disabled = false;
+  $("parse").disabled = $("reparse").disabled = false;
   $("r-prog").hidden = true;
   $("r-progbar").style.width = "0%";
   if (error) {

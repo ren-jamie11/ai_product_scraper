@@ -129,7 +129,14 @@ def api_parse_asins():
 
     slug = payload.get("slug")
     if slug and storage.group_file(slug).exists():
-        parsed.update(_split_work(slug, parsed["items"], payload.get("refetch")))
+        items = parsed["items"]
+        # Adding to an existing run: only the ASINs it doesn't have are work.
+        if payload.get("run_id"):
+            split = extract.split_new(slug, payload["run_id"], items)
+            items = split["new"]
+            parsed.update(in_run=split["in_run"], removed=split["removed"],
+                          new=[i["asin"] for i in items])
+        parsed.update(_split_work(slug, items, payload.get("refetch")))
     return jsonify(parsed)
 
 
@@ -195,18 +202,68 @@ def api_extract(slug: str):
 
 @app.post("/api/runs/<slug>/<run_id>/fetch-reviews")
 def api_fetch_reviews(slug: str, run_id: str):
-    """Read reviews from Amazon for the listings in a run that have none."""
-    missing = extract.missing_reviews(slug, run_id)
+    """Read reviews from Amazon for listings already in a run.
+
+    `{"scope": "missing"}` (the default) is the listings with no reviews at all;
+    `{"scope": "unscraped"}` is every listing never read from Amazon — how a run
+    from before customer photos existed gets them."""
+    scope = (request.get_json(silent=True) or {}).get("scope") or "missing"
+    if scope not in extract.SCOPES:
+        raise storage.StorageError("That isn't a kind of review fetch this app does.")
+    missing = extract.SCOPES[scope](slug, run_id)
     if not missing:
-        raise storage.StorageError("Every listing in this run already has reviews.")
+        raise storage.StorageError(
+            "Every listing in this run already has reviews." if scope == "missing"
+            else "Every listing in this run has already been read from Amazon.")
 
     jobs.prune()
     job = jobs.start(
         f"Fetching reviews for {len(missing)} listings…",
-        lambda j: extract.fetch_missing_reviews(j, slug, run_id),
+        lambda j: extract.fetch_missing_reviews(j, slug, run_id, scope),
         total=len(missing),
     )
-    return jsonify({"job_id": job.id, "count": len(missing)}), 202
+    return jsonify({"job_id": job.id, "count": len(missing), "scope": scope}), 202
+
+
+@app.post("/api/runs/<slug>/<run_id>/add")
+def api_add_to_run(slug: str, run_id: str):
+    """Add pasted ASINs to a run that already exists, in the background.
+
+    Listings the group already holds complete are carried across; the rest are
+    fetched from Rainforest and their reviews read from Amazon, on the run's own
+    site. ASINs already in the run are left alone."""
+    payload = request.get_json(silent=True) or {}
+    parsed = asins.parse_input_block(payload.get("text", ""))
+    if not parsed["items"]:
+        raise storage.StorageError(
+            "No Amazon ASINs found in what you pasted. Each line should be a "
+            "product URL (one containing /dp/) or a bare 10-character ASIN."
+        )
+
+    split = extract.split_new(slug, run_id, parsed["items"])
+    items = split["new"]
+    if not items:
+        raise storage.StorageError(
+            "Every ASIN you pasted is already in this run."
+            + (" Some were removed from it — restore them from the list of removed "
+               "listings instead." if split["removed"] else ""))
+
+    work = _split_work(slug, items, payload.get("refetch"))
+    needed = set(work["to_fetch"])
+    to_fetch = [i for i in items if i["asin"] in needed]
+    if to_fetch and not config.RAINFOREST_API_KEY:
+        raise storage.StorageError("RAINFOREST_API_KEY is empty in config.py.")
+
+    jobs.prune()
+    job = jobs.start(
+        f"Fetching {len(to_fetch)} listings…" if to_fetch
+        else "Collecting listings you already have…",
+        lambda j: extract.add_to_run(j, slug, run_id, items, to_fetch),
+        total=2 * len(to_fetch),
+    )
+    return jsonify({"job_id": job.id, "run_id": run_id, "asin_count": len(items),
+                    "fetch_count": len(to_fetch),
+                    "held_count": len(items) - len(to_fetch)}), 202
 
 
 # ---------------------------------------------------------------------------
@@ -494,10 +551,13 @@ def api_run(slug: str, run_id: str):
     # and must not ride along in an edit.
     media = {}
     for p in run["products"]:
-        found = {rid: m for rid, m in results.review_media(directory / "raw", p["asin"]).items()
-                 if m["photos"]}
+        linked = results.media_for_reviews(directory / "raw", p["asin"], p.get("reviews") or [])
+        found = {rid: m for rid, m in linked.items() if m["photos"]}
         if found:
             media[p["asin"]] = found
+        p["scraped"] = extract.scraped(slug, run_id, p["asin"])
+
+    parses = storage.list_parses(slug, run_id)
 
     return jsonify({
         "group": {"name": group.get("name", slug), "slug": slug},
@@ -506,8 +566,33 @@ def api_run(slug: str, run_id: str):
         "stats": normalize.summarize(live),
         "log": storage.read_json(directory / "run_log.json", {}) or {},
         "meta": storage.read_run_meta(slug, run_id),
-        "parses": storage.list_parses(slug, run_id),
+        "parses": parses,
+        "pending": _pending(directory, parses, live),
     })
+
+
+def _pending(directory, parses: list[dict], live: list[dict]) -> dict | None:
+    """What the run holds that its results don't: listings and reviews added
+    since the newest grouped parse was made. None when there are no results."""
+    newest = next((p for p in parses if p["grouped"]), None)
+    if not newest:
+        return None
+    tagged = storage.read_json(directory / newest["id"] / "tagged.json", {}) or {}
+    seen = {b.get("body_id") for b in (tagged.get("bodies") or []) + (tagged.get("skipped") or [])}
+
+    by_asin, listings, reviews = {}, 0, 0
+    for body in normalize.build_bodies(live):
+        if body["body_id"] in seen:
+            continue
+        entry = by_asin.setdefault(body["asin"], {"listing": False, "reviews": 0})
+        if body["type"] == "listing":
+            entry["listing"] = True
+            listings += 1
+        else:
+            entry["reviews"] += 1
+            reviews += 1
+    return {"parse_id": newest["id"], "listings": listings, "reviews": reviews,
+            "by_asin": by_asin}
 
 
 @app.delete("/api/runs/<slug>/<run_id>")

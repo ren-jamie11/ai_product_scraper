@@ -656,3 +656,31 @@ This supersedes the separate "Parse" and "Group tags" steps described above.
 - **Verified live on Gold Figurines** (565 bodies, 2026-11-12): 0 failed bodies, 0 repairs,
   bar never moved backwards, landed on results. This was also the first partitioned run on
   `gpt-6.1-sol` with the merge at `high`: 3 partitions, 89 partial clusters joined to 72.
+
+---
+
+## Old runs: photos, added listings, Parse again (built 2026-11-12)
+
+- **Photos for a run made before the review scraper.** `POST …/fetch-reviews {"scope":
+  "unscraped"}` reads every listing with no `raw/<ASIN>.amazon_reviews.json` from the run's own
+  site (`extract.fetch_missing_reviews(scope=…)`; `"missing"` is the old behaviour). A scraped
+  review the listing already has, by id or by text, is not added again; the rest are appended.
+  Photos are never copied into the run: `results.media_for_reviews` links a run review to the
+  scrape on read, by id first and then by text (`normalize.find_duplicate`, so a pasted review
+  cut off at "Read more" still matches). The run page offers it as **Fetch reviews & photos**
+  once no listing is without reviews.
+- **Measured live** on two ceramic-dinnerware listings (13 Rainforest reviews each): 50 scraped
+  each, only 2 and 4 matched by id, 1 and 3 old reviews gained photos, 46-48 new reviews added
+  per listing. So on an old run most photos arrive on *new* reviews, and show in the results
+  only after Parse again.
+- **Add listings to an existing run.** `POST /api/runs/<slug>/<run>/add` → `extract.add_to_run`:
+  the same fetch a new run does (`extract._fetch`, shared with `run_extraction`) and the same
+  `compact.resolve` carry-over, appended to `extracted.json` / `edits.json` / `run_log.json`
+  (`additions`). ASINs already in the run are skipped; `parse-asins` takes `run_id` for the
+  preview. The button is **Add listings**, beside Export.
+- **Not in results.** The run endpoint returns `pending`: bodies the run has that the newest
+  grouped parse's `tagged.json` doesn't. Cards carry a dashed "not in results" or
+  "+N reviews not in results" pill and one line above says results are behind.
+- **Buttons.** With any grouped parse the black Parse results is hidden and a white
+  **Parse again** sits between Reload and View results (same full re-parse). View results
+  opens the newest grouped parse.
