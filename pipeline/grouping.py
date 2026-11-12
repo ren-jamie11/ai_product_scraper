@@ -278,11 +278,7 @@ def _call(prompt: str, user_input: str, choice: dict, *,
     except json.JSONDecodeError:
         raise error_cls("OpenAI returned something that wasn't valid JSON.") from None
 
-    usage = getattr(response, "usage", None)
-    return payload.get(result_key) or [], {
-        "input_tokens": getattr(usage, "input_tokens", 0) or 0,
-        "output_tokens": getattr(usage, "output_tokens", 0) or 0,
-    }
+    return payload.get(result_key) or [], tagging.usage_of(response)
 
 
 def call_with_retries(prompt: str, user_input: str, choice: dict, *, what: str = "grouped",
@@ -298,7 +294,7 @@ def call_with_retries(prompt: str, user_input: str, choice: dict, *, what: str =
     """
     attempts = max(1, config.OPENAI_MAX_RETRIES + 1)
     last = "unknown error"
-    usage = {"input_tokens": 0, "output_tokens": 0}
+    usage = tagging.empty_usage()
 
     for attempt in range(attempts):
         try:
@@ -449,8 +445,7 @@ def _group_single(key: str, uniques: list[dict], occurrences: list[dict], produc
 
 
 def _add_usage(total: dict, more: dict) -> None:
-    total["input_tokens"] += more.get("input_tokens", 0) or 0
-    total["output_tokens"] += more.get("output_tokens", 0) or 0
+    total.update(tagging.sum_usage([total, more]))
 
 
 def _group_partitioned(key: str, uniques: list[dict], occurrences: list[dict], product: str,
@@ -465,7 +460,7 @@ def _group_partitioned(key: str, uniques: list[dict], occurrences: list[dict], p
     title = TITLES[key]
     texts = [u["display"] for u in uniques]
     notes: list[str] = []
-    usage = {"input_tokens": 0, "output_tokens": 0}
+    usage = tagging.empty_usage()
 
     try:
         vectors = partition.embed(texts)
@@ -961,11 +956,8 @@ def run_grouping(job, slug: str, run_id: str, parse_id: str,
 
     # Spend and repairs are this run's; statuses and failures cover the whole
     # document, since that is what the results view will show.
-    usage = {
-        "input_tokens": sum(s["usage"]["input_tokens"] for s in fresh),
-        "output_tokens": sum(s["usage"]["output_tokens"] for s in fresh),
-    }
-    actual = tagging._price(usage["input_tokens"], usage["output_tokens"], choice["model"])
+    usage = tagging.sum_usage(s["usage"] for s in fresh)
+    actual = tagging.price_usage(usage, choice["model"])
     repairs = sum(len(s["repairs"]) for s in fresh)
     failures = [{"list": s["title"], "reason": s["error"]}
                 for s in sections if s["status"] == "failed"]

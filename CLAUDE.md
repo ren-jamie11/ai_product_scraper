@@ -594,3 +594,39 @@ Top-reviews order, one ASIN at a time alongside the listing fetch. The Amazon si
 default, or USA) and the cap are Settings. A lapsed sign-in or a robot check leaves listings
 without reviews and a **Fetch reviews** / **Sign in to Amazon** bar on the run page. Decisions,
 structure and measurements are in `REVIEW-SCRAPING.md`.
+
+---
+
+## Real prices, cached tokens, and the GPT-6 models (built 2026-11-12)
+
+This supersedes the model names and `PRICE_PER_1M` placeholders in the sections above.
+
+- **The cost figures were wrong, in both directions.** `MODEL_PRICING` held placeholder rates
+  (gpt-5.6-terra at $0.25 / $2.00 against a real $2.00 / $12.00), and cached input was never
+  recorded. On 2026-11-12 the logs said $3.16 and OpenAI billed $5.84. The table now holds the
+  published rates with a `cached_input` column, and every call records `cached_tokens` and
+  `cache_write_tokens` (`tagging.usage_of`, summed by `tagging.sum_usage`, priced by
+  `tagging.price_usage`). Measured: ~97% of tagging input is read from the cache, and each
+  body's own text is billed as a cache write at 1.25x. Logs written before this date keep
+  their old `cost_usd`.
+- **Models are now `gpt-6.1-terra` (tagging) and `gpt-6.1-sol` (clustering, themes).** Reasoning
+  efforts are unchanged. `settings.MODELS` also lists `gpt-6-luna` and the two 5.6 models as a
+  way back. Trial, all on Tabletop Decor:
+  - *Tagging, same bodies:* 40 White Stone Look bodies gave 106 features on 6.1-terra against
+    103 on a 5.6-terra re-run; 60 Stone Statue reviews gave 64 vs 69 features and 39 vs 46
+    complaints. Same concepts and rule-keeping; 6.1-terra is a little more reserved on mild
+    complaints ("wish it were bigger") and writes product nouns in the singular.
+  - *Clustering, same 223 complaint tags:* 6.1-sol vs the 5.6-sol clusters on disk 96.9% pair
+    agreement, a 5.6-sol repeat 97.8%, 6.1-sol against itself 99.1%. It clusters slightly
+    finer (37-39 clusters against 31). Zero repairs.
+  - *Full parse of Stone Statue* (341 bodies): 0 failed bodies, 0 repairs, `check_grouping.py`
+    passes on both themed lists, attribution 94.2% confident on English text. Cost $0.53
+    (tagging $0.35, clustering $0.10, themes $0.08); the same parse on 5.6 would be roughly $2 (tagging alone ~$1.20 at the measured
+    $0.0036-0.0043 a body).
+- **`gpt-6-luna` was sampled for tagging and not adopted.** A tenth of 6.1-terra's price, but on
+  the 40-body sample it missed a plain complaint ("could be heavier"), dropped "heavy weight",
+  and let vague praise through ("good quality", "decorative and functional design").
+- **`OPENAI_WORKERS` is 24** (was 8): 325 bodies tagged in 52 s, about 2.1M tokens/min against a
+  4M limit.
+- **The tagging estimate assumes a cold cache** (the first wave of workers writes the prompt),
+  so it runs high when the prompt is already cached: $0.54 estimated vs $0.35 actual on the trial.

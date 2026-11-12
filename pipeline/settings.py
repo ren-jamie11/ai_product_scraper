@@ -23,9 +23,11 @@ from __future__ import annotations
 import config
 from pipeline import storage
 
-# Only the luna/terra/sol family. Base `gpt-5.6` is left off on purpose: it prices
-# the same as sol and having two near-identical top options invites second-guessing.
-MODELS = ("gpt-5.6-luna", "gpt-5.6-terra", "gpt-5.6-sol")
+# The luna/terra/sol family, cheapest first. The GPT-6 line replaced 5.6 as the
+# default on 2026-11-12 (same output on the trial parse at well under half the
+# cost); the two 5.6 models that were in use stay listed as a way back. Every
+# model here needs a row in config.MODEL_PRICING or its cost shows as unknown.
+MODELS = ("gpt-6-luna", "gpt-6.1-terra", "gpt-6.1-sol", "gpt-5.6-terra", "gpt-5.6-sol")
 
 # `none`, `minimal`, `xhigh` and `max` are all real API values, but the useful
 # span for this pipeline sits inside these three.
