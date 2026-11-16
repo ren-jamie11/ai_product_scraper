@@ -717,3 +717,11 @@ drive. `Start server.bat` sets `HOST=0.0.0.0` and the app serves through `waitre
 on 127.0.0.1. Amazon sign-in is refused from any address but the host's own, because the
 sign-in window opens on the host. Setup and troubleshooting are in `SHARING.md`. The project
 folder, with its keys and cookies, stays off the shared drive.
+
+**One extraction at a time.** `jobs.start(..., lane="extract")` puts a new run, Add listings
+and Fetch reviews in one first-come line (`app.EXTRACT_LANE`), because several at once on one
+Amazon login brings on the robot check. A waiting job stays `state: "running"` with the label
+"Waiting for another extraction to finish…" (and `waiting: true` in the snapshot), so the
+progress bars needed no change. Parsing, clustering and themes are not in a lane. The line
+lives in memory: restarting the server drops waiting jobs. Which listings to buy is still
+decided when the button is pressed, not when the job's turn comes.

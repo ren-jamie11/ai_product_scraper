@@ -158,6 +158,11 @@ def _split_work(slug: str, items: list[dict], refetch) -> dict:
 # Extraction
 # ---------------------------------------------------------------------------
 
+# Everything that reads from Rainforest or Amazon shares one waiting line: a new
+# run, Add listings and Fetch reviews. Several at once on one Amazon login is what
+# brings on the robot check, so a second person's job waits for the first to end.
+EXTRACT_LANE = "extract"
+
 @app.post("/api/groups/<slug>/extract")
 def api_extract(slug: str):
     """Kick off an extraction in the background and hand back a job id."""
@@ -191,6 +196,7 @@ def api_extract(slug: str):
         else "Collecting listings you already have…",
         lambda j: extract.run_extraction(j, slug, run_id, items, domain, to_fetch),
         total=2 * len(to_fetch),
+        lane=EXTRACT_LANE,
     )
     return jsonify({
         "job_id": job.id,
@@ -222,6 +228,7 @@ def api_fetch_reviews(slug: str, run_id: str):
         f"Fetching reviews for {len(missing)} listings…",
         lambda j: extract.fetch_missing_reviews(j, slug, run_id, scope),
         total=len(missing),
+        lane=EXTRACT_LANE,
     )
     return jsonify({"job_id": job.id, "count": len(missing), "scope": scope}), 202
 
@@ -261,6 +268,7 @@ def api_add_to_run(slug: str, run_id: str):
         else "Collecting listings you already have…",
         lambda j: extract.add_to_run(j, slug, run_id, items, to_fetch),
         total=2 * len(to_fetch),
+        lane=EXTRACT_LANE,
     )
     return jsonify({"job_id": job.id, "run_id": run_id, "asin_count": len(items),
                     "fetch_count": len(to_fetch),

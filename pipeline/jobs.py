@@ -5,8 +5,10 @@ Extraction and parsing take too long to hold an HTTP request open, so the route
 starts a job and hands back an id. The browser polls /api/jobs/<id> and draws a
 progress bar from what it finds.
 
-In-memory and process-local by design: this is a single-user local tool, and a
-job that dies with the server should not leave a "running" record on disk.
+In-memory and process-local by design: a job that dies with the server should
+not leave a "running" record on disk. The app is shared by a small team, so jobs
+that must not overlap (extractions: one Amazon login, one Rainforest limit) are
+started in a lane and wait their turn — see `start(lane=…)`.
 """
 
 from __future__ import annotations
@@ -26,6 +28,7 @@ class Job:
         self.total = total
         self.done = 0
         self.state = "running"          # running | done | error
+        self.waiting = False            # in a lane's line, not started yet
         self.error: str | None = None
         self.result = None
         self.notes: list[str] = []      # run-wide observations
@@ -61,6 +64,7 @@ class Job:
             return {
                 "id": self.id,
                 "state": self.state,
+                "waiting": self.waiting,
                 "label": self.label,
                 "done": self.done,
                 "total": self.total,
@@ -133,14 +137,55 @@ _JOBS: dict[str, Job] = {}
 _JOBS_LOCK = threading.Lock()
 
 
-def start(label: str, fn, total: int = 0) -> Job:
-    """Run `fn(job)` on a background thread and return the Job immediately."""
+# Waiting lines. Jobs started with the same `lane` run one at a time, in the order
+# they were started; everything else runs at once as before. A waiting job is
+# still "running" as far as the browser is concerned — its label says it is
+# waiting — so every progress bar shows the wait without knowing about lanes.
+_LANES: dict[str, list[str]] = {}
+_LANES_TURN = threading.Condition()
+
+
+def _wait_label(ahead: int) -> str:
+    if ahead == 1:
+        return "Waiting for another extraction to finish…"
+    return f"Waiting for {ahead} other extractions to finish…"
+
+
+def _take_turn(job: Job, lane: str) -> None:
+    """Join the lane's line and return once this job is at the front of it."""
+    label = job.label
+    with _LANES_TURN:
+        line = _LANES.setdefault(lane, [])
+        line.append(job.id)
+        while line[0] != job.id:
+            job.waiting = True
+            job.label = _wait_label(line.index(job.id))
+            _LANES_TURN.wait()
+        job.waiting = False
+        job.label = label
+
+
+def _leave(job: Job, lane: str) -> None:
+    with _LANES_TURN:
+        line = _LANES.get(lane) or []
+        if job.id in line:
+            line.remove(job.id)
+        _LANES_TURN.notify_all()
+
+
+def start(label: str, fn, total: int = 0, lane: str | None = None) -> Job:
+    """Run `fn(job)` on a background thread and return the Job immediately.
+
+    With `lane`, the job waits its turn behind earlier jobs in the same lane.
+    """
     job = Job(label, total)
     with _JOBS_LOCK:
         _JOBS[job.id] = job
 
     def runner():
         try:
+            if lane:
+                _take_turn(job, lane)
             job.result = fn(job)
             job.state = "done"
             job.label = "Finished"
@@ -151,6 +196,8 @@ def start(label: str, fn, total: int = 0) -> Job:
             traceback.print_exc()
         finally:
             job.finished_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+            if lane:
+                _leave(job, lane)
 
     threading.Thread(target=runner, daemon=True, name=f"job-{job.id}").start()
     return job

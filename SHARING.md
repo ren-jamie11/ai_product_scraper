@@ -30,6 +30,9 @@ holds the API keys and `amazon_cookies.*.txt` holds the Amazon login. Only
 - Everyone works in the same workspace: the same groups, runs, results and Settings.
   A Settings change by one person applies to everyone.
 - Extract and Parse spend the shared API credits.
+- Extractions run one at a time. If someone else is extracting, adding listings or fetching
+  reviews, yours shows "Waiting for another extraction to finish…" and starts by itself when
+  theirs ends. Leave the page open. Parsing does not wait in this line.
 - If two people edit the same run at the same moment, the last save wins.
 - A progress bar shows only for the person who started the job. Others see the result after
   reloading the page.
