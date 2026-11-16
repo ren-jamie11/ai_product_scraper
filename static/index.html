@@ -643,6 +643,17 @@ section[id]{scroll-margin-top:72px}
 }
 @media (prefers-reduced-motion:reduce){.zstage.busy::after{animation:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* Chinese interface (html lang="zh-CN", set by applyStatic): system Chinese fonts behind
+   the Latin ones, and none of the wide tracking the Latin labels use. */
+:root:lang(zh){
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,"PingFang SC","Microsoft YaHei","Noto Sans SC",monospace;
+  --sans:"IBM Plex Sans","PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,-apple-system,sans-serif;
+  --disp:"Bricolage Grotesque","IBM Plex Sans","PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+}
+:lang(zh) *{letter-spacing:normal!important}
+:lang(zh) h1{line-height:1.2}
+:lang(zh) .zstage.broken::after{content:"图片没有加载出来"}
 </style>
 </head>
 <body>
@@ -650,12 +661,12 @@ section[id]{scroll-margin-top:72px}
 
 <header class="masthead">
   <div class="mh">
-    <a class="back" id="back" href="#/" hidden>&larr; All groups</a>
+    <a class="back" id="back" href="#/" hidden data-i18n>&larr; All groups</a>
     <p class="eyebrow" id="eyebrow">Amazon competitor research &middot; feature extraction</p>
     <h1 id="title">What customers<br>actually care about.</h1>
   </div>
-  <button class="btn ghost" id="opensettings"
-          title="Which model and how much reasoning to spend">Settings</button>
+  <button class="btn ghost" id="opensettings" data-i18n data-i18n-attr="title"
+          title="Language, where reviews come from, and which models to use">Settings</button>
 </header>
 
 <div class="err" id="globalerr" hidden style="margin-top:16px"></div>
@@ -664,18 +675,18 @@ section[id]{scroll-margin-top:72px}
 <!-- ==================== GROUPS VIEW ==================== -->
 <div id="view-groups" hidden>
   <div class="drop">
-    <span class="dt">Groups</span>
+    <span class="dt" data-i18n>Groups</span>
     <span class="df" id="groupcount">&hellip;</span>
     <div class="spacer"></div>
-    <button class="btn" id="newgroup">New group</button>
+    <button class="btn" id="newgroup" data-i18n>New group</button>
   </div>
 
   <div class="blank" id="groups-blank" hidden>
-    <h3>No competitor groups yet</h3>
-    <p>A group is one product category you want to understand &mdash; <code>Vintage Gold Picture Frames</code>,
+    <h3 data-i18n>No competitor groups yet</h3>
+    <p data-i18n="html">A group is one product category you want to understand &mdash; <code>Vintage Gold Picture Frames</code>,
        <code>Faux Olive Trees</code>. You paste the competitor listings into it, and every extraction run
        is kept so you can come back to it later.</p>
-    <button class="btn" id="newgroup2">Create your first group</button>
+    <button class="btn" id="newgroup2" data-i18n>Create your first group</button>
   </div>
 
   <section id="groups-list" hidden style="margin-top:26px">
@@ -686,7 +697,7 @@ section[id]{scroll-margin-top:72px}
 <!-- ==================== GROUP DETAIL VIEW ==================== -->
 <div id="view-group" hidden>
   <div class="drop">
-    <span class="dt">Group</span>
+    <span class="dt" data-i18n>Group</span>
     <span class="df" id="g-slug"></span>
     <div class="prog" id="g-prog" hidden>
       <div class="bar"><i id="g-progbar"></i></div>
@@ -694,34 +705,34 @@ section[id]{scroll-margin-top:72px}
     </div>
     <div class="spacer"></div>
     <span class="err" id="g-err" hidden></span>
-    <button class="btn" id="addlistings" hidden>Add</button>
-    <button class="btn ghost" id="canceladd" hidden>Cancel</button>
-    <button class="btn" id="extract" disabled>Extract</button>
+    <button class="btn" id="addlistings" hidden data-i18n>Add</button>
+    <button class="btn ghost" id="canceladd" hidden data-i18n>Cancel</button>
+    <button class="btn" id="extract" disabled data-i18n>Extract</button>
   </div>
 
   <div class="sumstrip" id="g-sum" hidden></div>
 
   <section style="margin-top:26px" id="paste-panel">
     <div class="shead">
-      <h2>Competitor listings</h2>
+      <h2 data-i18n>Competitor listings</h2>
       <span class="note" id="pastenote"></span>
     </div>
-    <p class="lede">Paste Amazon product URLs, one per line &mdash; the long ones straight from the address bar are fine.
+    <p class="lede" data-i18n>Paste Amazon product URLs, one per line &mdash; the long ones straight from the address bar are fine.
        Bare ASINs work too. Duplicates are folded together automatically.</p>
     <div class="card">
       <div class="fld" style="margin-bottom:0">
-        <label for="urls">URLs or ASINs</label>
+        <label for="urls" data-i18n>URLs or ASINs</label>
         <textarea id="urls" spellcheck="false"
           placeholder="https://www.amazon.com/Sunlit-Vintage-Picture-Antique-Tabletop/dp/B08P5LPZFJ/ref=sr_1_10&#10;https://www.amazon.com/Picture-Frame-Vintage-Frames-Tabletop/dp/B0H49KRM51&#10;B0CQ1J8XYZ"></textarea>
-        <div class="h" id="urlhint">Nothing pasted yet.</div>
+        <div class="h" id="urlhint" data-i18n>Nothing pasted yet.</div>
       </div>
       <label class="chk" for="refetch">
         <input type="checkbox" id="refetch">
-        <span>Re-fetch ASINs I already have
+        <span data-i18n="html">Re-fetch ASINs I already have
           <em id="refetchhint">Skips anything this group already holds with bullets and reviews.</em></span>
       </label>
       <div class="badlines" id="badlines" hidden>
-        <div class="t">Couldn't read these lines</div>
+        <div class="t" data-i18n>Couldn't read these lines</div>
         <ul id="badlist"></ul>
       </div>
     </div>
@@ -729,7 +740,7 @@ section[id]{scroll-margin-top:72px}
 
   <section>
     <div class="shead">
-      <h2>Runs</h2>
+      <h2 data-i18n>Runs</h2>
       <span class="note" id="runnote"></span>
     </div>
     <div id="runs-wrap">
@@ -740,8 +751,8 @@ section[id]{scroll-margin-top:72px}
       </div>
     </div>
     <div class="tbar" id="compact-bar" hidden>
-      <span class="hint">Merges every run into one, keeping the best copy of each ASIN.</span>
-      <button class="btn ghost" id="compact">Compact</button>
+      <span class="hint" data-i18n>Merges every run into one, keeping the best copy of each ASIN.</span>
+      <button class="btn ghost" id="compact" data-i18n>Compact</button>
     </div>
   </section>
 </div>
@@ -749,19 +760,19 @@ section[id]{scroll-margin-top:72px}
 <!-- ==================== RUN VIEW ==================== -->
 <div id="view-run" hidden>
   <div class="drop">
-    <span class="dt">Run</span>
+    <span class="dt" data-i18n>Run</span>
     <span class="df" id="r-id"></span>
     <div class="spacer"></div>
     <div class="prog" id="r-prog" hidden>
       <div class="bar"><i id="r-progbar"></i></div>
       <div class="lb" id="r-proglb"></div>
     </div>
-    <button class="btn ghost" id="r-reload">Reload</button>
-    <button class="btn ghost" id="reparse" hidden
+    <button class="btn ghost" id="r-reload" data-i18n>Reload</button>
+    <button class="btn ghost" id="reparse" hidden data-i18n data-i18n-attr="title"
             title="Tag and cluster this run again, as a new parse">Parse again</button>
-    <button class="btn ghost" id="group" hidden>Group tags</button>
-    <button class="btn" id="results" hidden>View results</button>
-    <button class="btn" id="parse">Parse results</button>
+    <button class="btn ghost" id="group" hidden data-i18n>Group tags</button>
+    <button class="btn" id="results" hidden data-i18n>View results</button>
+    <button class="btn" id="parse" data-i18n>Parse results</button>
   </div>
 
   <div class="err" id="r-err" hidden></div>
@@ -773,23 +784,23 @@ section[id]{scroll-margin-top:72px}
 
   <section style="margin-top:6px">
     <div class="shead">
-      <h2>Extracted listings</h2>
+      <h2 data-i18n>Extracted listings</h2>
       <span class="note" id="r-note"></span>
     </div>
-    <textarea class="rnotes" id="r-memo" rows="1" spellcheck="true"
+    <textarea class="rnotes" id="r-memo" rows="1" spellcheck="true" data-i18n-attr="placeholder aria-label"
               placeholder="Click to add notes about this run&hellip;" aria-label="Notes about this run"></textarea>
     <div id="r-removed"></div>
     <div class="pgrid" id="r-cards"></div>
     <div class="cpbar">
-      <button class="btn ghost" id="r-add">Add listings</button>
-      <button class="btn ghost" id="r-export" hidden>Export</button>
-      <button class="btn ghost" id="r-copy" hidden>Copy ASINs</button>
+      <button class="btn ghost" id="r-add" data-i18n>Add listings</button>
+      <button class="btn ghost" id="r-export" hidden data-i18n>Export</button>
+      <button class="btn ghost" id="r-copy" hidden data-i18n>Copy ASINs</button>
     </div>
   </section>
   <!-- Customer photos by product, read from the review scrape; hidden when there are none -->
   <section id="r-photos" style="margin-top:38px" hidden>
     <div class="shead">
-      <h2>Customer photos</h2>
+      <h2 data-i18n>Customer photos</h2>
       <span class="note" id="rp-note"></span>
     </div>
     <div id="rp-rows"></div>
@@ -799,20 +810,20 @@ section[id]{scroll-margin-top:72px}
 <!-- ==================== RESULTS VIEW ==================== -->
 <div id="view-results" hidden>
   <div class="drop">
-    <span class="dt">Results</span>
+    <span class="dt" data-i18n>Results</span>
     <span class="df" id="res-id"></span>
     <div class="ctl" id="res-sel-wrap" hidden>
-      <label class="dt" for="res-sel">Parse</label>
+      <label class="dt" for="res-sel" data-i18n>Parse</label>
       <select id="res-sel"></select>
     </div>
     <div class="spacer"></div>
     <span class="hint" id="res-model"></span>
-    <a class="btn ghost" id="res-back" href="#/">Back to run</a>
+    <a class="btn ghost" id="res-back" href="#/" data-i18n>Back to run</a>
   </div>
 
   <!-- Shown from the first frame until the results render or fail. -->
   <div class="slim loading" id="res-loading" role="status" hidden>
-    <span class="ring" aria-hidden="true"></span><span>Loading results&hellip;</span>
+    <span class="ring" aria-hidden="true"></span><span data-i18n>Loading results&hellip;</span>
   </div>
   <div class="slim" id="res-sum" hidden></div>
 
@@ -820,18 +831,18 @@ section[id]{scroll-margin-top:72px}
        themes action. -->
   <div class="sbar" id="res-bar" hidden>
     <div class="sq">
-      <input type="search" id="res-q" placeholder="Filter&hellip; e.g. handle, pot, appearance"
+      <input type="search" id="res-q" data-i18n-attr="placeholder aria-label" placeholder="Filter&hellip; e.g. handle, pot, appearance"
              autocomplete="off" spellcheck="false" aria-label="Filter themes, clusters and tags">
-      <button type="button" class="x" id="res-qx" title="Clear (Esc)" hidden>&times;</button>
+      <button type="button" class="x" id="res-qx" title="Clear (Esc)" data-i18n-attr="title" hidden>&times;</button>
     </div>
-    <div class="seg" id="res-src" role="group" aria-label="Tag source">
-      <button type="button" data-src="all" aria-pressed="true">All</button>
-      <button type="button" data-src="listing" aria-pressed="false">Listings</button>
-      <button type="button" data-src="review" aria-pressed="false">Reviews</button>
+    <div class="seg" id="res-src" role="group" aria-label="Tag source" data-i18n-attr="aria-label">
+      <button type="button" data-src="all" aria-pressed="true" data-i18n>All</button>
+      <button type="button" data-src="listing" aria-pressed="false" data-i18n>Listings</button>
+      <button type="button" data-src="review" aria-pressed="false" data-i18n>Reviews</button>
     </div>
-    <nav class="jump" id="res-jump" aria-label="Lists"></nav>
-    <button class="btn ghost" id="res-expand" hidden>Expand all</button>
-    <button class="btn ghost" id="res-theme" hidden>Group into themes</button>
+    <nav class="jump" id="res-jump" aria-label="Lists" data-i18n-attr="aria-label"></nav>
+    <button class="btn ghost" id="res-expand" hidden data-i18n>Expand all</button>
+    <button class="btn ghost" id="res-theme" hidden data-i18n>Group into themes</button>
     <div class="prog" id="res-prog" hidden>
       <div class="bar"><i id="res-progbar"></i></div>
       <div class="lb" id="res-proglb"></div>
@@ -841,7 +852,7 @@ section[id]{scroll-margin-top:72px}
   </div>
 
   <!-- Tier 1: the analysis. Overview bars, then the three clustered lists. -->
-  <div class="mdiv" id="res-h1" hidden><span class="eyebrow">01 &middot; Feature Analysis</span></div>
+  <div class="mdiv" id="res-h1" hidden><span class="eyebrow" data-i18n>01 &middot; Feature Analysis</span></div>
 
   <!-- Overview: bars per theme for Features and Complaints. Built by overviewHtml(). -->
   <div class="ov" id="res-ov" hidden></div>
@@ -851,23 +862,23 @@ section[id]{scroll-margin-top:72px}
   <!-- Tier 2: the words shoppers use. The shell is static so the two filter
        inputs keep focus and caret while their lists re-render; keywordsHtml()
        only rewrites the note spans and the list containers. -->
-  <div class="mdiv" id="res-h2" hidden><span class="eyebrow">02 &middot; Keywords</span></div>
+  <div class="mdiv" id="res-h2" hidden><span class="eyebrow" data-i18n>02 &middot; Keywords</span></div>
   <div class="kw" id="res-kw" hidden>
     <section class="kwcol" id="sec-search_terms">
-      <div class="oh"><h2>Search Terms</h2><span class="note" id="kw-st-note"></span></div>
+      <div class="oh"><h2 data-i18n>Search Terms</h2><span class="note" id="kw-st-note"></span></div>
       <div class="sq">
-        <input type="search" id="kw-st-q" placeholder="Filter search terms"
+        <input type="search" id="kw-st-q" data-i18n-attr="placeholder aria-label" placeholder="Filter search terms"
                autocomplete="off" spellcheck="false" aria-label="Filter search terms">
-        <button type="button" class="x" id="kw-st-x" title="Clear (Esc)" hidden>&times;</button>
+        <button type="button" class="x" id="kw-st-x" title="Clear (Esc)" data-i18n-attr="title" hidden>&times;</button>
       </div>
       <div id="kw-st-list"></div>
     </section>
     <section class="kwcol" id="sec-usage">
-      <div class="oh"><h2>Usage Keywords</h2><span class="note" id="kw-us-note"></span></div>
+      <div class="oh"><h2 data-i18n>Usage Keywords</h2><span class="note" id="kw-us-note"></span></div>
       <div class="sq">
-        <input type="search" id="kw-us-q" placeholder="Filter usage keywords"
+        <input type="search" id="kw-us-q" data-i18n-attr="placeholder aria-label" placeholder="Filter usage keywords"
                autocomplete="off" spellcheck="false" aria-label="Filter usage keywords">
-        <button type="button" class="x" id="kw-us-x" title="Clear (Esc)" hidden>&times;</button>
+        <button type="button" class="x" id="kw-us-x" title="Clear (Esc)" data-i18n-attr="title" hidden>&times;</button>
       </div>
       <div id="kw-us-list"></div>
     </section>
@@ -880,31 +891,31 @@ section[id]{scroll-margin-top:72px}
 <div id="tip" role="tooltip" aria-hidden="true"></div>
 <!-- See all: customer photos by product. One product at a time with previous / next on the
      run page; product after product in one scrolling page on the results page. -->
-<div id="pall" class="pallveil" hidden role="dialog" aria-modal="true" aria-label="Customer photos">
+<div id="pall" class="pallveil" hidden role="dialog" aria-modal="true" aria-label="Customer photos" data-i18n-attr="aria-label">
   <div class="pallbox">
     <div class="pallscroll" id="pallscroll"></div>
     <!-- Extracted listings only: previous / next product -->
     <div class="pallft" id="pallft" hidden>
       <span id="pallpos"></span>
-      <button id="pallprev" title="Previous product (&larr;)" aria-label="Previous product">&lsaquo;</button>
-      <button id="pallnext" title="Next product (&rarr;)" aria-label="Next product">&rsaquo;</button>
+      <button id="pallprev" title="Previous product (&larr;)" aria-label="Previous product" data-i18n-attr="title aria-label">&lsaquo;</button>
+      <button id="pallnext" title="Next product (&rarr;)" aria-label="Next product" data-i18n-attr="title aria-label">&rsaquo;</button>
     </div>
-    <button class="x" id="pallclose" title="Close (Esc)" aria-label="Close">&times;</button>
+    <button class="x" id="pallclose" title="Close (Esc)" aria-label="Close" data-i18n-attr="title aria-label">&times;</button>
   </div>
 </div>
-<div id="zoom" class="zveil" hidden role="dialog" aria-modal="true" aria-label="Product images">
+<div id="zoom" class="zveil" hidden role="dialog" aria-modal="true" aria-label="Product images" data-i18n-attr="aria-label">
  <div class="zbox" id="zbox">
   <!-- Results page only: the products with photo reviews in the chip's cluster -->
   <div class="zprod" id="zprod" hidden>
     <div class="zpin">
-      <button type="button" class="zplbl" id="zplbl">Products</button>
+      <button type="button" class="zplbl" id="zplbl" data-i18n>Products</button>
       <div id="zplist"></div>
     </div>
   </div>
   <div class="zstage" id="zstage">
     <img id="zimg" alt="" draggable="false">
-    <button class="gnav prev" id="zprev" aria-label="Previous image">&lsaquo;</button>
-    <button class="gnav next" id="znext" aria-label="Next image">&rsaquo;</button>
+    <button class="gnav prev" id="zprev" aria-label="Previous image" data-i18n-attr="aria-label">&lsaquo;</button>
+    <button class="gnav next" id="znext" aria-label="Next image" data-i18n-attr="aria-label">&rsaquo;</button>
   </div>
   <div class="zrail">
     <p class="zttl" id="zttl"></p>
@@ -915,35 +926,35 @@ section[id]{scroll-margin-top:72px}
     <div class="zthumbs" id="zthumbs"></div>
     <div class="zrvpos" id="zrvpos" hidden></div>
     <div class="zbtns">
-      <button id="zout" title="Zoom out" aria-label="Zoom out">&minus;</button>
-      <button id="zin" title="Zoom in" aria-label="Zoom in">+</button>
+      <button id="zout" title="Zoom out" aria-label="Zoom out" data-i18n-attr="title aria-label">&minus;</button>
+      <button id="zin" title="Zoom in" aria-label="Zoom in" data-i18n-attr="title aria-label">+</button>
     </div>
     <!-- Extract page only: this listing's notes, saved as you type -->
     <div class="znotes" id="znotes" hidden>
-      <label class="dt" for="znote">Notes</label>
-      <textarea id="znote" spellcheck="true" placeholder="Notes about this product&hellip;"></textarea>
+      <label class="dt" for="znote" data-i18n>Notes</label>
+      <textarea id="znote" spellcheck="true" placeholder="Notes about this product&hellip;" data-i18n-attr="placeholder"></textarea>
       <span class="zsaved" id="zsaved" aria-live="polite"></span>
     </div>
   </div>
-  <button class="x zx" id="zclose" title="Close (Esc)" aria-label="Close">&times;</button>
+  <button class="x zx" id="zclose" title="Close (Esc)" aria-label="Close" data-i18n-attr="title aria-label">&times;</button>
  </div>
 </div>
 
 <!-- ==================== NEW GROUP MODAL ==================== -->
 <div class="veil" id="veil" hidden>
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modaltitle">
-    <h3 id="modaltitle">New competitor group</h3>
-    <p class="sd">One group per product category. The name becomes its folder on disk.</p>
+    <h3 id="modaltitle" data-i18n>New competitor group</h3>
+    <p class="sd" data-i18n>One group per product category. The name becomes its folder on disk.</p>
     <div class="fld">
-      <label for="gname">Group name</label>
+      <label for="gname" data-i18n>Group name</label>
       <input id="gname" type="text" placeholder="Vintage Gold Picture Frames" autocomplete="off">
       <div class="h" id="slugpreview">Saved to <code>data/</code></div>
     </div>
     <div class="err" id="modalerr" hidden></div>
     <div class="mbar">
       <div class="spacer"></div>
-      <button class="btn ghost" id="cancelgroup">Cancel</button>
-      <button class="btn" id="creategroup">Create group</button>
+      <button class="btn ghost" id="cancelgroup" data-i18n>Cancel</button>
+      <button class="btn" id="creategroup" data-i18n>Create group</button>
     </div>
   </div>
 </div>
@@ -956,7 +967,7 @@ section[id]{scroll-margin-top:72px}
     <div class="err" id="cerr" hidden></div>
     <div class="mbar">
       <div class="spacer"></div>
-      <button class="btn ghost" id="cno">Cancel</button>
+      <button class="btn ghost" id="cno" data-i18n>Cancel</button>
       <button class="btn" id="cyes">Confirm</button>
     </div>
   </div>
@@ -965,54 +976,65 @@ section[id]{scroll-margin-top:72px}
 <!-- ==================== SETTINGS MODAL ==================== -->
 <div class="veil" id="sveil" hidden>
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="stitle">
-    <h3 id="stitle" style="margin-bottom:16px">Settings</h3>
+    <h3 id="stitle" style="margin-bottom:16px" data-i18n>Settings</h3>
+
+    <!-- Per browser: kept in localStorage, never sent to the server. -->
+    <div class="spair">
+      <div class="fld">
+        <label for="s-lang">Language &middot; 语言</label>
+        <select id="s-lang">
+          <option value="en">English</option>
+          <option value="zh">中文</option>
+        </select>
+      </div>
+    </div>
 
     <h4>Amazon</h4>
-    <p class="sd">Listing details (title, price, rating) always come from amazon.com.
+    <p class="sd" data-i18n>Listing details (title, price, rating) always come from amazon.com.
        Reviews are read from the site chosen here, for new extractions; a product that
        isn't on amazon.com takes its details from this site too.
        Reviews come straight from Amazon with your saved sign-in, taken evenly across
        star ratings; every one is tagged, so more reviews means a longer, costlier parse.</p>
     <div class="spair">
       <div class="fld">
-        <label for="s-site">Reviews from</label>
+        <label for="s-site" data-i18n>Reviews from</label>
         <select id="s-site"></select>
       </div>
       <div class="fld">
-        <label for="s-reviews">Reviews per listing</label>
+        <label for="s-reviews" data-i18n>Reviews per listing</label>
         <select id="s-reviews"></select>
       </div>
     </div>
     <div class="ssign" id="s-amazon"></div>
 
-    <h4>Models &amp; reasoning</h4>
-    <p class="sd">Tagging makes one call per text body, so it runs on a cheaper model.
+    <h4 data-i18n>Models &amp; reasoning</h4>
+    <p class="sd" data-i18n>Tagging makes one call per text body, so it runs on a cheaper model.
        Grouping makes one call per tag list and is pure judgement, so it's worth more.
        Changes apply to the next run, never to one already in flight.</p>
 
     <div class="spair">
       <div class="fld">
-        <label for="s-tag-model">Tagging model</label>
+        <label for="s-tag-model" data-i18n>Tagging model</label>
         <select id="s-tag-model"></select>
       </div>
       <div class="fld">
-        <label for="s-tag-reasoning">Tagging reasoning</label>
+        <label for="s-tag-reasoning" data-i18n>Tagging reasoning</label>
         <select id="s-tag-reasoning"></select>
       </div>
     </div>
     <div class="spair">
       <div class="fld">
-        <label for="s-group-model">Grouping model</label>
+        <label for="s-group-model" data-i18n>Grouping model</label>
         <select id="s-group-model"></select>
       </div>
       <div class="fld">
-        <label for="s-group-reasoning">Grouping reasoning</label>
+        <label for="s-group-reasoning" data-i18n>Grouping reasoning</label>
         <select id="s-group-reasoning"></select>
       </div>
     </div>
     <label class="chk" for="s-auto-themes" style="margin-top:4px;margin-bottom:16px">
       <input type="checkbox" id="s-auto-themes">
-      <span>Automatically group clusters into themes
+      <span data-i18n="html">Automatically group clusters into themes
         <em>Runs right after tag clustering, on the grouping model above. When off, use
             &ldquo;Group into themes&rdquo; on the results view.</em></span>
     </label>
@@ -1020,14 +1042,582 @@ section[id]{scroll-margin-top:72px}
     <div class="err" id="serr" hidden></div>
     <div class="mbar">
       <div class="spacer"></div>
-      <button class="btn ghost" id="scancel">Cancel</button>
-      <button class="btn" id="ssave">Save</button>
+      <button class="btn ghost" id="scancel" data-i18n>Cancel</button>
+      <button class="btn" id="ssave" data-i18n>Save</button>
     </div>
   </div>
 </div>
 
 <script>
 "use strict";
+
+/* ---------- language ----------
+   The interface reads in English or Chinese; the choice is per browser (Settings →
+   Language, kept in localStorage) and never reaches the server. Only the page's own
+   wording is translated: anything the server or a model wrote — progress labels,
+   error messages, warnings, tags, cluster and theme titles — is shown as it arrives.
+
+   L(text, vars) takes the English text itself as the key, with {name} placeholders,
+   so English needs no table and a string missing from ZH shows in English. plural()
+   reads ZH_COUNT by its plural noun. Static markup opts in with data-i18n (text),
+   data-i18n="html" and data-i18n-attr="title …", translated once by applyStatic().
+   L.miss collects every key that had no Chinese, for checking in the console. */
+/* One word per idea, everywhere: group 竞品组 · run 批次 · extract 抓取 · listing 商品页 ·
+   product 商品 · bullets 五点描述 · review 评论 · parse 分析 · tag 标签 · cluster 类别 ·
+   theme 主题 · mention 提及 · credit 点数. */
+const ZH = {
+  // ----- shared words -----
+  "Settings": "设置",
+  "Cancel": "取消",
+  "Confirm": "确定",
+  "Save": "保存",
+  "Close": "关闭",
+  "Close (Esc)": "关闭（Esc）",
+  "Clear (Esc)": "清空（Esc）",
+  "Done": "完成",
+  "Not found": "没有找到",
+  "Notes": "备注",
+  "Note": "提示",
+  "Results": "结果",
+  "Reviews": "评论",
+  "Listings": "商品页",
+  "Products": "商品",
+  "Themes": "主题",
+  "Clusters": "类别",
+  "Photos": "照片",
+  "All": "全部",
+  "Hide": "收起",
+  "Show": "展开",
+  "Restore": "恢复",
+  "failed": "失败",
+  "Failed": "失败",
+  "skipped": "跳过",
+  "then": "然后",
+  "estimated": "预计",
+  "prompt": "提示词",
+  " and ": "和",
+  "{a} and {b}": "{a}和{b}",
+  ", +{n} more": "，还有 {n} 个",
+  "+{n} more": "还有 {n} 个",
+  "{n} of {total}": "{n} / {total}",
+  "{n} failed": "{n} 个失败",
+  "no image": "没有图片",
+  "no rating": "没有评分",
+  "no price": "没有价格",
+  "(no title returned)": "（没有标题）",
+  "(no title)": "（没有标题）",
+  "(untitled)": "（没有标题）",
+  "Open on Amazon": "在 Amazon 上打开",
+  "Double-click to edit": "双击修改",
+  "Couldn't reach the local server. Is python app.py still running?": "连不上本机的服务。python app.py 还在运行吗？",
+  "Server returned {status}.": "服务器返回了 {status}。",
+
+  // ----- list names (the server sends the English ones) -----
+  "Features": "功能特点",
+  "Product Features & Benefits": "功能特点",
+  "Complaints": "问题投诉",
+  "Care": "安装保养",
+  "Assembly, Care & Maintenance": "安装保养",
+  "Assembly & care": "安装保养",
+  "feature": "功能特点",
+  "complaint": "问题投诉",
+  "care": "安装保养",
+  "Search Terms": "搜索词",
+  "Search terms": "搜索词",
+  "Usage Keywords": "使用场景词",
+  "Usage keywords": "使用场景词",
+  "Usage": "使用场景",
+  "Spaces": "空间",
+  "Placements": "摆放位置",
+  "Occasions": "场合",
+  "Used for": "用途",
+  "search term": "搜索词",
+  "usage keyword": "使用场景词",
+  "listings": "商品页",
+  "reviews": "评论",
+  "listing": "商品页",
+  "review": "评论",
+  "Listing": "商品页",
+  "Review": "评论",
+
+  // ----- groups view -----
+  "← All groups": "← 全部竞品组",
+  "Language, where reviews come from, and which models to use": "界面语言、评论来源和使用的模型",
+  "Amazon competitor research · feature extraction": "Amazon 竞品调研 · 卖点提取",
+  "What customers<br>actually care about.": "买家真正<br>在意的是什么。",
+  "Groups": "竞品组",
+  "Group": "竞品组",
+  "New group": "新建竞品组",
+  "None yet": "还没有",
+  "none yet": "还没有",
+  "never": "从未",
+  "Runs": "批次",
+  "Run": "批次",
+  "Last run": "最近一次",
+  "Created": "创建时间",
+  "Parses": "分析",
+  "Parse": "分析",
+  "No competitor groups yet": "还没有竞品组",
+  "A group is one product category you want to understand — <code>Vintage Gold Picture Frames</code>, <code>Faux Olive Trees</code>. You paste the competitor listings into it, and every extraction run is kept so you can come back to it later.":
+    "一个竞品组就是你想了解的一个品类，比如 <code>Vintage Gold Picture Frames</code>、<code>Faux Olive Trees</code>。把竞品链接贴进去就行，每次抓取的结果都会保留，以后随时可以回来看。",
+  "Create your first group": "新建第一个竞品组",
+  "Delete this group": "删除这个竞品组",
+  'Delete "{name}"?': "删除“{name}”？",
+  "This moves the group and {what} to <code>data/_trash/</code>. Nothing is erased &mdash; you can drag the folder back in your file browser if you change your mind.":
+    "这会把这个竞品组和{what}移到 <code>data/_trash/</code>。不会真的删除，想恢复时把文件夹拖回来就行。",
+  "its (empty) folder": "它的（空）文件夹",
+  "Delete group": "删除竞品组",
+  "New competitor group": "新建竞品组",
+  "One group per product category. The name becomes its folder on disk.": "一个品类建一个竞品组。名称会用作硬盘上的文件夹名。",
+  "Group name": "竞品组名称",
+  "Create group": "创建",
+  "Saved to <code>data/{slug}</code>": "保存到 <code>data/{slug}</code>",
+
+  // ----- group view -----
+  "Competitor group": "竞品组",
+  "Add": "添加",
+  "Extract": "抓取",
+  "Competitor listings": "竞品链接",
+  "Paste Amazon product URLs, one per line — the long ones straight from the address bar are fine. Bare ASINs work too. Duplicates are folded together automatically.":
+    "粘贴 Amazon 商品链接，每行一个，直接从地址栏复制的长链接也可以。只写 ASIN 也行。重复的会自动合并。",
+  "URLs or ASINs": "链接或 ASIN",
+  "Nothing pasted yet.": "还没有粘贴内容。",
+  "Re-fetch ASINs I already have <em id=\"refetchhint\">Skips anything this group already holds with bullets and reviews.</em>":
+    "重新抓取已有的 ASIN <em id=\"refetchhint\">这个竞品组里已经有五点描述和评论的，会跳过。</em>",
+  "Skips anything this group already holds with bullets and reviews.": "这个竞品组里已经有五点描述和评论的，会跳过。",
+  "Couldn't read these lines": "这些行无法识别",
+  "No runs yet": "还没有批次",
+  "Each time you press <b>Extract</b>, a timestamped run is saved here with the raw Rainforest payloads, so nothing you pull is ever overwritten.":
+    "每点一次<b>抓取</b>，这里就会存下一个带时间的批次，连同 Rainforest 的原始数据，所以抓过的内容不会被覆盖。",
+  "Merges every run into one, keeping the best copy of each ASIN.": "把所有批次合并成一个，每个 ASIN 保留最完整的一份。",
+  "Compact": "合并",
+  "compacted from {runs}": "由 {runs}合并而成",
+  "not parsed": "未分析",
+  "not grouped": "未归类",
+  "Open results": "打开结果",
+  "Tagged but not grouped yet": "已打标签，还没有归类",
+  "Delete this run": "删除这个批次",
+  "Delete run {run}?": "删除批次 {run}？",
+  "This moves the run &mdash; its {n} fetched {listings}, the raw Rainforest payloads, and {parses} &mdash; to <code>data/{slug}/_trash/</code>. Nothing is erased, so you can drag the folder back in your file browser.":
+    "这会把这个批次（{n} 个已抓取的商品页、Rainforest 原始数据和 {parses}）移到 <code>data/{slug}/_trash/</code>。不会真的删除，想恢复时把文件夹拖回来就行。",
+  "This moves the run &mdash; its {n} fetched {listings}, the raw Rainforest payloads &mdash; to <code>data/{slug}/_trash/</code>. Nothing is erased, so you can drag the folder back in your file browser.":
+    "这会把这个批次（{n} 个已抓取的商品页和 Rainforest 原始数据）移到 <code>data/{slug}/_trash/</code>。不会真的删除，想恢复时把文件夹拖回来就行。",
+  "Delete run": "删除批次",
+  "unique ASIN kept": "个不重复的 ASIN 保留",
+  "unique ASINs kept": "个不重复的 ASIN 保留",
+  "reviews in total": "条评论（合计）",
+  "{n} merged back in from older runs": "其中 {n} 条来自旧批次",
+  "duplicate ASIN resolved": "个重复的 ASIN 已处理",
+  "duplicate ASINs resolved": "个重复的 ASIN 已处理",
+  "kept the copy with both bullets and reviews, then the most recent": "优先保留同时有五点描述和评论的，其次是最新的",
+  "dropped": "个被去掉",
+  "no bullets and no reviews in any run": "在所有批次里都没有五点描述和评论",
+  "run moves to <code>_trash/</code>": "个批次移到 <code>_trash/</code>",
+  "runs move to <code>_trash/</code>": "个批次移到 <code>_trash/</code>",
+  "Dropping {asins}": "去掉：{asins}",
+  "{parses} won't carry over &mdash; they refer to the old runs, which keep them in <code>_trash/</code>.":
+    "{parses}不会带过来。它们属于旧批次，会跟着旧批次留在 <code>_trash/</code> 里。",
+  "Compact {runs} into one": "把 {runs}合并成一个",
+  "A new run is written first; the originals only move afterwards.": "会先写好新批次，然后才移走原来的。",
+  "Lines": "行数",
+  "ASINs found": "找到的 ASIN",
+  "Already have": "已有",
+  "Will fetch": "将抓取",
+  "Duplicates": "重复",
+  "Unreadable": "无法识别",
+  "won't be fetched": "不会再抓取",
+  "costs credits": "会用点数",
+  "no credits": "不用点数",
+  "folded together": "已合并",
+  "No ASINs found in what's pasted.": "粘贴的内容里没有找到 ASIN。",
+  "Ready to extract {found} — fetching {fetch}, {held} already complete in this group.":
+    "可以抓取 {found} 个：需要抓 {fetch} 个，另外 {held} 个这个竞品组里已经完整。",
+  "Ready to extract {asins}: ": "可以抓取 {asins}：",
+  "Fetching all {asins}, including any already here.": "全部 {asins} 都会重新抓取，包括已有的。",
+  "{asins} would be skipped: ": "会跳过 {asins}：",
+  "Nothing pasted is already here — everything will be fetched.": "粘贴的都是新的，全部都会抓取。",
+  "Paste at least one Amazon URL first": "请先粘贴至少一个 Amazon 链接",
+  "Fetch {listings} from Rainforest": "从 Rainforest 抓取 {listings}",
+  "Everything pasted is already here — no credits will be spent": "粘贴的这里都已经有了，不会用点数",
+  "Starting — {listings} to fetch": "开始：要抓取 {listings}",
+  ", {n} already here": "，另有 {n} 个已有",
+  "Collecting {listings} you already have": "正在整理已有的 {listings}",
+  "The extraction failed.": "抓取失败了。",
+
+  // ----- run view -----
+  "Reload": "刷新",
+  "Parse again": "重新分析",
+  "Tag and cluster this run again, as a new parse": "重新给这个批次打标签并归类，另存为一次新的分析",
+  "Group tags": "标签归类",
+  "View results": "查看结果",
+  "Parse results": "开始分析",
+  "Extracted listings": "已抓取的商品页",
+  "Click to add notes about this run…": "点这里给这个批次写备注…",
+  "Notes about this run": "这个批次的备注",
+  "Add listings": "添加商品页",
+  "Export": "导出",
+  "Exporting…": "正在导出…",
+  "Export failed.": "导出失败了。",
+  "Copy ASINs": "复制 ASIN",
+  "Copied {n} ASINs": "已复制 {n} 个 ASIN",
+  "Copy failed": "复制失败",
+  "Customer photos": "买家晒图",
+  "Extraction run": "抓取批次",
+  "{group} · extraction run": "{group} · 抓取批次",
+  "Compacted": "合并",
+  "Fetch": "抓取",
+  "View images": "查看图片",
+  "Ranked by {score} (rating adjusted for {ratings})": "排序分 {score}（评分按 {ratings}调整）",
+  "no bullets": "没有五点描述",
+  "no reviews": "没有评论",
+  "Edited: {fields}": "已修改：{fields}",
+  "edited": "已修改",
+  "not in results": "未进入结果",
+  "+{reviews} not in results": "+{reviews}未进入结果",
+  "Added after the results were made. Parse again to include it.": "这是出结果之后才加的。重新分析后才会包含它。",
+  "Added after the results were made. Parse again to include them.": "这些是出结果之后才加的。重新分析后才会包含它们。",
+  "Remove this ASIN from the run": "把这个 ASIN 从批次里移除",
+  "Restore original": "恢复原样",
+  "Bullets": "五点描述",
+  "Details": "详情",
+  "Listing body &mdash; title + {bullets}": "商品页文本：标题 + {bullets}",
+  "Double-click a bullet to edit it. Ctrl+Enter saves, Escape cancels.": "双击一条五点描述可以修改。Ctrl+Enter 保存，Esc 取消。",
+  "Delete this bullet": "删除这条五点描述",
+  "+ add bullet": "+ 添加五点描述",
+  "Double-click a title, body or rating to edit it.": "双击标题、正文或评分可以修改。",
+  "Delete this review": "删除这条评论",
+  "verified": "已验证购买",
+  "pasted": "手动粘贴",
+  "+ add reviews": "+ 添加评论",
+  "Paste reviews straight from Amazon &mdash; select them on the product page or the reviews page and copy.&#10;&#10;Star ratings, titles, dates and Verified Purchase are read automatically; names and Helpful / Report lines are dropped.&#10;&#10;Plain text works too: one blank line between each review.":
+    "直接从 Amazon 粘贴评论：在商品页或评论页选中后复制即可。&#10;&#10;星级、标题、日期和 Verified Purchase 会自动识别；买家名字和 Helpful / Report 这些行会去掉。&#10;&#10;纯文本也可以：每条评论之间空一行。",
+  "Add reviews": "添加评论",
+  "Copied from Amazon, or plain text with a blank line between each review.": "从 Amazon 复制，或用纯文本，每条评论之间空一行。",
+  "Product details": "商品详情",
+  "Material": "材质",
+  "Colour": "颜色",
+  "Model": "型号",
+  "Category": "类目",
+  "Best sellers rank": "畅销排名",
+  "{n} ratings": "{n} 个评分",
+  "{reviews} added": "已添加 {reviews}",
+  "{duplicates} omitted": "{duplicates}已略过",
+  "{reviews} replaced with the full text": "{reviews}换成了完整内容",
+  "Product title": "商品标题",
+  "Review title": "评论标题",
+  "Fetch reviews & photos": "抓取评论和晒图",
+  "Fetch reviews": "抓取评论",
+  "{listings} fetched before customer photos were collected. Read their reviews and photos from {site} — no Rainforest credits are used. Reviews already here gain their photos; new ones are added.":
+    "{listings}是在开始收集买家晒图之前抓取的。可以从 {site} 读取它们的评论和晒图，不用 Rainforest 点数。已有的评论会补上图片，新的评论会加进来。",
+  "{listings} no reviews. Fetch them from {site} — no Rainforest credits are used.":
+    "{listings}没有评论。可以从 {site} 抓取，不用 Rainforest 点数。",
+  "Sign in to Amazon": "登录 Amazon",
+  "Signed in to {site}. Press {verb}.": "已登录 {site}。请点“{verb}”。",
+  "{what} isn't in the results yet. Press <b>Parse again</b> to include it.": "{what}还没有进入结果。点<b>重新分析</b>把它加进去。",
+  "{what} aren't in the results yet. Press <b>Parse again</b> to include them.": "{what}还没有进入结果。点<b>重新分析</b>把它们加进去。",
+  "Add listings to this run": "给这个批次添加商品页",
+  "Paste Amazon URLs or ASINs, one per line. Listings are fetched from Rainforest and their reviews read from <b>{site}</b>.":
+    "粘贴 Amazon 链接或 ASIN，每行一个。商品页从 Rainforest 抓取，评论从 <b>{site}</b> 读取。",
+  " The results you have stay as they are until you parse again.": "现有的结果不会变，重新分析后才会更新。",
+  "new to this run": "个是这个批次没有的",
+  "nothing to add": "没有可添加的",
+  "to fetch": "个需要抓取",
+  "already complete in this group": "个在这个竞品组里已经完整",
+  "carried across, no credits": "直接带过来，不用点数",
+  "already in this run": "个已经在这个批次里",
+  "left as they are": "保持不变",
+  "removed from this run earlier": "个之前从这个批次里移除过",
+  "restore them from the removed list instead": "请到已移除列表里恢复",
+  "unreadable lines": "行无法识别",
+  "Adding {listings}…": "正在添加 {listings}…",
+  "Adding the listings failed.": "添加商品页失败了。",
+  "Reviews {done}/{total}": "评论 {done}/{total}",
+  "Fetching reviews failed.": "抓取评论失败了。",
+  "after edits": "修改后",
+  "all fetched": "全部抓到",
+  "{n} of {total} fetched": "已抓到的 {total} 个中有 {n} 个",
+  "{n} avg per ASIN": "平均每个 ASIN {n} 条",
+  "to be tagged": "等待打标签",
+  "ASINs": "ASIN",
+  "With bullets": "有五点描述",
+  "With reviews": "有评论",
+  "Text bodies": "文本段",
+  "Credits left": "剩余点数",
+  "Elapsed": "用时",
+  "{asins} removed from this run": "{asins} 已从这个批次移除",
+  "Customer photo": "买家晒图",
+  ", {n} stars": "，{n} 星",
+  "{photos} · {n} of {products}": "{photos} · {products}中的 {n} 个",
+  "{photos} from {reviews}": "{photos}，来自 {reviews}",
+  "See all {n}": "查看全部 {n} 张",
+  " in &ldquo;{name}&rdquo;": "，属于“{name}”",
+  "Product {n} of {total}": "商品 {n} / {total}",
+  "Previous product (←)": "上一个商品（←）",
+  "Previous product": "上一个商品",
+  "Next product (→)": "下一个商品（→）",
+  "Next product": "下一个商品",
+
+  // ----- parsing and clustering -----
+  "Tagged": "已打标签",
+  "all bodies": "全部文本",
+  "concrete benefits": "具体卖点",
+  "from reviews": "来自评论",
+  "instructions": "使用说明",
+  "Skipped": "已跳过",
+  "under {n} chars": "不到 {n} 个字符",
+  "Nothing found": "没有内容",
+  "tagged but empty": "打了标签但没有结果",
+  "Cost": "费用",
+  "tagging": "打标签",
+  "clustering": "归类",
+  "themes": "主题",
+  "from {n} tags": "来自 {n} 个标签",
+  "see the results view": "详见结果页",
+  "one list failed": "有一个列表失败",
+  "auto themes is off": "自动归入主题已关闭",
+  "no list long enough": "没有足够长的列表",
+  "across {lists}": "分布在 {lists}",
+  "Repairs": "修正",
+  "see cluster_log.json": "详见 cluster_log.json",
+  "every tag placed once": "每个标签都只归了一次",
+  "Time": "用时",
+  "tagging {a}s · clustering {b}s": "打标签 {a} 秒 · 归类 {b} 秒",
+  "about {n} s": "约 {n} 秒",
+  "about {n} min": "约 {n} 分钟",
+  "the grouping model": "归类模型",
+  "There is nothing long enough to tag in this run. Add bullets or reviews first.": "这个批次里没有够长的文本可以打标签。请先添加五点描述或评论。",
+  "text body to tag": "段文本要打标签",
+  "text bodies to tag": "段文本要打标签",
+  "under {n} characters, too short to hold a concrete benefit": "不到 {n} 个字符，太短，说不出具体卖点",
+  "tags are clustered and grouped into themes": "标签归类，再归入主题",
+  "tags are clustered": "标签归类",
+  "{time} in all, no second click": "全程{time}，不用再点一次",
+  "estimated for the whole parse": "整次分析的预计费用",
+  "tagging ${a}, clustering and themes about ${b} (a projection: tag counts aren't known yet)": "打标签 ${a}，归类和主题约 ${b}（只是估算，标签数量现在还不知道）",
+  "tagging ${a}, clustering about ${b} (a projection: tag counts aren't known yet)": "打标签 ${a}，归类约 ${b}（只是估算，标签数量现在还不知道）",
+  "cost unknown": "费用未知",
+  "no pricing set for {a} or {b} in config.py": "config.py 里没有 {a} 或 {b} 的价格",
+  "no pricing set for {model} in config.py": "config.py 里没有 {model} 的价格",
+  "Clustering starts by itself once tagging ends, unless more than {pct}% of the bodies fail to tag or no tags are found. The tags are kept either way.":
+    "打完标签后会自动开始归类。如果超过 {pct}% 的文本打标签失败，或者一个标签都没找到，就不会归类。不管怎样，标签都会保留。",
+  "Parsed before &mdash; this writes a new <code>parse-&lt;time&gt;</code> folder and leaves the earlier results untouched.":
+    "之前分析过。这次会新建一个 <code>parse-&lt;时间&gt;</code> 文件夹，之前的结果不受影响。",
+  "Parse this run?": "分析这个批次？",
+  "One call per text body to <b>{model}</b>, extracting search terms, features, complaints, assembly &amp; care instructions and usage keywords. Then <b>{group}</b> sorts the tags into clusters and the clusters into themes.":
+    "每段文本调用一次 <b>{model}</b>，提取搜索词、功能特点、问题投诉、安装保养说明和使用场景词。然后由 <b>{group}</b> 把标签归成类别，再把类别归入主题。",
+  "One call per text body to <b>{model}</b>, extracting search terms, features, complaints, assembly &amp; care instructions and usage keywords. Then <b>{group}</b> sorts the tags into clusters.":
+    "每段文本调用一次 <b>{model}</b>，提取搜索词、功能特点、问题投诉、安装保养说明和使用场景词。然后由 <b>{group}</b> 把标签归成类别。",
+  "Starting — {bodies} to tag": "开始：{bodies}要打标签",
+  "The parse failed.": "分析失败了。",
+  "about {calls} + 1 merge": "约 {calls}，外加 1 次合并",
+  "This parse found no features, complaints or care instructions, so there is nothing to group. Parse again, or add more reviews first.":
+    "这次分析没有找到功能特点、问题投诉或安装保养说明，所以没有可归类的内容。请重新分析，或先多加一些评论。",
+  "from {mentions}": "来自 {mentions}",
+  "the real figure is written to {file}": "实际费用会写进 {file}",
+  "Grouped before &mdash; this replaces <code>clusters.json</code> for this parse.": "之前归类过。这次会替换这次分析的 <code>clusters.json</code>。",
+  "Then clusters are grouped into themes automatically for any list with {n} or more clusters &mdash; change this in Settings.":
+    "之后，类别达到 {n} 个或更多的列表会自动归入主题。可以在设置里更改。",
+  "Group this parse's tags?": "给这次分析的标签归类？",
+  "One call per list to <b>{model}</b> at <b>{reasoning}</b> reasoning, sorting every tag into exactly one semantic cluster with a title and a one-line description.":
+    "每个列表调用一次 <b>{model}</b>（推理强度：<b>{reasoning}</b>），把每个标签归到一个意思相近的类别里，每个类别有标题和一句话说明。",
+  "Starting — {lists} to group": "开始：{lists}要归类",
+  "The grouping failed.": "归类失败了。",
+
+  // ----- results view -----
+  "Back to run": "返回批次",
+  "Loading results…": "正在加载结果…",
+  "{group} · results": "{group} · 结果",
+  "This parse hasn't been grouped yet": "这次分析还没有归类",
+  "That parse doesn't exist": "这次分析不存在",
+  "Tags on their own are only half the picture. Group them into clusters first, then come back here.": "只有标签还看不出全貌。请先把标签归类，再回到这里。",
+  "It may have been deleted, or the address is wrong.": "可能已经删除，或者地址不对。",
+  "Back to the run to group tags": "回到批次去归类标签",
+  "Back to the run": "返回批次",
+  "Filter… e.g. handle, pot, appearance": "筛选…（用英文，如 handle, pot）",
+  "Filter themes, clusters and tags": "筛选主题、类别和标签",
+  "Tag source": "标签来源",
+  "Lists": "列表",
+  "Expand all": "全部展开",
+  "Collapse all": "全部收起",
+  "Group into themes": "归入主题",
+  "01 · Feature Analysis": "01 · 卖点分析",
+  "02 · Keywords": "02 · 关键词",
+  "Filter search terms": "筛选搜索词",
+  "Filter usage keywords": "筛选使用场景词",
+  "in {n} of {total} product": "出现在 {n} / {total} 个商品中",
+  "in {n} of {total} products": "出现在 {n} / {total} 个商品中",
+  "under-advertised": "宣传不足",
+  "Customers mention this far more than listings claim it — a benefit worth advertising.": "买家提到它的次数远多于商品页的宣传，是值得主打的卖点。",
+  "unconfirmed": "评论未证实",
+  "Listings claim this but customers barely mention it — reviews don't back it up yet.": "商品页宣传了这一点，但买家很少提到，评论还没有印证。",
+  "not in {name}": "{name}里没有",
+  "unranked": "没有排名",
+  "Reviews rank it {r}, listings {l}.": "评论里排 {r}，商品页里排 {l}。",
+  "{list} clusters failed": "{list}归类失败",
+  "<b>{n}</b> {list} cluster ({mentions})": "<b>{n}</b> 个{list}类别（{mentions}）",
+  "<b>{n}</b> {list} clusters ({mentions})": "<b>{n}</b> 个{list}类别（{mentions}）",
+  "<b>{n}</b> product": "<b>{n}</b> 个商品",
+  "<b>{n}</b> products": "<b>{n}</b> 个商品",
+  "of mentions traced to a sentence": "的提及找到了原句",
+  "<b>{n}</b> search terms": "<b>{n}</b> 个搜索词",
+  "<b>{n}</b> usage keywords": "<b>{n}</b> 个使用场景词",
+  "Clusters are not grouped into themes yet. Press <b>Group into themes</b> above to build them for {lists} ({n} or more).":
+    "类别还没有归入主题。点上面的<b>归入主题</b>，为{lists}生成主题（需要 {n}或更多）。",
+  "Nothing to show": "没有内容可显示",
+  "This list was not grouped.": "这个列表没有归类。",
+  "Nothing here": "这里没有内容",
+  "No {list} tags came out of this parse.": "这次分析没有得到{list}标签。",
+  "{n} from listings": "商品页 {n} 次",
+  "{n} from reviews": "评论 {n} 次",
+  "Show top {n}": "只看前 {n} 个",
+  "Show all {n}": "查看全部 {n} 个",
+  "Nothing matches &ldquo;{q}&rdquo;": "没有符合“{q}”的内容",
+  "No {what} contains it.": "没有{what}包含它。",
+  "Clear the filter": "清空筛选",
+  "Nothing from {source}": "{source}里没有内容",
+  "No {what} came from {source}.": "没有来自{source}的{what}。",
+  "No search terms came out of this parse.": "这次分析没有得到搜索词。",
+  "No usage keywords came out of this parse.": "这次分析没有得到使用场景词。",
+  "Re-run {list} clustering": "重新归类{list}",
+  "{n} of {total} clusters": "{n} / {total} 个类别",
+  "This list could not be grouped.": "这个列表归类失败了。",
+  "This list could not be grouped into themes: {error}": "这个列表没能归入主题：{error}",
+  "No {list} theme, cluster or tag contains it.": "没有{list}的主题、类别或标签包含它。",
+  "No {list} theme, cluster or tag from {source} contains it.": "来自{source}的{list}主题、类别或标签里都没有它。",
+  "No {list} tags in this list came from {source}.": "这个列表里没有来自{source}的{list}标签。",
+  "From listings ({n})": "来自商品页（{n}）",
+  "From reviews ({n})": "来自评论（{n}）",
+  "Has customer photos": "有买家晒图",
+  "No list has {n} or more clusters, so there is nothing to group into themes.": "没有哪个列表的类别达到 {n} 个，所以没有可归入主题的内容。",
+  "clusters to group into themes": "个类别要归入主题",
+  "stays a flat list (fewer than {n} clusters)": "保持不分主题（类别不到 {n} 个）",
+  "Themed before &mdash; this replaces <code>themes.json</code> for this parse.": "之前归过主题。这次会替换这次分析的 <code>themes.json</code>。",
+  "Group clusters into themes?": "把类别归入主题？",
+  "One call per list to <b>{model}</b> at <b>{reasoning}</b> reasoning, folding related clusters into themes that each get a title and a one-sentence summary. Every cluster lands in exactly one theme.":
+    "每个列表调用一次 <b>{model}</b>（推理强度：<b>{reasoning}</b>），把相关的类别归成主题，每个主题有标题和一句话总结。每个类别只会归入一个主题。",
+  "The theme grouping failed.": "归入主题失败了。",
+  "This parse has no {list} tags, so there is nothing to re-run.": "这次分析没有{list}标签，所以没有可重新归类的内容。",
+  "{lists} &mdash; and their themes &mdash; are kept exactly as they are.": "{lists}和它们的主题保持不变。",
+  "Then the new {list} clusters are grouped into themes if there are {n} or more.": "之后，新的{list}类别如果达到 {n} 个或更多，会归入主题。",
+  "Re-run {list} clustering?": "重新归类{list}？",
+  "Re-run": "重新归类",
+  "One call to <b>{model}</b> at <b>{reasoning}</b> reasoning, sorting every {list} tag into exactly one semantic cluster with a title and a one-line description.":
+    "调用一次 <b>{model}</b>（推理强度：<b>{reasoning}</b>），把每个{list}标签归到一个意思相近的类别里，每个类别有标题和一句话说明。",
+  "Starting — re-grouping {list}": "开始：重新归类{list}",
+  "The re-run failed.": "重新归类失败了。",
+
+  // ----- hover card and image views -----
+  "No exact sentence found": "没有找到对应的原句",
+  "1 of {n} sources": "第 1 处，共 {n} 处来源",
+  "Verified purchase": "已验证购买",
+  "view on Amazon": "在 Amazon 上查看",
+  "Source <b>{n}</b> of {total}": "来源 <b>{n}</b> / {total}",
+  "Review <b>{n}</b> of {total}": "评论 <b>{n}</b> / {total}",
+  "Product <b>{n}</b> of {total}": "商品 <b>{n}</b> / {total}",
+  "Listing <b>{n}</b> of {total}": "商品页 <b>{n}</b> / {total}",
+  "image": "图片",
+  "photo": "照片",
+  "product": "商品",
+  "to switch": "切换",
+  "Saving…": "正在保存…",
+  "Saved": "已保存",
+  "Not saved": "没有保存",
+  "No listing image": "没有商品图",
+  "Listing image": "商品图",
+  "Image {n}": "图片 {n}",
+  "Product images": "商品图片",
+  "Previous image": "上一张",
+  "Next image": "下一张",
+  "Zoom out": "缩小",
+  "Zoom in": "放大",
+  "Notes about this product…": "给这个商品写备注…",
+
+  // ----- settings -----
+  "Listing details (title, price, rating) always come from amazon.com. Reviews are read from the site chosen here, for new extractions; a product that isn't on amazon.com takes its details from this site too. Reviews come straight from Amazon with your saved sign-in, taken evenly across star ratings; every one is tagged, so more reviews means a longer, costlier parse.":
+    "商品页信息（标题、价格、评分）始终来自 amazon.com。评论从这里选的站点读取，只对新的抓取生效；amazon.com 上没有的商品，信息也从这个站点读取。评论用你保存的登录直接从 Amazon 读取，各星级平均取；每条评论都会打标签，所以评论越多，分析越久、越贵。",
+  "Reviews from": "评论来源",
+  "Reviews per listing": "每个商品页的评论数",
+  "Canada (amazon.ca)": "加拿大（amazon.ca）",
+  "USA (amazon.com)": "美国（amazon.com）",
+  "Models & reasoning": "模型和推理强度",
+  "Tagging makes one call per text body, so it runs on a cheaper model. Grouping makes one call per tag list and is pure judgement, so it's worth more. Changes apply to the next run, never to one already in flight.":
+    "打标签是每段文本调用一次，所以用便宜一些的模型。归类是每个标签列表调用一次，全靠判断，值得用更好的模型。改动只对下一次运行生效，正在进行的不受影响。",
+  "Tagging model": "打标签的模型",
+  "Tagging reasoning": "打标签的推理强度",
+  "Grouping model": "归类的模型",
+  "Grouping reasoning": "归类的推理强度",
+  "low": "低",
+  "medium": "中",
+  "high": "高",
+  "Automatically group clusters into themes <em>Runs right after tag clustering, on the grouping model above. When off, use “Group into themes” on the results view.</em>":
+    "自动把类别归入主题 <em>标签归类后马上进行，用上面的归类模型。关闭后，可以在结果页点“归入主题”。</em>",
+  "signed in &middot; saved {when}": "已登录 &middot; 保存于 {when}",
+  "not signed in": "未登录",
+  "Sign in again": "重新登录",
+  "Sign in": "登录",
+  "A browser window is opening — sign in to Amazon there…": "正在打开浏览器窗口，请在那里登录 Amazon…",
+  "Sign-in didn't complete. Try again.": "登录没有完成，请再试一次。",
+};
+
+/* plural(n, one, many) in Chinese, by the plural noun. */
+const ZH_COUNT = {
+  "groups": "{n} 个竞品组",
+  "runs": "{n} 个批次",
+  "parses": "{n} 次分析",
+  "ASINs": "{n} 个 ASIN",
+  "listings": "{n} 个商品页",
+  "listings were": "{n} 个商品页",
+  "listings have": "{n} 个商品页",
+  "products": "{n} 个商品",
+  "ratings": "{n} 个评分",
+  "bullets": "{n} 条五点描述",
+  "reviews": "{n} 条评论",
+  "duplicates": "{n} 条重复的",
+  "Rainforest credits": "{n} 个 Rainforest 点数",
+  "photos": "{n} 张照片",
+  "customer photos": "{n} 张买家晒图",
+  "photo reviews": "{n} 条带图评论",
+  "sources": "{n} 处来源",
+  "lists": "{n} 个列表",
+  "bodies": "{n} 段文本",
+  "parallel calls": "{n} 次并行调用",
+  "mentions": "{n} 次提及",
+  "clusters": "{n} 个类别",
+  "themes": "{n} 个主题",
+  "terms": "{n} 个搜索词",
+  "keywords": "{n} 个使用场景词",
+  "distinct tags": "{n} 个不同的标签",
+};
+
+let LANG = "en";
+try { if (localStorage.getItem("lang") === "zh") LANG = "zh"; } catch (e) { /* stays English */ }
+const LOCALE = LANG === "zh" ? "zh-CN" : undefined;
+const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+
+function L(text, vars) {
+  let s = String(text ?? "");
+  if (LANG === "zh" && s) {
+    if (has(ZH, s)) s = ZH[s];
+    else L.miss.add(s);
+  }
+  if (vars) s = s.replace(/\{(\w+)\}/g, (m, k) => (has(vars, k) ? vars[k] : m));
+  return s;
+}
+L.miss = new Set();
+
+function applyStatic() {
+  if (LANG !== "zh") return;
+  document.documentElement.lang = "zh-CN";
+  const norm = s => s.replace(/\s+/g, " ").trim();
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    if (el.dataset.i18n === "html") el.innerHTML = L(norm(el.innerHTML));
+    else el.textContent = L(norm(el.textContent));
+  });
+  document.querySelectorAll("[data-i18n-attr]").forEach(el => {
+    for (const a of el.dataset.i18nAttr.split(" ")) el.setAttribute(a, L(el.getAttribute(a)));
+  });
+}
+applyStatic();
 
 /* ---------- tiny helpers ---------- */
 const $ = id => document.getElementById(id);
@@ -1039,11 +1629,11 @@ async function api(path, opts) {
   try {
     res = await fetch(path, Object.assign({ headers: { "Content-Type": "application/json" } }, opts));
   } catch (e) {
-    throw new Error("Couldn't reach the local server. Is python app.py still running?");
+    throw new Error(L("Couldn't reach the local server. Is python app.py still running?"));
   }
   let body = null;
   try { body = await res.json(); } catch (e) { /* fall through to status text */ }
-  if (!res.ok) throw new Error((body && body.error) || `Server returned ${res.status}.`);
+  if (!res.ok) throw new Error((body && body.error) || L("Server returned {status}.", { status: res.status }));
   return body;
 }
 
@@ -1077,14 +1667,14 @@ function fmtDate(iso) {
   if (!iso) return "—";
   const d = new Date(iso);
   if (isNaN(d)) return iso;
-  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  return d.toLocaleDateString(LOCALE, { year: "numeric", month: "short", day: "numeric" });
 }
 
 function fmtDateTime(value) {
   if (!value) return "—";
   const d = new Date(value);
   if (isNaN(d)) return String(value);
-  return d.toLocaleString(undefined, {
+  return d.toLocaleString(LOCALE, {
     month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
   });
 }
@@ -1098,10 +1688,18 @@ function runCreated(run) {
   return run.started_at || null;
 }
 
-function plural(n, one, many) { return `${n} ${n === 1 ? one : many}`; }
+/* "3 runs" / "3 个批次". Chinese has no plural, so it is looked up by the plural noun. */
+function plural(n, one, many) {
+  if (LANG === "zh") {
+    if (has(ZH_COUNT, many)) return ZH_COUNT[many].replace("{n}", n);
+    L.miss.add("count: " + many);
+  }
+  return `${n} ${n === 1 ? one : many}`;
+}
 
+/* The label is translated here; a sub-line is passed in already translated. */
 function stat(label, value, sub, tone) {
-  return `<div class="sm ${tone || ""}"><div class="t">${esc(label)}</div>` +
+  return `<div class="sm ${tone || ""}"><div class="t">${esc(L(label))}</div>` +
          `<div class="v">${esc(value)}</div>` +
          (sub ? `<div class="s">${esc(sub)}</div>` : "") + `</div>`;
 }
@@ -1111,7 +1709,7 @@ function stat(label, value, sub, tone) {
    with its own wiring, and two small dialogs beat one that does both jobs. */
 let confirmResolve = null;
 
-function confirmModal({ title, body, confirmLabel = "Confirm" }) {
+function confirmModal({ title, body, confirmLabel = L("Confirm") }) {
   $("ctitle").textContent = title;
   $("cbody").innerHTML = body;
   $("cerr").hidden = true;
@@ -1138,7 +1736,7 @@ function editable(el, { value, multiline, placeholder, onSave, onCancel }) {
   el.classList.add("ed");
   // A hint the element already carries (the rating pill's rank) stays, ahead of this one.
   const own = el.dataset.hint || "";
-  el.title = (own ? own + " · " : "") + "Double-click to edit";
+  el.title = (own ? own + " · " : "") + L("Double-click to edit");
   // Assignment, not addEventListener: card elements are rebuilt on every
   // render, but the run title is the page's one persistent h1, and stacking
   // handlers there would leave the oldest closure — with the oldest value —
@@ -1233,18 +1831,18 @@ function resultsHref(slug, runId, parseId) {
 function parsePill(slug, runId, p, newest) {
   if (p.grouped) {
     return `<a class="pill ok" href="${resultsHref(slug, runId, p.id)}"
-              title="Open results">${esc(p.id)}</a>`;
+              title="${L("Open results")}">${esc(p.id)}</a>`;
   }
-  return `<span class="pill ${newest ? "warn" : "na"}" title="Tagged but not grouped yet">${
-    esc(p.id)} &middot; not grouped</span>`;
+  return `<span class="pill ${newest ? "warn" : "na"}" title="${L("Tagged but not grouped yet")}">${
+    esc(p.id)} &middot; ${L("not grouped")}</span>`;
 }
 
 /* ---------- groups view ---------- */
 async function renderGroups() {
   showView("groups");
   setHeader({
-    eyebrow: "Amazon competitor research · feature extraction",
-    title: "What customers<br>actually care about.",
+    eyebrow: L("Amazon competitor research · feature extraction"),
+    title: L("What customers<br>actually care about."),
     back: false
   });
 
@@ -1255,14 +1853,14 @@ async function renderGroups() {
 
   $("groupcount").textContent = groups.length
     ? plural(groups.length, "group", "groups")
-    : "None yet";
+    : L("None yet");
   $("groups-blank").hidden = groups.length > 0;
   $("groups-list").hidden = groups.length === 0;
   if (!groups.length) return;
 
   $("grouptbl").innerHTML =
     `<thead><tr>
-       <th class="l">Group</th><th>Runs</th><th class="l">Last run</th><th class="l">Created</th>
+       <th class="l">${L("Group")}</th><th>${L("Runs")}</th><th class="l">${L("Last run")}</th><th class="l">${L("Created")}</th>
        <th class="act"></th>
      </tr></thead><tbody>` +
     groups.map(g => `
@@ -1271,9 +1869,9 @@ async function renderGroups() {
         <td class="l nm"><b>${esc(g.name)}</b><span class="sub">${esc(g.slug)}</span></td>
         <td>${g.run_count || 0}</td>
         <td class="l">${g.last_run ? `<span class="pill ok">${esc(g.last_run)}</span>`
-                                   : `<span class="pill na">never</span>`}</td>
+                                   : `<span class="pill na">${L("never")}</span>`}</td>
         <td class="l">${esc(fmtDate(g.created_at))}</td>
-        <td class="act"><button class="x" title="Delete this group">&times;</button></td>
+        <td class="act"><button class="x" title="${L("Delete this group")}">&times;</button></td>
       </tr>`).join("") + `</tbody>`;
 
   $("grouptbl").querySelectorAll("tr.r").forEach(tr => {
@@ -1282,12 +1880,11 @@ async function renderGroups() {
       event.stopPropagation();   // the whole row is a link to the group
       const runs = Number(tr.dataset.runs);
       const ok = await confirmModal({
-        title: `Delete "${tr.dataset.name}"?`,
-        body: `<p class="sd">This moves the group and ${
-          runs ? plural(runs, "run", "runs") : "its (empty) folder"
-        } to <code>data/_trash/</code>. Nothing is erased &mdash; you can drag the folder back
-        in your file browser if you change your mind.</p>`,
-        confirmLabel: "Delete group",
+        title: L('Delete "{name}"?', { name: tr.dataset.name }),
+        body: `<p class="sd">${L("This moves the group and {what} to <code>data/_trash/</code>. " +
+          "Nothing is erased &mdash; you can drag the folder back in your file browser if you change your mind.",
+          { what: runs ? plural(runs, "run", "runs") : L("its (empty) folder") })}</p>`,
+        confirmLabel: L("Delete group"),
       });
       if (!ok) return;
       try {
@@ -1309,16 +1906,16 @@ async function renderGroup(slug) {
   try {
     group = (await api("/api/groups/" + encodeURIComponent(slug))).group;
   } catch (e) {
-    setHeader({ eyebrow: "Competitor group", title: "Not found", back: true });
+    setHeader({ eyebrow: L("Competitor group"), title: L("Not found"), back: true });
     showError(e.message);
     return;
   }
 
-  setHeader({ eyebrow: "Competitor group", title: esc(group.name), back: true });
+  setHeader({ eyebrow: L("Competitor group"), title: esc(group.name), back: true });
   $("g-slug").textContent = "data/" + group.slug;
 
   const runs = group.runs || [];
-  $("runnote").textContent = runs.length ? plural(runs.length, "run", "runs") : "none yet";
+  $("runnote").textContent = runs.length ? plural(runs.length, "run", "runs") : L("none yet");
   $("compact-bar").hidden = runs.length === 0;
   $("compact").onclick = () => startCompact(slug);
 
@@ -1334,23 +1931,23 @@ async function renderGroup(slug) {
   if (runs.length) {
     $("runs-wrap").innerHTML =
       `<div class="tscroll"><table>
-        <thead><tr><th class="l">Run</th><th class="l">Created</th><th>ASINs</th><th>Reviews</th>
-          <th class="l">Parses</th><th class="act"></th></tr></thead>
+        <thead><tr><th class="l">${L("Run")}</th><th class="l">${L("Created")}</th><th>${L("ASINs")}</th><th>${L("Reviews")}</th>
+          <th class="l">${L("Parses")}</th><th class="act"></th></tr></thead>
         <tbody>` + runs.map(r => `
           <tr class="r" data-run="${esc(r.run_id)}"
               data-asins="${r.asins_ok != null ? esc(r.asins_ok) : "?"}"
               data-parses="${(r.parses || []).length}">
             <td class="l nm"><b>${esc(r.label || r.run_id)}</b>${r.label
                 ? `<span class="sub">${esc(r.run_id)}</span>` : ""}${r.compacted_from
-                ? `<span class="sub">compacted from ${plural(r.compacted_from.length, "run", "runs")}</span>`
+                ? `<span class="sub">${L("compacted from {runs}", { runs: plural(r.compacted_from.length, "run", "runs") })}</span>`
                 : ""}</td>
             <td class="l">${esc(fmtDateTime(runCreated(r)))}</td>
             <td>${r.asins_ok != null ? esc(r.asins_ok + " / " + r.asins_total) : "—"}</td>
             <td>${r.reviews_total != null ? esc(r.reviews_total) : "—"}</td>
             <td class="l">${r.parses && r.parses.length
                 ? r.parses.map((p, i) => parsePill(slug, r.run_id, p, i === 0)).join(" ")
-                : `<span class="pill na">not parsed</span>`}</td>
-            <td class="act"><button class="x" title="Delete this run">&times;</button></td>
+                : `<span class="pill na">${L("not parsed")}</span>`}</td>
+            <td class="act"><button class="x" title="${L("Delete this run")}">&times;</button></td>
           </tr>`).join("") + `</tbody></table></div>`;
 
     $("runs-wrap").querySelectorAll("tr.r").forEach(tr => {
@@ -1365,9 +1962,9 @@ async function renderGroup(slug) {
     });
   } else {
     $("runs-wrap").innerHTML =
-      `<div class="blank"><h3>No runs yet</h3>
-        <p>Each time you press <b>Extract</b>, a timestamped run is saved here with the raw
-           Rainforest payloads, so nothing you pull is ever overwritten.</p></div>`;
+      `<div class="blank"><h3>${L("No runs yet")}</h3>
+        <p>${L("Each time you press <b>Extract</b>, a timestamped run is saved here with the raw " +
+               "Rainforest payloads, so nothing you pull is ever overwritten.")}</p></div>`;
   }
 }
 
@@ -1391,13 +1988,15 @@ function setPastePanel(open) {
 async function deleteRun(slug, data) {
   const parses = Number(data.parses);
   const ok = await confirmModal({
-    title: `Delete run ${data.run}?`,
-    body: `<p class="sd">This moves the run &mdash; its ${data.asins} fetched
-      ${data.asins === "1" ? "listing" : "listings"}, the raw Rainforest payloads${
-        parses ? `, and ${plural(parses, "parse", "parses")}` : ""
-      } &mdash; to <code>data/${esc(slug)}/_trash/</code>. Nothing is erased, so you can drag
-      the folder back in your file browser.</p>`,
-    confirmLabel: "Delete run",
+    title: L("Delete run {run}?", { run: data.run }),
+    body: `<p class="sd">${L(parses
+      ? "This moves the run &mdash; its {n} fetched {listings}, the raw Rainforest payloads, and {parses} " +
+        "&mdash; to <code>data/{slug}/_trash/</code>. Nothing is erased, so you can drag the folder back in your file browser."
+      : "This moves the run &mdash; its {n} fetched {listings}, the raw Rainforest payloads " +
+        "&mdash; to <code>data/{slug}/_trash/</code>. Nothing is erased, so you can drag the folder back in your file browser.",
+      { n: esc(data.asins), listings: data.asins === "1" ? "listing" : "listings",
+        parses: plural(parses, "parse", "parses"), slug: esc(slug) })}</p>`,
+    confirmLabel: L("Delete run"),
   });
   if (!ok) return;
 
@@ -1416,27 +2015,26 @@ function compactionPlan(p) {
     `<div class="ln ${tone || ""}"><b>${esc(n)}</b><span>${text}</span></div>`;
 
   let html = `<div class="plan">` +
-    line(p.kept_count, `unique ${p.kept_count === 1 ? "ASIN" : "ASINs"} kept`, "") +
-    line(p.reviews_total, `reviews in total` +
-      (p.reviews_gained ? ` <span class="d">&mdash; ${p.reviews_gained} merged back in from
-        older runs</span>` : "")) +
+    line(p.kept_count, L(p.kept_count === 1 ? "unique ASIN kept" : "unique ASINs kept"), "") +
+    line(p.reviews_total, L("reviews in total") +
+      (p.reviews_gained ? ` <span class="d">&mdash; ${
+        L("{n} merged back in from older runs", { n: p.reviews_gained })}</span>` : "")) +
     (p.duplicates
-      ? line(p.duplicates, `duplicate ${p.duplicates === 1 ? "ASIN" : "ASINs"} resolved
-          <span class="d">&mdash; kept the copy with both bullets and reviews, then the most
-          recent</span>`)
+      ? line(p.duplicates, `${L(p.duplicates === 1 ? "duplicate ASIN resolved" : "duplicate ASINs resolved")}
+          <span class="d">&mdash; ${L("kept the copy with both bullets and reviews, then the most recent")}</span>`)
       : "") +
     (p.dropped_asins.length
-      ? line(p.dropped_asins.length, `dropped <span class="d">&mdash; no bullets and no reviews
-          in any run</span>`, "warn")
+      ? line(p.dropped_asins.length, `${L("dropped")} <span class="d">&mdash; ${
+          L("no bullets and no reviews in any run")}</span>`, "warn")
       : "") +
-    line(p.runs, `${p.runs === 1 ? "run moves" : "runs move"} to <code>_trash/</code>`, "bad");
+    line(p.runs, L(p.runs === 1 ? "run moves to <code>_trash/</code>" : "runs move to <code>_trash/</code>"), "bad");
 
   if (p.dropped_asins.length) {
-    html += `<div class="asins">Dropping ${esc(p.dropped_asins.join(", "))}</div>`;
+    html += `<div class="asins">${L("Dropping {asins}", { asins: esc(p.dropped_asins.join(", ")) })}</div>`;
   }
   if (p.parses.length) {
-    html += `<div class="asins">${plural(p.parses.length, "parse", "parses")} won't carry over
-      &mdash; they refer to the old runs, which keep them in <code>_trash/</code>.</div>`;
+    html += `<div class="asins">${L("{parses} won't carry over &mdash; they refer to the old runs, " +
+      "which keep them in <code>_trash/</code>.", { parses: plural(p.parses.length, "parse", "parses") })}</div>`;
   }
   return html + `</div>`;
 }
@@ -1455,10 +2053,10 @@ async function startCompact(slug) {
   }
 
   const ok = await confirmModal({
-    title: `Compact ${plural(preview.runs, "run", "runs")} into one`,
+    title: L("Compact {runs} into one", { runs: plural(preview.runs, "run", "runs") }),
     body: compactionPlan(preview) +
-      `<p class="sd">A new run is written first; the originals only move afterwards.</p>`,
-    confirmLabel: "Compact",
+      `<p class="sd">${L("A new run is written first; the originals only move afterwards.")}</p>`,
+    confirmLabel: L("Compact"),
   });
   if (!ok) return;
 
@@ -1468,6 +2066,7 @@ async function startCompact(slug) {
                         { method: "POST" })).result;
   } catch (e) { showError(e.message); return; }
 
+  freshRun = `${slug}/${result.run_id}`;
   location.hash = `#/g/${encodeURIComponent(slug)}/r/${encodeURIComponent(result.run_id)}`;
 }
 
@@ -1490,10 +2089,10 @@ async function runPreview() {
   if (!text.trim()) {
     $("g-sum").hidden = true;
     $("badlines").hidden = true;
-    $("urlhint").textContent = "Nothing pasted yet.";
+    $("urlhint").textContent = L("Nothing pasted yet.");
     $("pastenote").textContent = "";
     $("refetchhint").textContent =
-      "Skips anything this group already holds with bullets and reviews.";
+      L("Skips anything this group already holds with bullets and reviews.");
     $("extract").disabled = true;
     return;
   }
@@ -1514,28 +2113,28 @@ async function runPreview() {
   $("g-sum").innerHTML =
     stat("Lines", r.line_count) +
     stat("ASINs found", found, null, found ? "good" : "bad") +
-    stat("Already have", held, held ? "won't be fetched" : null, held ? "good" : "") +
-    stat("Will fetch", willFetch, willFetch ? "costs credits" : "no credits",
+    stat("Already have", held, held ? L("won't be fetched") : null, held ? "good" : "") +
+    stat("Will fetch", willFetch, L(willFetch ? "costs credits" : "no credits"),
          willFetch ? "warn" : "good") +
-    stat("Duplicates", r.duplicates.length, r.duplicates.length ? "folded together" : null,
+    stat("Duplicates", r.duplicates.length, r.duplicates.length ? L("folded together") : null,
          r.duplicates.length ? "warn" : "") +
     stat("Unreadable", r.unparsed.length, null, r.unparsed.length ? "bad" : "");
 
   $("urlhint").textContent = !found
-    ? "No ASINs found in what's pasted."
+    ? L("No ASINs found in what's pasted.")
     : held
-      ? `Ready to extract ${found} — fetching ${willFetch}, ` +
-        `${held} already complete in this group.`
-      : `Ready to extract ${plural(found, "ASIN", "ASINs")}: ` +
+      ? L("Ready to extract {found} — fetching {fetch}, {held} already complete in this group.",
+          { found, fetch: willFetch, held })
+      : L("Ready to extract {asins}: ", { asins: plural(found, "ASIN", "ASINs") }) +
         r.items.slice(0, 6).map(i => i.asin).join(", ") +
-        (found > 6 ? `, +${found - 6} more` : "");
+        (found > 6 ? L(", +{n} more", { n: found - 6 }) : "");
 
   $("refetchhint").textContent = r.refetch
-    ? `Fetching all ${plural(found, "ASIN", "ASINs")}, including any already here.`
+    ? L("Fetching all {asins}, including any already here.", { asins: plural(found, "ASIN", "ASINs") })
     : held
-      ? `${plural(held, "ASIN", "ASINs")} would be skipped: ` + r.held.slice(0, 4).join(", ") +
-        (held > 4 ? `, +${held - 4} more` : "")
-      : "Nothing pasted is already here — everything will be fetched.";
+      ? L("{asins} would be skipped: ", { asins: plural(held, "ASIN", "ASINs") }) + r.held.slice(0, 4).join(", ") +
+        (held > 4 ? L(", +{n} more", { n: held - 4 }) : "")
+      : L("Nothing pasted is already here — everything will be fetched.");
 
   $("badlines").hidden = r.unparsed.length === 0;
   $("badlist").innerHTML = r.unparsed.map(l => `<li>${esc(l)}</li>`).join("");
@@ -1543,10 +2142,10 @@ async function runPreview() {
   $("pastenote").textContent = found ? plural(found, "ASIN", "ASINs") : "";
   $("extract").disabled = found === 0 || extracting;
   $("extract").title = !found
-    ? "Paste at least one Amazon URL first"
+    ? L("Paste at least one Amazon URL first")
     : willFetch
-      ? `Fetch ${plural(willFetch, "listing", "listings")} from Rainforest`
-      : "Everything pasted is already here — no credits will be spent";
+      ? L("Fetch {listings} from Rainforest", { listings: plural(willFetch, "listing", "listings") })
+      : L("Everything pasted is already here — no credits will be spent");
 }
 
 /* ---------- extraction ---------- */
@@ -1587,9 +2186,9 @@ async function startExtract() {
   }
 
   setProgress(0, job.fetch_count
-    ? `Starting — ${plural(job.fetch_count, "listing", "listings")} to fetch` +
-      (job.held_count ? `, ${job.held_count} already here` : "")
-    : `Collecting ${plural(job.asin_count, "listing", "listings")} you already have`);
+    ? L("Starting — {listings} to fetch", { listings: plural(job.fetch_count, "listing", "listings") }) +
+      (job.held_count ? L(", {n} already here", { n: job.held_count }) : "")
+    : L("Collecting {listings} you already have", { listings: plural(job.asin_count, "listing", "listings") }));
   pollJob(job.job_id, slug, job.run_id);
 }
 
@@ -1615,16 +2214,17 @@ async function pollJob(jobId, slug, runId) {
   $("urls").disabled = false;
 
   if (snap.state === "error") {
-    $("g-err").textContent = snap.error || "The extraction failed.";
+    $("g-err").textContent = snap.error || L("The extraction failed.");
     $("g-err").hidden = false;
     clearProgress();
     refreshPreview();
     return;
   }
 
-  setProgress(100, "Done");
+  setProgress(100, L("Done"));
   setTimeout(() => {
     clearProgress();
+    freshRun = `${slug}/${runId}`;
     location.hash = `#/g/${encodeURIComponent(slug)}/r/${encodeURIComponent(runId)}`;
   }, 400);
 }
@@ -1637,8 +2237,15 @@ async function pollJob(jobId, slug, runId) {
 let runState = null;
 let removedOpen = false;
 
+/* The run whose fetch has just finished ("slug/runId"), set by the job that
+   finished it: a new run, a compaction, Add listings, Fetch reviews. The run page
+   shows the fetch's notes and per-item failures once, for that run, and then
+   never again: any later visit or reload shows the page without them. They stay
+   in run_log.json. */
+let freshRun = null;
+
 function stars(n) {
-  if (n == null || n === "") return "no rating";
+  if (n == null || n === "") return L("no rating");
   const v = Math.round(Number(n) || 0);
   return "★".repeat(v) + "☆".repeat(Math.max(0, 5 - v));
 }
@@ -1660,58 +2267,59 @@ function productCard(p) {
   const edits = editedFields(p);
 
   const thumb = p.main_image
-    ? `<img class="thumb zoomable" src="${esc(p.main_image)}" alt="" loading="lazy" title="View images"
-         onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'thumb none',textContent:'no image'}))">`
-    : `<div class="thumb none">no image</div>`;
+    ? `<img class="thumb zoomable" src="${esc(p.main_image)}" alt="" loading="lazy" title="${L("View images")}"
+         onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'thumb none',textContent:'${L("no image")}'}))">`
+    : `<div class="thumb none">${L("no image")}</div>`;
 
   const facts = [];
   // The order is by a rating adjusted for the number of ratings (sortProducts); say so on hover.
-  const ranked = p._score == null ? "" : ` data-hint="Ranked by ${p._score.toFixed(2)} (rating adjusted for ${
-    plural(+p.ratings_total || 0, "rating", "ratings")})"`;
+  const ranked = p._score == null ? "" : ` data-hint="${L("Ranked by {score} (rating adjusted for {ratings})",
+    { score: p._score.toFixed(2), ratings: plural(+p.ratings_total || 0, "rating", "ratings") })}"`;
   facts.push(`<span class="pill ${p.rating ? "ok" : "na"}${wasEdited(p, "rating")}" data-f="rating"${ranked}>` +
              `${esc(p.rating || "—")}&#9733; &middot; ${esc((p.ratings_total || 0).toLocaleString())}</span>`);
   facts.push(bullets.length ? `<span class="pill ok">${plural(bullets.length, "bullet", "bullets")}</span>`
-                            : `<span class="pill warn">no bullets</span>`);
+                            : `<span class="pill warn">${L("no bullets")}</span>`);
   facts.push(reviews.length ? `<span class="pill ok">${plural(reviews.length, "review", "reviews")}</span>`
-                            : `<span class="pill warn">no reviews</span>`);
+                            : `<span class="pill warn">${L("no reviews")}</span>`);
   if (p.brand) facts.push(`<span class="pill na">${esc(p.brand)}</span>`);
   if (edits.length) facts.push(`<span class="pill" style="background:var(--cobalt-wash);color:var(--cobalt)"
-    title="Edited: ${esc(edits.join(", "))}">edited</span>`);
+    title="${L("Edited: {fields}", { fields: esc(edits.join(", ")) })}">${L("edited")}</span>`);
 
   // Added since the results were made: said quietly, where the listing is.
   const pend = ((runState.pending || {}).by_asin || {})[p.asin];
   if (pend && pend.listing) {
-    facts.push(`<span class="pill na behind" title="Added after the results were made. Parse again to include it.">not in results</span>`);
+    facts.push(`<span class="pill na behind" title="${L("Added after the results were made. Parse again to include it.")}">${
+      L("not in results")}</span>`);
   } else if (pend && pend.reviews) {
-    facts.push(`<span class="pill na behind" title="Added after the results were made. Parse again to include them.">+${
-      plural(pend.reviews, "review", "reviews")} not in results</span>`);
+    facts.push(`<span class="pill na behind" title="${L("Added after the results were made. Parse again to include them.")}">${
+      L("+{reviews} not in results", { reviews: plural(pend.reviews, "review", "reviews") })}</span>`);
   }
 
   const warnings = (p.warnings || []).map(w =>
-    `<div class="note-line"><span class="ic">Note</span><span>${esc(w)}</span></div>`).join("");
+    `<div class="note-line"><span class="ic">${L("Note")}</span><span>${esc(w)}</span></div>`).join("");
 
   return `
   <div class="pcard ${dead ? "dead" : ""}" data-asin="${esc(p.asin)}">
     <div class="top">
-      <button class="x rm" title="Remove this ASIN from the run">&times;</button>
+      <button class="x rm" title="${L("Remove this ASIN from the run")}">&times;</button>
       ${thumb}
       <div class="meta">
-        <p class="ttl${wasEdited(p, "title")}" data-f="title">${esc(p.title || "(no title returned)")}</p>
+        <p class="ttl${wasEdited(p, "title")}" data-f="title">${esc(p.title || L("(no title returned)"))}</p>
         <div class="ids">
           ${link ? `<a href="${esc(link)}" target="_blank" rel="noopener">${esc(p.asin)}</a>` : esc(p.asin)}
           &middot; <span class="price${wasEdited(p, "price")}" data-f="price">${
-            esc((p.price && p.price.raw) || "no price")}</span>
+            esc((p.price && p.price.raw) || L("no price"))}</span>
         </div>
         <div class="facts">${facts.join("")}</div>
       </div>
     </div>
     ${warnings ? `<div style="padding:0 16px 12px">${warnings}</div>` : ""}
     ${edits.length ? `<div style="padding:0 16px 12px">
-      <button class="lnk restore">Restore original</button></div>` : ""}
+      <button class="lnk restore">${L("Restore original")}</button></div>` : ""}
     <div class="foot">
-      <button class="tabbtn" data-tab="bullets">Bullets ${bullets.length}</button>
-      <button class="tabbtn" data-tab="reviews">Reviews ${reviews.length}</button>
-      <button class="tabbtn" data-tab="specs" ${specs.length ? "" : "disabled"}>Details ${specs.length}</button>
+      <button class="tabbtn" data-tab="bullets">${L("Bullets")} ${bullets.length}</button>
+      <button class="tabbtn" data-tab="reviews">${L("Reviews")} ${reviews.length}</button>
+      <button class="tabbtn" data-tab="specs" ${specs.length ? "" : "disabled"}>${L("Details")} ${specs.length}</button>
     </div>
     <div class="pbody" hidden></div>
   </div>`;
@@ -1720,36 +2328,36 @@ function productCard(p) {
 function tabHtml(p, tab) {
   if (tab === "bullets") {
     const bullets = p.feature_bullets || [];
-    return `<h4>Listing body &mdash; title + ${plural(bullets.length, "bullet", "bullets")}</h4>
-      <p class="ehint">Double-click a bullet to edit it. Ctrl+Enter saves, Escape cancels.</p>
+    return `<h4>${L("Listing body &mdash; title + {bullets}", { bullets: plural(bullets.length, "bullet", "bullets") })}</h4>
+      <p class="ehint">${L("Double-click a bullet to edit it. Ctrl+Enter saves, Escape cancels.")}</p>
       <ul>${bullets.map((b, i) => `<li data-i="${i}">${esc(b)}
-        <button class="x" title="Delete this bullet">&times;</button></li>`).join("")}</ul>
-      <button class="addrow" data-add="bullet">+ add bullet</button>`;
+        <button class="x" title="${L("Delete this bullet")}">&times;</button></li>`).join("")}</ul>
+      <button class="addrow" data-add="bullet">${L("+ add bullet")}</button>`;
   }
 
   if (tab === "reviews") {
     const reviews = p.reviews || [];
     return `<h4>${plural(reviews.length, "review", "reviews")}</h4>` +
-      (reviews.length ? `<p class="ehint">Double-click a title, body or rating to edit it.</p>` : "") +
+      (reviews.length ? `<p class="ehint">${L("Double-click a title, body or rating to edit it.")}</p>` : "") +
       reviews.map((r, i) => `
         <div class="rv" data-i="${i}">
-          <button class="x" title="Delete this review">&times;</button>
+          <button class="x" title="${L("Delete this review")}">&times;</button>
           <div class="rh">
             <span class="stars" data-f="rating">${esc(stars(r.rating))}</span>
-            <span class="rt" data-f="title">${esc(r.title || "(untitled)")}</span>
-            <span class="rd">${esc(r.date || "")}${r.verified_purchase ? " &middot; verified" : ""}${
-              r.source === "manual" ? " &middot; pasted" : ""}</span>
+            <span class="rt" data-f="title">${esc(r.title || L("(untitled)"))}</span>
+            <span class="rd">${esc(r.date || "")}${r.verified_purchase ? ` &middot; ${L("verified")}` : ""}${
+              r.source === "manual" ? ` &middot; ${L("pasted")}` : ""}</span>
           </div>
           <div class="rb" data-f="body">${esc(r.body)}</div>
         </div>`).join("") +
-      `<button class="addrow" data-add="reviews">+ add reviews</button>
+      `<button class="addrow" data-add="reviews">${L("+ add reviews")}</button>
        <div class="paste" hidden>
          <textarea spellcheck="false"
-           placeholder="Paste reviews straight from Amazon &mdash; select them on the product page or the reviews page and copy.&#10;&#10;Star ratings, titles, dates and Verified Purchase are read automatically; names and Helpful / Report lines are dropped.&#10;&#10;Plain text works too: one blank line between each review."></textarea>
+           placeholder="${L("Paste reviews straight from Amazon &mdash; select them on the product page or the reviews page and copy.&#10;&#10;Star ratings, titles, dates and Verified Purchase are read automatically; names and Helpful / Report lines are dropped.&#10;&#10;Plain text works too: one blank line between each review.")}"></textarea>
          <div class="pb">
-           <button class="btn" data-do="save">Add reviews</button>
-           <button class="btn ghost" data-do="cancel">Cancel</button>
-           <span class="hint">Copied from Amazon, or plain text with a blank line between each review.</span>
+           <button class="btn" data-do="save">${L("Add reviews")}</button>
+           <button class="btn ghost" data-do="cancel">${L("Cancel")}</button>
+           <span class="hint">${L("Copied from Amazon, or plain text with a blank line between each review.")}</span>
          </div>
        </div>`;
   }
@@ -1759,8 +2367,8 @@ function tabHtml(p, tab) {
   const extra = [
     ["Material", p.material], ["Colour", p.color], ["Model", p.model_number],
     ["Category", p.categories_flat], ["Best sellers rank", p.bestsellers_rank_flat],
-  ].filter(([, v]) => v).map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join("");
-  return `<h4>Product details</h4><table class="specs">${extra}${rows}</table>`;
+  ].filter(([, v]) => v).map(([k, v]) => `<tr><td>${esc(L(k))}</td><td>${esc(v)}</td></tr>`).join("");
+  return `<h4>${L("Product details")}</h4><table class="specs">${extra}${rows}</table>`;
 }
 
 /* ---------- edits ---------- */
@@ -1809,8 +2417,8 @@ function sortProducts() {
 function productFacts(p) {
   const price = typeof p.price === "string" ? p.price : (p.price && p.price.raw) || "";
   return [
-    p.rating != null && p.rating !== "" ? `${esc(p.rating)}&#9733;` : "no rating",
-    p.ratings_total ? `${esc(Number(p.ratings_total).toLocaleString())} ratings` : "",
+    p.rating != null && p.rating !== "" ? `${esc(p.rating)}&#9733;` : L("no rating"),
+    p.ratings_total ? L("{n} ratings", { n: esc(Number(p.ratings_total).toLocaleString()) }) : "",
     price ? esc(price) : "",
   ].filter(Boolean);
 }
@@ -1872,12 +2480,12 @@ function addReviews(asin, text) {
 /** What a paste did, in the order it matters: what landed, then what didn't. */
 function pasteNote(r) {
   const parts = [];
-  if (r.added) parts.push(`${plural(r.added, "review", "reviews")} added`);
+  if (r.added) parts.push(L("{reviews} added", { reviews: plural(r.added, "review", "reviews") }));
   // Extensions are duplicates too — count them once, under the thing they did.
   const omitted = (r.duplicates || 0) - (r.extended || 0);
-  if (omitted > 0) parts.push(`${plural(omitted, "duplicate", "duplicates")} omitted`);
+  if (omitted > 0) parts.push(L("{duplicates} omitted", { duplicates: plural(omitted, "duplicate", "duplicates") }));
   if (r.extended) {
-    parts.push(`${plural(r.extended, "review", "reviews")} replaced with the full text`);
+    parts.push(L("{reviews} replaced with the full text", { reviews: plural(r.extended, "review", "reviews") }));
   }
   return parts.join(" · ");
 }
@@ -1889,7 +2497,7 @@ function wireCard(card) {
   const panel = card.querySelector(".pbody");
 
   editable(card.querySelector(".ttl"), {
-    value: p.title || "", multiline: true, placeholder: "Product title",
+    value: p.title || "", multiline: true, placeholder: L("Product title"),
     onSave: v => saveField(asin, { title: v.trim() || null }),
     onCancel: () => renderRunBody(),
   });
@@ -1988,7 +2596,7 @@ function wireReviews(card, p, panel) {
     });
 
     editable(row.querySelector('[data-f="title"]'), {
-      value: current.title || "", placeholder: "Review title",
+      value: current.title || "", placeholder: L("Review title"),
       onSave: v => save({ title: v.trim() }),
       onCancel: () => renderRunBody(),
     });
@@ -2049,19 +2657,19 @@ function renderReviewBar(say) {
   const old = fetched.filter(p => !p.scraped);
   if ((!missing.length && !old.length) || !runState.site) { bar.innerHTML = ""; return; }
   const photos = !missing.length;
-  const verb = photos ? "Fetch reviews & photos" : "Fetch reviews";
+  const verb = L(photos ? "Fetch reviews & photos" : "Fetch reviews");
   const stopped = ((runState.log || {}).reviews || {}).stopped;
   const text = say || (photos
-    ? `${plural(old.length, "listing was", "listings were")} fetched before customer photos ` +
-      `were collected. Read their reviews and photos from ${runState.site} — no Rainforest ` +
-      `credits are used. Reviews already here gain their photos; new ones are added.`
-    : `${plural(missing.length, "listing has", "listings have")} no reviews. ` +
-      `Fetch them from ${runState.site} — no Rainforest credits are used.`);
+    ? L("{listings} fetched before customer photos were collected. Read their reviews and photos " +
+        "from {site} — no Rainforest credits are used. Reviews already here gain their photos; new ones are added.",
+        { listings: plural(old.length, "listing was", "listings were"), site: runState.site })
+    : L("{listings} no reviews. Fetch them from {site} — no Rainforest credits are used.",
+        { listings: plural(missing.length, "listing has", "listings have"), site: runState.site }));
   bar.innerHTML = `
     <div class="note-line${stopped === "signin" ? "" : " info"}">
-      <span class="ic">${photos ? "Photos" : "Reviews"}</span><span>${esc(text)}</span>
+      <span class="ic">${L(photos ? "Photos" : "Reviews")}</span><span>${esc(text)}</span>
       <span class="acts">
-        <button class="btn ghost" id="r-signin">Sign in to Amazon</button>
+        <button class="btn ghost" id="r-signin">${L("Sign in to Amazon")}</button>
         <button class="btn${photos ? " ghost" : ""}" id="r-fetchrv">${esc(verb)}</button>
       </span>
     </div>`;
@@ -2070,7 +2678,7 @@ function renderReviewBar(say) {
   $("r-signin").onclick = () => {
     const site = runState.site;
     amazonSignIn(site, t => renderReviewBar(t),
-      () => renderReviewBar(`Signed in to ${site}. Press ${verb}.`));
+      () => renderReviewBar(L("Signed in to {site}. Press {verb}.", { site, verb })));
   };
 }
 
@@ -2082,10 +2690,11 @@ function renderBehind() {
   if (pend && pend.reviews) bits.push(plural(pend.reviews, "review", "reviews"));
   $("r-behind").innerHTML = bits.length ? `
     <div class="note-line info">
-      <span class="ic">Results</span>
-      <span>${esc(bits.join(" and "))} ${pend.listings + pend.reviews === 1 ? "isn't" : "aren't"}
-        in the results yet. Press <b>Parse again</b> to include ${
-        pend.listings + pend.reviews === 1 ? "it" : "them"}.</span>
+      <span class="ic">${L("Results")}</span>
+      <span>${L(pend.listings + pend.reviews === 1
+        ? "{what} isn't in the results yet. Press <b>Parse again</b> to include it."
+        : "{what} aren't in the results yet. Press <b>Parse again</b> to include them.",
+        { what: esc(bits.join(L(" and "))) })}</span>
     </div>` : "";
 }
 
@@ -2101,18 +2710,18 @@ async function startAddListings() {
   $("r-err").hidden = true;
 
   const asked = confirmModal({
-    title: "Add listings to this run",
-    confirmLabel: "Add listings",
-    body: `<p class="sd">Paste Amazon URLs or ASINs, one per line. Listings are fetched from
-             Rainforest and their reviews read from <b>${esc(runState.site || "Amazon")}</b>.${
+    title: L("Add listings to this run"),
+    confirmLabel: L("Add listings"),
+    body: `<p class="sd">${L("Paste Amazon URLs or ASINs, one per line. Listings are fetched from " +
+             "Rainforest and their reviews read from <b>{site}</b>.", { site: esc(runState.site || "Amazon") })}${
              (runState.parses || []).some(p => p.grouped)
-               ? " The results you have stay as they are until you parse again." : ""}</p>
+               ? L(" The results you have stay as they are until you parse again.") : ""}</p>
            <textarea id="addtext" rows="6" spellcheck="false"
              style="width:100%;font-family:var(--mono);font-size:12px;padding:8px;
                     border:1px solid var(--rule);border-radius:3px;resize:vertical"
              placeholder="https://www.amazon.com/dp/B0XXXXXXXX"></textarea>
            <div class="plan" id="addprev" style="margin-top:10px">
-             <div class="asins">Nothing pasted yet.</div></div>`,
+             <div class="asins">${L("Nothing pasted yet.")}</div></div>`,
   });
   $("cyes").disabled = true;
   const box = $("addtext");
@@ -2121,7 +2730,7 @@ async function startAddListings() {
     clearTimeout(addTimer);
     addTimer = setTimeout(async () => {
       if (!box.value.trim()) {
-        $("addprev").innerHTML = `<div class="asins">Nothing pasted yet.</div>`;
+        $("addprev").innerHTML = `<div class="asins">${L("Nothing pasted yet.")}</div>`;
         $("cyes").disabled = true;
         return;
       }
@@ -2134,17 +2743,17 @@ async function startAddListings() {
         `<div class="ln ${tone || ""}"><b>${esc(n)}</b><span>${text}</span></div>`;
       const fresh = (r.new || []).length, fetch = (r.to_fetch || []).length;
       $("addprev").innerHTML =
-        line(fresh, `new to this run${fresh ? "" : ` <span class="d">&mdash; nothing to add</span>`}`,
+        line(fresh, `${L("new to this run")}${fresh ? "" : ` <span class="d">&mdash; ${L("nothing to add")}</span>`}`,
              fresh ? "" : "warn") +
-        (fetch ? line(fetch, `to fetch <span class="d">&mdash; ${
+        (fetch ? line(fetch, `${L("to fetch")} <span class="d">&mdash; ${
           plural(fetch, "Rainforest credit", "Rainforest credits")}</span>`) : "") +
-        ((r.held || []).length ? line(r.held.length, `already complete in this group
-          <span class="d">&mdash; carried across, no credits</span>`) : "") +
-        ((r.in_run || []).length ? line(r.in_run.length, `already in this run
-          <span class="d">&mdash; left as they are</span>`, "warn") : "") +
-        ((r.removed || []).length ? line(r.removed.length, `removed from this run earlier
-          <span class="d">&mdash; restore them from the removed list instead</span>`, "warn") : "") +
-        ((r.unparsed || []).length ? line(r.unparsed.length, "unreadable lines", "warn") : "");
+        ((r.held || []).length ? line(r.held.length, `${L("already complete in this group")}
+          <span class="d">&mdash; ${L("carried across, no credits")}</span>`) : "") +
+        ((r.in_run || []).length ? line(r.in_run.length, `${L("already in this run")}
+          <span class="d">&mdash; ${L("left as they are")}</span>`, "warn") : "") +
+        ((r.removed || []).length ? line(r.removed.length, `${L("removed from this run earlier")}
+          <span class="d">&mdash; ${L("restore them from the removed list instead")}</span>`, "warn") : "") +
+        ((r.unparsed || []).length ? line(r.unparsed.length, L("unreadable lines"), "warn") : "");
       $("cyes").disabled = !fresh;
     }, 250);
   };
@@ -2165,7 +2774,7 @@ async function startAddListings() {
     job = await api(runPath("/add"), { method: "POST", body: JSON.stringify({ text }) });
   } catch (e) { return done(e.message); }
 
-  setParseProgress(0, `Adding ${plural(job.asin_count, "listing", "listings")}…`);
+  setParseProgress(0, L("Adding {listings}…", { listings: plural(job.asin_count, "listing", "listings") }));
   for (;;) {
     await new Promise(r => setTimeout(r, 700));
     let snap;
@@ -2173,11 +2782,14 @@ async function startAddListings() {
     catch (e) { return done(e.message); }
     setParseProgress(snap.pct, snap.label);
     if (snap.state === "running") continue;
-    if (snap.state === "error") return done(snap.error || "Adding the listings failed.");
+    if (snap.state === "error") return done(snap.error || L("Adding the listings failed."));
     break;
   }
   done(null);
-  if (runState.slug === slug && runState.runId === runId) renderRun(slug, runId);
+  if (runState.slug === slug && runState.runId === runId) {
+    freshRun = `${slug}/${runId}`;
+    renderRun(slug, runId);
+  }
 }
 
 async function startFetchReviews(scope = "missing") {
@@ -2199,7 +2811,7 @@ async function startFetchReviews(scope = "missing") {
                     { method: "POST", body: JSON.stringify({ scope }) });
   } catch (e) { return fail(e.message); }
 
-  setParseProgress(0, `Reviews 0/${job.count}`);
+  setParseProgress(0, L("Reviews {done}/{total}", { done: 0, total: job.count }));
   for (;;) {
     await new Promise(r => setTimeout(r, 700));
     let snap;
@@ -2207,13 +2819,16 @@ async function startFetchReviews(scope = "missing") {
     catch (e) { return fail(e.message); }
     setParseProgress(snap.pct, snap.label);
     if (snap.state === "running") continue;
-    if (snap.state === "error") return fail(snap.error || "Fetching reviews failed.");
+    if (snap.state === "error") return fail(snap.error || L("Fetching reviews failed."));
     break;
   }
   fetchingReviews = false;
   $("r-prog").hidden = true;
   // Reload the run: its notes say what happened, and the cards show the reviews.
-  if (runState.slug === slug && runState.runId === runId) renderRun(slug, runId);
+  if (runState.slug === slug && runState.runId === runId) {
+    freshRun = `${slug}/${runId}`;
+    renderRun(slug, runId);
+  }
 }
 
 function renderRunBody() {
@@ -2227,33 +2842,33 @@ function renderRunBody() {
   const edited = s.asins_total !== (log.asins_total ?? s.asins_total) ||
                  s.reviews_total !== (log.reviews_total ?? s.reviews_total) ||
                  s.bullets_total !== (log.bullets_total ?? s.bullets_total);
-  const since = edited ? "after edits" : null;
+  const since = edited ? L("after edits") : null;
 
   $("r-note").textContent = plural(live.length, "listing", "listings");
   $("r-sum").innerHTML =
     stat("ASINs", `${s.asins_ok} / ${s.asins_total}`,
-         since || (s.asins_failed ? `${s.asins_failed} failed` : "all fetched"),
+         since || (s.asins_failed ? L("{n} failed", { n: s.asins_failed }) : L("all fetched")),
          s.asins_failed ? "bad" : "good") +
-    stat("With bullets", `${s.with_bullets_pct}%`, `${s.with_bullets} of ${s.asins_ok} fetched`,
+    stat("With bullets", `${s.with_bullets_pct}%`, L("{n} of {total} fetched", { n: s.with_bullets, total: s.asins_ok }),
          s.with_bullets_pct === 100 ? "good" : "warn") +
-    stat("With reviews", `${s.with_reviews_pct}%`, `${s.with_reviews} of ${s.asins_ok} fetched`,
+    stat("With reviews", `${s.with_reviews_pct}%`, L("{n} of {total} fetched", { n: s.with_reviews, total: s.asins_ok }),
          s.with_reviews_pct === 100 ? "good" : "warn") +
-    stat("Reviews", s.reviews_total, `${s.reviews_avg} avg per ASIN`) +
-    stat("Text bodies", s.bodies_total, "to be tagged") +
+    stat("Reviews", s.reviews_total, L("{n} avg per ASIN", { n: s.reviews_avg })) +
+    stat("Text bodies", s.bodies_total, L("to be tagged")) +
     stat("Credits left", log.credits_remaining ?? "—", "Rainforest") +
     stat("Elapsed", `${log.elapsed_seconds ?? 0}s`, since);
 
   $("r-removed").innerHTML = removed.length ? `
     <div class="strip">
       <div class="sh">
-        <span>${plural(removed.length, "ASIN", "ASINs")} removed from this run</span>
-        <button class="lnk toggle">${removedOpen ? "Hide" : "Show"}</button>
+        <span>${L("{asins} removed from this run", { asins: plural(removed.length, "ASIN", "ASINs") })}</span>
+        <button class="lnk toggle">${L(removedOpen ? "Hide" : "Show")}</button>
       </div>
       <ul ${removedOpen ? "" : "hidden"}>${removed.map(p => `
         <li data-asin="${esc(p.asin)}">
           <span class="a">${esc(p.asin)}</span>
-          <span class="t">${esc(p.title || "(no title returned)")}</span>
-          <button class="lnk">Restore</button>
+          <span class="t">${esc(p.title || L("(no title returned)"))}</span>
+          <button class="lnk">${L("Restore")}</button>
         </li>`).join("")}</ul>
     </div>` : "";
 
@@ -2314,7 +2929,7 @@ function photoThumb(url, px) {
 
 function photoTileHtml(asin, t) {
   return `<button class="cptile" data-asin="${esc(asin)}" data-rid="${esc(t.id)}" data-url="${esc(t.url)}"
-            aria-label="Customer photo${t.rating != null ? `, ${esc(t.rating)} stars` : ""}">
+            aria-label="${L("Customer photo")}${t.rating != null ? L(", {n} stars", { n: esc(t.rating) }) : ""}">
     <img src="${esc(photoThumb(t.url, 320))}" data-url="${esc(t.url)}" alt="" loading="lazy" draggable="false"
          onload="photoChecked(this, true)" onerror="photoChecked(this, false)">${
     t.rating != null ? `<span class="cpstars">${esc(stars(t.rating))}</span>` : ""}</button>`;
@@ -2326,18 +2941,20 @@ function renderRunPhotos() {
   $("r-photos").hidden = !rows.length;
   if (!rows.length) { $("rp-rows").innerHTML = ""; closeAllPhotos(); return; }
   const total = rows.reduce((n, row) => n + row.tiles.length, 0);
-  $("rp-note").textContent = `${plural(total, "photo", "photos")} · ${rows.length} of ${plural(live, "product", "products")}`;
+  $("rp-note").textContent = L("{photos} · {n} of {products}",
+    { photos: plural(total, "photo", "photos"), n: rows.length, products: plural(live, "product", "products") });
   $("rp-rows").innerHTML = rows.map(({ p, reviews, tiles }) => `
     <div class="cprow" data-asin="${esc(p.asin)}">
       <div class="cph">${thumbHtml(p.main_image)}
         <div class="cpt">
           <a href="${esc(p.link || p.source_url || "#")}" target="_blank" rel="noopener"
-             title="Open on Amazon">${esc(p.title || "(no title returned)")}</a>
+             title="${L("Open on Amazon")}">${esc(p.title || L("(no title returned)"))}</a>
           <span class="cpm">${esc(p.asin)} &middot; ${productFacts(p).join(" &middot; ")} &middot; ${
-            plural(tiles.length, "photo", "photos")} from ${plural(reviews.length, "review", "reviews")}</span>
+            L("{photos} from {reviews}", { photos: plural(tiles.length, "photo", "photos"),
+                                           reviews: plural(reviews.length, "review", "reviews") })}</span>
         </div>
         ${tiles.length > PHOTO_PREVIEW
-          ? `<button class="lnk cpall" data-all="${esc(p.asin)}">See all ${tiles.length} &rsaquo;</button>` : ""}
+          ? `<button class="lnk cpall" data-all="${esc(p.asin)}">${L("See all {n}", { n: tiles.length })} &rsaquo;</button>` : ""}
       </div>
       <div class="cptiles">${tiles.slice(0, PHOTO_PREVIEW).map(t => photoTileHtml(p.asin, t)).join("")}</div>
     </div>`).join("");
@@ -2434,18 +3051,18 @@ function fillAllPhotos() {
     <section class="pallsec" data-asin="${esc(row.p.asin)}">
       <div class="pallhd">${thumbHtml(row.p.main_image)}
         <div class="cpt"><a href="${esc(row.p.link || row.p.source_url || "#")}" target="_blank" rel="noopener"
-             title="Open on Amazon">${esc(row.p.title || "(no title returned)")}</a>
+             title="${L("Open on Amazon")}">${esc(row.p.title || L("(no title returned)"))}</a>
           <span class="cpm">${esc(row.p.asin)} &middot; ${productFacts(row.p).join(" &middot; ")} &middot; ${
-            plural(row.tiles.length, "customer photo", "customer photos")} from ${
-            plural(row.reviews.length, "review", "reviews")}${
-            pallState.note ? ` in &ldquo;${esc(pallState.note)}&rdquo;` : ""}</span></div>
+            L("{photos} from {reviews}", { photos: plural(row.tiles.length, "customer photo", "customer photos"),
+                                           reviews: plural(row.reviews.length, "review", "reviews") })}${
+            pallState.note ? L(" in &ldquo;{name}&rdquo;", { name: esc(pallState.note) }) : ""}</span></div>
       </div>
       <div class="pallgrid">${row.tiles.map(t => photoTileHtml(row.p.asin, t)).join("")}</div>
     </section>`).join("");
   box.scrollTop = top;
   $("pallft").hidden = !pallState.paged || rows.length < 2;
   if (!pallState.paged) return;
-  $("pallpos").textContent = `Product ${at + 1} of ${rows.length}`;
+  $("pallpos").textContent = L("Product {n} of {total}", { n: at + 1, total: rows.length });
   $("pallprev").disabled = at === 0;
   $("pallnext").disabled = at === rows.length - 1;
 }
@@ -2528,10 +3145,10 @@ $("r-export").onclick = async () => {
   const btn = $("r-export");
   await Promise.all(Object.keys(notePending).map(k => flushNote(k || null)));
   btn.disabled = true;
-  btn.textContent = "Exporting…";
+  btn.textContent = L("Exporting…");
   try {
     const res = await fetch(runPath("/export.pptx"));
-    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Export failed.");
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || L("Export failed."));
     const a = document.createElement("a");
     a.href = URL.createObjectURL(await res.blob());
     a.download = `${runState.meta.label || runState.runId}.pptx`;
@@ -2541,7 +3158,7 @@ $("r-export").onclick = async () => {
     showError(e.message);
   }
   btn.disabled = false;
-  btn.textContent = "Export";
+  btn.textContent = L("Export");
 };
 
 /* Copy the run's live ASINs, one per line, in card order. */
@@ -2552,12 +3169,12 @@ $("r-copy").onclick = async () => {
   const asins = runState.products.filter(p => !p.deleted).map(p => p.asin);
   try {
     await navigator.clipboard.writeText(asins.join("\n"));
-    btn.textContent = `Copied ${asins.length} ASINs`;
+    btn.textContent = L("Copied {n} ASINs", { n: asins.length });
   } catch (e) {
-    btn.textContent = "Copy failed";
+    btn.textContent = L("Copy failed");
   }
   clearTimeout(btn.resetTimer);
-  btn.resetTimer = setTimeout(() => { btn.textContent = "Copy ASINs"; }, 1600);
+  btn.resetTimer = setTimeout(() => { btn.textContent = L("Copy ASINs"); }, 1600);
 };
 
 async function renderRun(slug, runId) {
@@ -2568,7 +3185,7 @@ async function renderRun(slug, runId) {
   try {
     data = await api(`/api/runs/${encodeURIComponent(slug)}/${encodeURIComponent(runId)}`);
   } catch (e) {
-    setHeader({ eyebrow: "Extraction run", title: "Not found", back: true });
+    setHeader({ eyebrow: L("Extraction run"), title: L("Not found"), back: true });
     showError(e.message);
     return;
   }
@@ -2576,7 +3193,7 @@ async function renderRun(slug, runId) {
   const { group, run, log, stats, meta, parses, media, pending } = data;
   const label = (meta || {}).label || "";
   setHeader({
-    eyebrow: `${group.name} · extraction run`,
+    eyebrow: L("{group} · extraction run", { group: group.name }),
     title: esc(label || runId),
     back: true,
     backHref: `#/g/${encodeURIComponent(slug)}`,
@@ -2611,12 +3228,16 @@ async function renderRun(slug, runId) {
   memo.onblur = () => flushNote(null);
   requestAnimationFrame(() => growNote(memo));
 
+  // What the fetch reported: shown once, on the render that follows the job
+  // (see freshRun), and not on any later one.
+  const justFetched = freshRun === `${slug}/${runId}`;
+  freshRun = null;
   const notes = (log.notes || []).map(n =>
     `<div class="note-line info"><span class="ic">${
-      log.compacted_from ? "Compacted" : "Fetch"}</span><span>${esc(n)}</span></div>`).join("");
+      L(log.compacted_from ? "Compacted" : "Fetch")}</span><span>${esc(n)}</span></div>`).join("");
   const fails = (log.failures || []).map(f =>
     `<div class="note-line"><span class="ic">${esc(f.item)}</span><span>${esc(f.reason)}</span></div>`).join("");
-  $("r-notes").innerHTML = notes + fails;
+  $("r-notes").innerHTML = justFetched ? notes + fails : "";
 
   renderRunBody();
   renderParses();
@@ -2704,23 +3325,23 @@ async function renderParses() {
   const costParts = [["tagging", log.cost_usd], ["clustering", clusterLog.cost_usd],
                      ["themes", themesLog.cost_usd]].filter(([, c]) => c != null);
   const totalCost = costParts.length ? costParts.reduce((n, [, c]) => n + c, 0) : null;
-  const costSplit = costParts.map(([name, c]) => `${name} ${money(c)}`).join(" · ");
+  const costSplit = costParts.map(([name, c]) => `${L(name)} ${money(c)}`).join(" · ");
 
   const pills = list.map((p, i) => parsePill(runState.slug, runState.runId, p, i === 0)).join(" ");
 
   const stats = log.bodies_total ? `
     <div class="sumstrip" style="margin-top:10px">
       ${stat("Tagged", `${log.tagged} / ${log.bodies_total}`,
-             log.failed ? `${log.failed} failed` : "all bodies",
+             log.failed ? L("{n} failed", { n: log.failed }) : L("all bodies"),
              log.failed ? "bad" : "good")}
-      ${stat("Features", log.features_total, "concrete benefits")}
-      ${stat("Complaints", log.complaints_total, "from reviews")}
-      ${stat("Assembly & care", log.assembly_maintenance_total ?? "—", "instructions")}
+      ${stat("Features", log.features_total, L("concrete benefits"))}
+      ${stat("Complaints", log.complaints_total, L("from reviews"))}
+      ${stat("Assembly & care", log.assembly_maintenance_total ?? "—", L("instructions"))}
       ${stat("Search terms", log.search_terms_total, null)}
       ${stat("Usage keywords", log.usage_keywords_total, null)}
-      ${stat("Skipped", log.skipped, `under ${log.min_tag_chars} chars`,
+      ${stat("Skipped", log.skipped, L("under {n} chars", { n: log.min_tag_chars }),
              log.skipped ? "warn" : "")}
-      ${stat("Nothing found", log.empty ?? "—", "tagged but empty")}
+      ${stat("Nothing found", log.empty ?? "—", L("tagged but empty"))}
       ${stat("Cost", totalCost == null ? "—" : `$${totalCost.toFixed(4)}`,
              costParts.length > 1 ? costSplit : `${log.elapsed_seconds}s`)}
     </div>` : "";
@@ -2728,7 +3349,7 @@ async function renderParses() {
   // Step 3's own strip, shown only once a grouping has run. Phase 5 renders the
   // clusters themselves; this is just enough to see that it worked and what it cost.
   const clusters = (clusterLog.lists || []).map(l =>
-    stat(l.title, l.clusters, `from ${l.unique_tags} tags`,
+    stat(l.title, l.clusters, L("from {n} tags", { n: l.unique_tags }),
          l.status === "failed" ? "bad" : "")).join("");
 
   // The theme step's outcome when it ran inside this grouping. An older log has
@@ -2738,34 +3359,34 @@ async function renderParses() {
     const th = clusterLog.themes;
     const count = (th.lists || []).reduce((n, l) => n + (l.themes || 0), 0);
     if (th.status === "failed") {
-      themeStat = stat("Themes", "failed", th.error ? "see the results view" : "one list failed", "bad");
+      themeStat = stat("Themes", L("failed"), L(th.error ? "see the results view" : "one list failed"), "bad");
     } else if (th.status === "skipped") {
-      themeStat = stat("Themes", "—", "auto themes is off");
+      themeStat = stat("Themes", "—", L("auto themes is off"));
     } else if (!count) {
-      themeStat = stat("Themes", "—", "no list long enough");
+      themeStat = stat("Themes", "—", L("no list long enough"));
     } else {
-      themeStat = stat("Themes", count, `across ${plural(th.lists.length, "list", "lists")}`, "good");
+      themeStat = stat("Themes", count, L("across {lists}", { lists: plural(th.lists.length, "list", "lists") }), "good");
     }
   }
 
   const clusterStrip = clusterLog.lists ? `
     <div class="strip" style="margin-top:14px">
       <div class="sh">
-        <span>Clusters &middot; <span class="pill ok">${esc(clusterLog.parse_id || "")}</span></span>
+        <span>${L("Clusters")} &middot; <span class="pill ok">${esc(clusterLog.parse_id || "")}</span></span>
         <span class="hint">${esc(clusterLog.model || "")}${
           clusterLog.reasoning ? ` &middot; ${esc(clusterLog.reasoning)}` : ""}${
-          clusterLog.prompt_sha ? ` &middot; prompt ${esc(clusterLog.prompt_sha)}` : ""}</span>
+          clusterLog.prompt_sha ? ` &middot; ${L("prompt")} ${esc(clusterLog.prompt_sha)}` : ""}</span>
       </div>
     </div>
     <div class="sumstrip" style="margin-top:10px">
       ${clusters}
       ${stat("Repairs", clusterLog.repairs ?? 0,
-             clusterLog.repairs ? "see cluster_log.json" : "every tag placed once",
+             L(clusterLog.repairs ? "see cluster_log.json" : "every tag placed once"),
              clusterLog.repairs ? "warn" : "good")}
       ${themeStat}
       ${stat("Time", about((log.elapsed_seconds || 0) + (clusterLog.elapsed_seconds || 0)),
-             `tagging ${Math.round(log.elapsed_seconds || 0)}s · clustering ${
-               Math.round(clusterLog.elapsed_seconds || 0)}s`)}
+             L("tagging {a}s · clustering {b}s", { a: Math.round(log.elapsed_seconds || 0),
+                                                    b: Math.round(clusterLog.elapsed_seconds || 0) }))}
     </div>` : "";
 
   $("r-parses").innerHTML = `
@@ -2773,7 +3394,7 @@ async function renderParses() {
       <div class="sh">
         <span>${plural(list.length, "parse", "parses")} &middot; ${pills}</span>
         <span class="hint">${esc(log.model || "")}${
-          log.prompt_sha ? ` &middot; prompt ${esc(log.prompt_sha)}` : ""}</span>
+          log.prompt_sha ? ` &middot; ${L("prompt")} ${esc(log.prompt_sha)}` : ""}</span>
       </div>
     </div>${stats}${clusterStrip}`;
 }
@@ -2794,10 +3415,10 @@ async function startParse() {
 
   const est = info.estimate;
   const all = info.combined;
-  const groupModel = (all.grouping || {}).model || "the grouping model";
+  const groupModel = (all.grouping || {}).model || L("the grouping model");
   if (!est.to_tag) {
     $("r-err").textContent =
-      "There is nothing long enough to tag in this run. Add bullets or reviews first.";
+      L("There is nothing long enough to tag in this run. Add bullets or reviews first.");
     $("r-err").hidden = false;
     return;
   }
@@ -2806,39 +3427,43 @@ async function startParse() {
     `<div class="ln ${tone || ""}"><b>${esc(n)}</b><span>${text}</span></div>`;
 
   let plan = `<div class="plan">` +
-    line(est.to_tag, `text ${est.to_tag === 1 ? "body" : "bodies"} to tag
-      <span class="d">&mdash; ${plural(est.listings, "listing", "listings")} and
-      ${plural(est.reviews, "review", "reviews")}</span>`) +
+    line(est.to_tag, `${L(est.to_tag === 1 ? "text body to tag" : "text bodies to tag")}
+      <span class="d">&mdash; ${L("{a} and {b}", { a: plural(est.listings, "listing", "listings"),
+                                                    b: plural(est.reviews, "review", "reviews") })}</span>`) +
     (est.to_skip
-      ? line(est.to_skip, `skipped <span class="d">&mdash; under ${info.min_tag_chars}
-          characters, too short to hold a concrete benefit</span>`, "warn")
+      ? line(est.to_skip, `${L("skipped")} <span class="d">&mdash; ${
+          L("under {n} characters, too short to hold a concrete benefit", { n: info.min_tag_chars })}</span>`, "warn")
       : "") +
-    line("then", `tags are clustered${info.auto_themes ? " and grouped into themes" : ""}
-      <span class="d">&mdash; ${esc(about(all.seconds))} in all, no second click</span>`) +
+    line(L("then"), `${L(info.auto_themes ? "tags are clustered and grouped into themes" : "tags are clustered")}
+      <span class="d">&mdash; ${L("{time} in all, no second click", { time: esc(about(all.seconds)) })}</span>`) +
     (all.cost_known
-      ? line(`$${all.cost_usd.toFixed(2)}`, `estimated for the whole parse
-          <span class="d">&mdash; tagging $${all.tagging_cost_usd.toFixed(2)}, clustering${
-          info.auto_themes ? " and themes" : ""} about $${all.grouping_cost_usd.toFixed(2)}
-          (a projection: tag counts aren't known yet)</span>`)
-      : line("?", `cost unknown <span class="d">&mdash; no pricing set for
-          ${esc(est.model)} or ${esc(groupModel)} in config.py</span>`, "warn"));
+      ? line(`$${all.cost_usd.toFixed(2)}`, `${L("estimated for the whole parse")}
+          <span class="d">&mdash; ${L(info.auto_themes
+            ? "tagging ${a}, clustering and themes about ${b} (a projection: tag counts aren't known yet)"
+            : "tagging ${a}, clustering about ${b} (a projection: tag counts aren't known yet)",
+            { a: all.tagging_cost_usd.toFixed(2), b: all.grouping_cost_usd.toFixed(2) })}</span>`)
+      : line("?", `${L("cost unknown")} <span class="d">&mdash; ${
+          L("no pricing set for {a} or {b} in config.py", { a: esc(est.model), b: esc(groupModel) })}</span>`, "warn"));
 
-  plan += `<div class="asins">Clustering starts by itself once tagging ends, unless more than
-    ${Math.round(info.max_failed_share * 100)}% of the bodies fail to tag or no tags are found.
-    The tags are kept either way.</div>`;
+  plan += `<div class="asins">${L("Clustering starts by itself once tagging ends, unless more than " +
+    "{pct}% of the bodies fail to tag or no tags are found. The tags are kept either way.",
+    { pct: Math.round(info.max_failed_share * 100) })}</div>`;
   if ((runState.parses || []).length) {
-    plan += `<div class="asins">Parsed before &mdash; this writes a new
-      <code>parse-&lt;time&gt;</code> folder and leaves the earlier results untouched.</div>`;
+    plan += `<div class="asins">${L("Parsed before &mdash; this writes a new " +
+      "<code>parse-&lt;time&gt;</code> folder and leaves the earlier results untouched.")}</div>`;
   }
   plan += `</div>`;
 
   const ok = await confirmModal({
-    title: "Parse this run?",
-    confirmLabel: "Parse results",
-    body: `<p class="sd">One call per text body to <b>${esc(est.model)}</b>, extracting search
-             terms, features, complaints, assembly &amp; care instructions and usage
-             keywords. Then <b>${esc(groupModel)}</b> sorts the tags into clusters${
-             info.auto_themes ? " and the clusters into themes" : ""}.</p>${plan}`,
+    title: L("Parse this run?"),
+    confirmLabel: L("Parse results"),
+    body: `<p class="sd">${L(info.auto_themes
+      ? "One call per text body to <b>{model}</b>, extracting search terms, features, complaints, " +
+        "assembly &amp; care instructions and usage keywords. Then <b>{group}</b> sorts the tags into " +
+        "clusters and the clusters into themes."
+      : "One call per text body to <b>{model}</b>, extracting search terms, features, complaints, " +
+        "assembly &amp; care instructions and usage keywords. Then <b>{group}</b> sorts the tags into clusters.",
+      { model: esc(est.model), group: esc(groupModel) })}</p>${plan}`,
   });
   if (!ok) return;
 
@@ -2856,7 +3481,7 @@ async function startParse() {
     return;
   }
 
-  setParseProgress(0, `Starting — ${plural(job.to_tag, "body", "bodies")} to tag`);
+  setParseProgress(0, L("Starting — {bodies} to tag", { bodies: plural(job.to_tag, "body", "bodies") }));
   pollParse(job.job_id, slug, runId);
 }
 
@@ -2883,10 +3508,10 @@ async function pollParse(jobId, slug, runId) {
     return;
   }
   if (snap.state === "error") {
-    return endParse(slug, runId, snap.error || "The parse failed.");
+    return endParse(slug, runId, snap.error || L("The parse failed."));
   }
 
-  setParseProgress(100, "Done");
+  setParseProgress(100, L("Done"));
   setTimeout(() => endParse(slug, runId, null, snap.result), 500);
 }
 
@@ -2926,7 +3551,7 @@ let grouping = false;
    merged; the confirm dialog says so, since "one call per list" no longer holds. */
 function callsNote(l) {
   if (l.mode !== "partitioned") return "";
-  return ` &mdash; about ${plural(l.partitions, "parallel call", "parallel calls")} + 1 merge`;
+  return ` &mdash; ${L("about {calls} + 1 merge", { calls: plural(l.partitions, "parallel call", "parallel calls") })}`;
 }
 
 async function startGroup() {
@@ -2950,8 +3575,8 @@ async function startGroup() {
   const est = info.estimate;
   if (!est.to_group) {
     $("r-err").textContent =
-      "This parse found no features, complaints or care instructions, so there is " +
-      "nothing to group. Parse again, or add more reviews first.";
+      L("This parse found no features, complaints or care instructions, so there is " +
+        "nothing to group. Parse again, or add more reviews first.");
     $("r-err").hidden = false;
     return;
   }
@@ -2961,31 +3586,30 @@ async function startGroup() {
 
   let plan = `<div class="plan">` +
     est.lists.map(l => line(l.unique_tags,
-      `${esc(l.title.toLowerCase())} <span class="d">&mdash; from
-       ${plural(l.occurrences, "mention", "mentions")}${
+      `${esc(listName(l.title))} <span class="d">&mdash; ${
+       L("from {mentions}", { mentions: plural(l.occurrences, "mention", "mentions") })}${
        l.seconds ? `, ${esc(about(l.seconds))}` : ""}${callsNote(l)}</span>`)).join("") +
     (est.cost_known
-      ? line(`$${est.cost_usd.toFixed(3)}`, `estimated <span class="d">&mdash; the real figure is
-          written to cluster_log.json</span>`)
-      : line("?", `cost unknown <span class="d">&mdash; no pricing set for
-          ${esc(est.model)} in config.py</span>`, "warn"));
+      ? line(`$${est.cost_usd.toFixed(3)}`, `${L("estimated")} <span class="d">&mdash; ${
+          L("the real figure is written to {file}", { file: "cluster_log.json" })}</span>`)
+      : line("?", `${L("cost unknown")} <span class="d">&mdash; ${
+          L("no pricing set for {model} in config.py", { model: esc(est.model) })}</span>`, "warn"));
 
   if (info.already_grouped) {
-    plan += `<div class="asins">Grouped before &mdash; this replaces
-      <code>clusters.json</code> for this parse.</div>`;
+    plan += `<div class="asins">${L("Grouped before &mdash; this replaces <code>clusters.json</code> for this parse.")}</div>`;
   }
   if (info.auto_themes) {
-    plan += `<div class="asins">Then clusters are grouped into themes automatically for any
-      list with ${esc(info.theme_min_clusters)} or more clusters &mdash; change this in Settings.</div>`;
+    plan += `<div class="asins">${L("Then clusters are grouped into themes automatically for any " +
+      "list with {n} or more clusters &mdash; change this in Settings.", { n: esc(info.theme_min_clusters) })}</div>`;
   }
   plan += `</div>`;
 
   const ok = await confirmModal({
-    title: "Group this parse's tags?",
-    confirmLabel: "Group tags",
-    body: `<p class="sd">One call per list to <b>${esc(est.model)}</b> at
-             <b>${esc(est.reasoning)}</b> reasoning, sorting every tag into exactly one
-             semantic cluster with a title and a one-line description.</p>${plan}`,
+    title: L("Group this parse's tags?"),
+    confirmLabel: L("Group tags"),
+    body: `<p class="sd">${L("One call per list to <b>{model}</b> at <b>{reasoning}</b> reasoning, " +
+      "sorting every tag into exactly one semantic cluster with a title and a one-line description.",
+      { model: esc(est.model), reasoning: esc(L(est.reasoning)) })}</p>${plan}`,
   });
   if (!ok) return;
 
@@ -3003,7 +3627,7 @@ async function startGroup() {
     return;
   }
 
-  setParseProgress(0, `Starting — ${plural(job.to_group, "list", "lists")} to group`);
+  setParseProgress(0, L("Starting — {lists} to group", { lists: plural(job.to_group, "list", "lists") }));
   pollGroup(job.job_id, slug, runId);
 }
 
@@ -3023,10 +3647,10 @@ async function pollGroup(jobId, slug, runId) {
     return;
   }
   if (snap.state === "error") {
-    return endGroup(slug, runId, snap.error || "The grouping failed.");
+    return endGroup(slug, runId, snap.error || L("The grouping failed."));
   }
 
-  setParseProgress(100, "Done");
+  setParseProgress(100, L("Done"));
   setTimeout(() => endGroup(slug, runId, null), 500);
 }
 
@@ -3087,14 +3711,14 @@ async function renderResults(slug, runId, parseId) {
     runData = await api(base);
   } catch (e) {
     $("res-loading").hidden = true;
-    setHeader({ eyebrow: "Results", title: "Not found", back: true, backHref: runHref });
+    setHeader({ eyebrow: L("Results"), title: L("Not found"), back: true, backHref: runHref });
     showError(e.message);
     return;
   }
   const groupName = runData.group.name;
   // The run's own name, as on the run page; a run never named falls back to the group's.
   const runName = (runData.meta || {}).label || groupName;
-  setHeader({ eyebrow: `${groupName} · results`, title: esc(runName),
+  setHeader({ eyebrow: L("{group} · results", { group: groupName }), title: esc(runName),
               back: true, backHref: runHref });
 
   const parses = runData.parses || [];
@@ -3112,11 +3736,11 @@ async function renderResults(slug, runId, parseId) {
     $("res-loading").hidden = true;
     $("res-body").innerHTML = `
       <div class="blank">
-        <h3>${here ? "This parse hasn't been grouped yet" : "That parse doesn't exist"}</h3>
-        <p>${here
+        <h3>${L(here ? "This parse hasn't been grouped yet" : "That parse doesn't exist")}</h3>
+        <p>${L(here
           ? "Tags on their own are only half the picture. Group them into clusters first, then come back here."
-          : "It may have been deleted, or the address is wrong."}</p>
-        <a class="btn" href="${runHref}">${here ? "Back to the run to group tags" : "Back to the run"}</a>
+          : "It may have been deleted, or the address is wrong.")}</p>
+        <a class="btn" href="${runHref}">${L(here ? "Back to the run to group tags" : "Back to the run")}</a>
       </div>`;
     return;
   }
@@ -3152,9 +3776,14 @@ async function renderResults(slug, runId, parseId) {
 
 /* Chips are coloured by the list they came from — and nothing else is. */
 const LIST_TONE = { features: "feat", complaints: "comp", assembly_maintenance: "care" };
-const SOURCE_NAME = { listing: "listings", review: "reviews" };
-const SHORT_NAME = { features: "feature", complaints: "complaint", assembly_maintenance: "care" };
-const JUMP_NAME = { features: "Features", complaints: "Complaints", assembly_maintenance: "Care" };
+const SOURCE_NAME = { listing: L("listings"), review: L("reviews") };
+const SHORT_NAME = { features: L("feature"), complaints: L("complaint"), assembly_maintenance: L("care") };
+const JUMP_NAME = { features: L("Features"), complaints: L("Complaints"), assembly_maintenance: L("Care") };
+
+/* "in 3 of 12 products", wherever coverage is said in words. */
+function inProducts(n, total) {
+  return L(total === 1 ? "in {n} of {total} product" : "in {n} of {total} products", { n, total });
+}
 
 /* Gap badges, features only.
    Under-advertised: customers weigh it — its share of the list's review mentions
@@ -3167,27 +3796,27 @@ const JUMP_NAME = { features: "Features", complaints: "Complaints", assembly_mai
    flagged a third of every list, including top-3 listing features. */
 const GAP_RATIO = 3, GAP_RANK_GAP = 3, GAP_MIN_REVIEWS = 5, GAP_MIN_LISTINGS = 3, GAP_MAX_REVIEWS = 2;
 const GAP_TEXT = {
-  under: ["under-advertised", "Customers mention this far more than listings claim it — a benefit worth advertising."],
-  unconfirmed: ["unconfirmed", "Listings claim this but customers barely mention it — reviews don't back it up yet."],
+  under: [L("under-advertised"), L("Customers mention this far more than listings claim it — a benefit worth advertising.")],
+  unconfirmed: [L("unconfirmed"), L("Listings claim this but customers barely mention it — reviews don't back it up yet.")],
 };
 /* Coverage as dots: one per product in the run, filled when the item appears in it. */
 const COV_MAX_DOTS = 20;
 
 function covHtml(n, total) {
-  const text = `in ${n} of ${total} ${total === 1 ? "product" : "products"}`;
+  const text = inProducts(n, total);
   if (total > COV_MAX_DOTS || total < 1) return esc(text);
   return `<span class="cov" title="${esc(text)}">${"<i class=\"on\"></i>".repeat(n)}${
     "<i></i>".repeat(Math.max(0, total - n))}<b>${n}/${total}</b></span>`;
 }
 function rankHtml(rank) {
-  const one = (k, name) => rank[k] ? `${name} <b>#${rank[k]}</b>` : `not in ${name}`;
-  return `<div class="rk">${one("listing", "listings")} &middot; ${one("review", "reviews")}</div>`;
+  const one = (k, name) => rank[k] ? `${name} <b>#${rank[k]}</b>` : L("not in {name}", { name });
+  return `<div class="rk">${one("listing", L("listings"))} &middot; ${one("review", L("reviews"))}</div>`;
 }
 function gapPill(v) {
   if (!v.gap) return "";
   const [label, why] = GAP_TEXT[v.gap];
-  const at = k => v.rank[k] ? `#${v.rank[k]}` : "unranked";
-  const why2 = `${why} Reviews rank it ${at("review")}, listings ${at("listing")}.`;
+  const at = k => v.rank[k] ? `#${v.rank[k]}` : L("unranked");
+  const why2 = `${why} ${L("Reviews rank it {r}, listings {l}.", { r: at("review"), l: at("listing") })}`;
   return ` <span class="pill ${v.gap === "under" ? "warn" : "na"} gap" title="${esc(why2)}">${label}</span>`;
 }
 
@@ -3482,29 +4111,30 @@ function renderResultsBody() {
   $("res-sum").hidden = false;
   $("res-sum").innerHTML =
     d.sections.map(s => s.status === "failed"
-      ? `<span class="bad">${esc(SHORT_NAME[s.key] || s.title.toLowerCase())} clusters failed</span>`
-      : `<b>${s.clusters.length}</b> ${esc(SHORT_NAME[s.key] || s.title.toLowerCase())} ${
-          s.clusters.length === 1 ? "cluster" : "clusters"} (${plural(s.mentions, "mention", "mentions")})`)
+      ? `<span class="bad">${L("{list} clusters failed", { list: esc(SHORT_NAME[s.key] || listName(s.title)) })}</span>`
+      : L(s.clusters.length === 1 ? "<b>{n}</b> {list} cluster ({mentions})" : "<b>{n}</b> {list} clusters ({mentions})",
+          { n: s.clusters.length, list: esc(SHORT_NAME[s.key] || listName(s.title)),
+            mentions: plural(s.mentions, "mention", "mentions") }))
     .concat([
-      `<b>${d.products_total}</b> ${d.products_total === 1 ? "product" : "products"}`,
-      `<b class="${pct >= 90 ? "good" : "warn"}">${pct}%</b> of mentions traced to a sentence`,
+      L(d.products_total === 1 ? "<b>{n}</b> product" : "<b>{n}</b> products", { n: d.products_total }),
+      `<b class="${pct >= 90 ? "good" : "warn"}">${pct}%</b> ${L("of mentions traced to a sentence")}`,
     ]).concat(d.keywords ? [
-      `<b>${d.keywords.search_terms.items.length}</b> search terms`,
-      `<b>${d.keywords.usage.groups.reduce((n, g) => n + g.items.length, 0)}</b> usage keywords`,
+      L("<b>{n}</b> search terms", { n: d.keywords.search_terms.items.length }),
+      L("<b>{n}</b> usage keywords", { n: d.keywords.usage.groups.reduce((n, g) => n + g.items.length, 0) }),
     ] : []).join(" &nbsp;&middot;&nbsp; ");
 
   // Jump links follow the current source and, while filtering, read "4 of 35".
   const kw = resultsState.views.keywords;
   const jumpCount = (count, total, filtering) =>
-    filtering ? `${count} of ${total}` : String(count);
+    filtering ? L("{n} of {total}", { n: count, total }) : String(count);
   $("res-jump").innerHTML = d.sections.map(s => {
     const sv = sectionView(s);
-    const label = JUMP_NAME[s.key] || s.title;
+    const label = JUMP_NAME[s.key] || L(s.title);
     const n = s.status === "failed" ? "&mdash;" :
       jumpCount(sv.count, sv.total, resultsState.terms.length > 0);
     return `<a href="#" data-sec="${esc(s.key)}" class="${sv.count ? "" : "none"}">${esc(label)} <b>${n}</b></a>`;
-  }).concat(kw ? [["search_terms", "Search terms", kw.search_terms],
-                  ["usage", "Usage", kw.usage]].map(([key, label, kv]) =>
+  }).concat(kw ? [["search_terms", L("Search terms"), kw.search_terms],
+                  ["usage", L("Usage"), kw.usage]].map(([key, label, kv]) =>
     // data-sec matches the section ids in the static shell, so the existing
     // scroll handler finds #sec-search_terms / #sec-usage with no change.
     `<a href="#" data-sec="${esc(key)}" class="${kv.count ? "" : "none"}">${esc(label)} <b>${
@@ -3521,17 +4151,17 @@ function renderResultsBody() {
   $("res-src").querySelectorAll("button").forEach(b =>
     b.setAttribute("aria-pressed", String(b.dataset.src === resultsState.source)));
   $("res-expand").hidden = !hasThemes;
-  $("res-expand").textContent = allThemesOpen() ? "Collapse all" : "Expand all";
+  $("res-expand").textContent = L(allThemesOpen() ? "Collapse all" : "Expand all");
   $("res-theme").hidden = !needThemes;
 
   let banner = "";
   if (needThemes) {
     const names = d.sections.filter(s => themes.eligible.includes(s.key))
-      .map(s => s.title.toLowerCase());
-    banner = `<div class="note-line info" style="margin-bottom:22px"><span class="ic">Themes</span>
-      <span>Clusters are not grouped into themes yet. Press <b>Group into themes</b> above to
-      build them for ${esc(names.join(" and "))} (${plural(themes.min_clusters || 13,
-      "cluster", "clusters")} or more).</span></div>`;
+      .map(s => listName(s.title));
+    banner = `<div class="note-line info" style="margin-bottom:22px"><span class="ic">${L("Themes")}</span>
+      <span>${L("Clusters are not grouped into themes yet. Press <b>Group into themes</b> above to " +
+        "build them for {lists} ({n} or more).",
+        { lists: esc(names.join(L(" and "))), n: plural(themes.min_clusters || 13, "cluster", "clusters") })}</span></div>`;
   }
 
   $("res-h1").hidden = false;
@@ -3560,16 +4190,18 @@ function overviewHtml(key) {
   const src = resultsState.source;
   const s = d.sections.find(x => x.key === key);
   const tone = LIST_TONE[key] || "";
-  const title = s ? s.title : key;
+  const title = s ? L(s.title) : key;
   const blank = (h, p, extra = "") => `<div class="ovcol ${tone}"><div class="oh"><h2>${esc(title)}</h2></div>
     <div class="blank"><h3>${h}</h3><p>${p}</p>${extra}</div></div>`;
 
   if (!s || s.status === "failed") {
-    return blank("Nothing to show", esc(s && s.error || "This list was not grouped."),
+    return blank(L("Nothing to show"), esc(s && s.error || L("This list was not grouped.")),
                  s ? rerunButton(s.key) : "");
   }
   const sv = sectionView(s);
-  if (!s.clusters.length) return blank("Nothing here", `No ${esc(title.toLowerCase())} tags came out of this parse.`);
+  if (!s.clusters.length) {
+    return blank(L("Nothing here"), L("No {list} tags came out of this parse.", { list: esc(title.toLowerCase()) }));
+  }
   if (!sv.count) {
     return `<div class="ovcol ${tone}"><div class="oh"><h2>${esc(title)}</h2></div>${nothingHtml(s, sv)}</div>`;
   }
@@ -3585,8 +4217,10 @@ function overviewHtml(key) {
   };
   const tip = v => {
     const bits = [plural(v.mentions[src], "mention", "mentions")];
-    if (src === "all") bits.push(`${v.mentions.listing} from listings`, `${v.mentions.review} from reviews`);
-    bits.push(`in ${v.asins[src].size} of ${total} ${total === 1 ? "product" : "products"}`);
+    if (src === "all") {
+      bits.push(L("{n} from listings", { n: v.mentions.listing }), L("{n} from reviews", { n: v.mentions.review }));
+    }
+    bits.push(inProducts(v.asins[src].size, total));
     return bits.join(" · ");
   };
   const row = (v, label, opts) => `
@@ -3612,7 +4246,7 @@ function overviewHtml(key) {
     for (const v of shown) rows += row(v, v.c.title, {});
     if (!terms.length && sv.order.length > OVERVIEW_TOP) {
       rows += `<button class="lnk more" data-all="${esc(key)}">${
-        all ? `Show top ${OVERVIEW_TOP}` : `Show all ${sv.order.length}`}</button>`;
+        all ? L("Show top {n}", { n: OVERVIEW_TOP }) : L("Show all {n}", { n: sv.order.length })}</button>`;
     }
   }
 
@@ -3637,9 +4271,9 @@ function kwStats(v) {
   const src = resultsState.source;
   const bits = [plural(v.mentions[src], "mention", "mentions")];
   if (src === "all") {
-    bits.push(`${v.mentions.listing} from listings`, `${v.mentions.review} from reviews`);
+    bits.push(L("{n} from listings", { n: v.mentions.listing }), L("{n} from reviews", { n: v.mentions.review }));
   }
-  bits.push(`in ${v.asins[src].size} of ${total} ${total === 1 ? "product" : "products"}`);
+  bits.push(inProducts(v.asins[src].size, total));
   return bits.join(" · ");
 }
 
@@ -3654,20 +4288,20 @@ function kwBlank(kv, title, none) {
   const src = resultsState.source;
   const q = resultsState.kwQuery[kv.key], sticky = resultsState.query;
   if ((q || sticky) && kv.total) {
-    return `<div class="blank"><h3>Nothing matches &ldquo;${esc(q || sticky)}&rdquo;</h3>
-      <p>No ${esc(title)} contains it.</p>
-      <button class="lnk" ${q ? `data-kwclear="${esc(kv.key)}"` : "data-clearq"}>Clear the filter</button></div>`;
+    return `<div class="blank"><h3>${L("Nothing matches &ldquo;{q}&rdquo;", { q: esc(q || sticky) })}</h3>
+      <p>${L("No {what} contains it.", { what: esc(title) })}</p>
+      <button class="lnk" ${q ? `data-kwclear="${esc(kv.key)}"` : "data-clearq"}>${L("Clear the filter")}</button></div>`;
   }
   if (kv.total === 0 && src !== "all") {
-    return `<div class="blank"><h3>Nothing from ${esc(SOURCE_NAME[src])}</h3>
-      <p>No ${esc(title)} came from ${esc(SOURCE_NAME[src])}.</p></div>`;
+    return `<div class="blank"><h3>${L("Nothing from {source}", { source: esc(SOURCE_NAME[src]) })}</h3>
+      <p>${L("No {what} came from {source}.", { what: esc(title), source: esc(SOURCE_NAME[src]) })}</p></div>`;
   }
-  return `<div class="blank"><h3>Nothing here</h3><p>${esc(none)}</p></div>`;
+  return `<div class="blank"><h3>${L("Nothing here")}</h3><p>${esc(none)}</p></div>`;
 }
 
 function kwNote(kv, one, many) {
   const filtering = resultsState.kwQuery[kv.key] || resultsState.query;
-  if (filtering) return `${kv.count} of ${kv.total} ${kv.total === 1 ? one : many}`;
+  if (filtering) return L("{n} of {total}", { n: kv.count, total: plural(kv.total, one, many) });
   return `${plural(kv.total, one, many)} &middot; ${plural(kv.mentions, "mention", "mentions")}`;
 }
 
@@ -3688,10 +4322,10 @@ function keywordsHtml() {
           <div class="trk"><i style="width:${(100 * v.mentions[src] / max).toFixed(2)}%"></i></div>
           <span class="val">${v.mentions[src]}</span>
         </div>`).join("")
-    : kwBlank(st, "search term", "No search terms came out of this parse.");
+    : kwBlank(st, L("search term"), L("No search terms came out of this parse."));
   if (st.order.length > KW_TOP_TERMS) {
     stHtml += `<button class="lnk more" data-kwall="search_terms">${
-      all ? `Show top ${KW_TOP_TERMS}` : `Show all ${st.order.length}`}</button>`;
+      all ? L("Show top {n}", { n: KW_TOP_TERMS }) : L("Show all {n}", { n: st.order.length })}</button>`;
   }
 
   // --- usage: four sub-blocks of chips, each with its own "+N more" ---
@@ -3701,13 +4335,13 @@ function keywordsHtml() {
     const chips = open ? g.order : g.order.slice(0, KW_TOP_USAGE);
     const more = g.order.length - chips.length;
     return `<div class="kwsub">
-      <h4>${esc(g.g.title)}<span class="n">${g.order.length}</span></h4>
+      <h4>${esc(L(g.g.title))}<span class="n">${g.order.length}</span></h4>
       <div class="bubs">${chips.map(v => `<span class="bub" ${kwAttrs(v)}><span class="lbl">${
         hilite(v.item.display, us.terms)}</span>${
         v.mentions[src] > 1 ? `<i>&times;${v.mentions[src]}</i>` : ""}</span>`).join("")}${
-        more > 0 ? `<button class="lnk more" data-kwall="${esc(g.key)}">+${more} more</button>`
+        more > 0 ? `<button class="lnk more" data-kwall="${esc(g.key)}">${L("+{n} more", { n: more })}</button>`
                  : (open && g.order.length > KW_TOP_USAGE
-                    ? `<button class="lnk more" data-kwall="${esc(g.key)}">Show top ${KW_TOP_USAGE}</button>` : "")}
+                    ? `<button class="lnk more" data-kwall="${esc(g.key)}">${L("Show top {n}", { n: KW_TOP_USAGE })}</button>` : "")}
       </div></div>`;
   }).join("");
 
@@ -3715,7 +4349,7 @@ function keywordsHtml() {
   $("kw-us-note").innerHTML = kwNote(us, "keyword", "keywords");
   $("kw-st-list").innerHTML = stHtml;
   $("kw-us-list").innerHTML = blocks ||
-    kwBlank(us, "usage keyword", "No usage keywords came out of this parse.");
+    kwBlank(us, L("usage keyword"), L("No usage keywords came out of this parse."));
   $("kw-st-x").hidden = !resultsState.kwQuery.search_terms;
   $("kw-us-x").hidden = !resultsState.kwQuery.usage;
   return true;
@@ -3779,7 +4413,8 @@ function revealItem(listKey, key, parent) {
 /* The button under a failed list, in the overview and in the section itself. */
 function rerunButton(key) {
   const name = (JUMP_NAME[key] || key).toLowerCase();
-  return `<button type="button" class="btn ghost" data-rerun="${esc(key)}">Re-run ${esc(name)} clustering</button>`;
+  return `<button type="button" class="btn ghost" data-rerun="${esc(key)}">${
+    L("Re-run {list} clustering", { list: esc(name) })}</button>`;
 }
 
 $("res-ov").addEventListener("click", e => {
@@ -3813,28 +4448,28 @@ function sectionHtml(s) {
   const q = resultsState.query;
   const open = `<section id="sec-${esc(s.key)}">`;
 
-  const note = s.status === "failed" ? "failed" :
-    `${q ? `${sv.count} of ${sv.total} clusters` : plural(sv.count, "cluster", "clusters")} &middot; ${
+  const note = s.status === "failed" ? L("failed") :
+    `${q ? L("{n} of {total} clusters", { n: sv.count, total: sv.total }) : plural(sv.count, "cluster", "clusters")} &middot; ${
       plural(sv.mentions, "mention", "mentions")}${
       themed ? ` &middot; ${plural(sv.themeOrder.length, "theme", "themes")}` : ""}`;
   const head = `<div class="shead clk" data-list="${esc(s.key)}" role="button" aria-expanded="${!closed}">
     <span class="caret">${closed ? "&#9656;" : "&#9662;"}</span>
-    <h2>${esc(s.title)}</h2><span class="note">${note}</span></div>`;
+    <h2>${esc(L(s.title))}</h2><span class="note">${note}</span></div>`;
 
   if (closed) return `${open}${head}</section>`;
   if (s.status === "failed") {
-    return `${open}${head}<div class="note-line"><span class="ic">Failed</span>
-      <span>${esc(s.error || "This list could not be grouped.")}</span></div>
+    return `${open}${head}<div class="note-line"><span class="ic">${L("Failed")}</span>
+      <span>${esc(s.error || L("This list could not be grouped."))}</span></div>
       <div style="margin:10px 0 22px">${rerunButton(s.key)}</div></section>`;
   }
   if (!s.clusters.length) {
-    return `${open}${head}<div class="blank"><h3>Nothing here</h3>
-      <p>No ${esc(s.title.toLowerCase())} tags came out of this parse.</p></div></section>`;
+    return `${open}${head}<div class="blank"><h3>${L("Nothing here")}</h3>
+      <p>${L("No {list} tags came out of this parse.", { list: esc(listName(s.title)) })}</p></div></section>`;
   }
 
   const themeNote = s.theme_error
-    ? `<div class="note-line"><span class="ic">Themes</span>
-       <span>This list could not be grouped into themes: ${esc(s.theme_error)}</span></div>` : "";
+    ? `<div class="note-line"><span class="ic">${L("Themes")}</span>
+       <span>${L("This list could not be grouped into themes: {error}", { error: esc(s.theme_error) })}</span></div>` : "";
 
   if (!sv.count) {
     return `${open}${head}${themeNote}${nothingHtml(s, sv)}</section>`;
@@ -3851,13 +4486,15 @@ function nothingHtml(s, sv) {
   const src = resultsState.source;
   const q = resultsState.query;
   if (q && sv.total) {
-    return `<div class="blank"><h3>Nothing matches &ldquo;${esc(q)}&rdquo;</h3>
-      <p>No ${esc(s.title.toLowerCase())} theme, cluster or tag${src === "all" ? "" :
-        ` from ${esc(SOURCE_NAME[src])}`} contains it.</p>
-      <button class="lnk" data-clearq>Clear the filter</button></div>`;
+    return `<div class="blank"><h3>${L("Nothing matches &ldquo;{q}&rdquo;", { q: esc(q) })}</h3>
+      <p>${L(src === "all" ? "No {list} theme, cluster or tag contains it."
+                           : "No {list} theme, cluster or tag from {source} contains it.",
+             { list: esc(listName(s.title)), source: esc(SOURCE_NAME[src]) })}</p>
+      <button class="lnk" data-clearq>${L("Clear the filter")}</button></div>`;
   }
-  return `<div class="blank"><h3>Nothing from ${esc(SOURCE_NAME[src])}</h3>
-    <p>No ${esc(s.title.toLowerCase())} tags in this list came from ${esc(SOURCE_NAME[src])}.</p></div>`;
+  return `<div class="blank"><h3>${L("Nothing from {source}", { source: esc(SOURCE_NAME[src]) })}</h3>
+    <p>${L("No {list} tags in this list came from {source}.",
+           { list: esc(listName(s.title)), source: esc(SOURCE_NAME[src]) })}</p></div>`;
 }
 
 function num(n) { return esc(String(n).padStart(2, "0")); }
@@ -3879,7 +4516,7 @@ function themeHtml(s, tv) {
   const asins = tv.asins[src].size;
 
   const counts =
-    `<b>${terms.length ? `${shown.length} of ${tv.members.filter(m => m.mentions[src] > 0).length} clusters`
+    `<b>${terms.length ? L("{n} of {total} clusters", { n: shown.length, total: tv.members.filter(m => m.mentions[src] > 0).length })
                        : plural(shown.length, "cluster", "clusters")}</b> &middot; ` +
     `${plural(tv.mentions[src], "mention", "mentions")} &middot; ` +
     covHtml(asins, total);
@@ -3924,15 +4561,15 @@ function clusterHtml(s, v) {
   if (open) {
     body =
       (v.tags.listing.length
-        ? `<h4>From listings (${v.tags.listing.length})</h4>
+        ? `<h4>${L("From listings ({n})", { n: v.tags.listing.length })}</h4>
            <div class="bubs">${v.tags.listing.map(t => chipHtml(t, c, s.key)).join("")}</div>` : "") +
       (v.tags.review.length
-        ? `<h4>From reviews (${v.tags.review.length})</h4>
+        ? `<h4>${L("From reviews ({n})", { n: v.tags.review.length })}</h4>
            <div class="bubs">${v.tags.review.map(t => chipHtml(t, c, s.key)).join("")}</div>` : "");
   } else {
     const more = v.distinct - v.preview.length;
     body = `<div class="bubs">${v.preview.map(t => chipHtml(t, c, s.key)).join("")}${
-      more > 0 ? `<button class="lnk more">+${more} more</button>` : ""}</div>`;
+      more > 0 ? `<button class="lnk more">${L("+{n} more", { n: more })}</button>` : ""}</div>`;
   }
 
   return `
@@ -3957,7 +4594,7 @@ function clusterHtml(s, v) {
    chip is an inline-flex box with a gap, and bare hilite() fragments would each
    become their own flex item and drift apart. */
 const CAMERA = `<svg class="cam" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"
-  stroke-linejoin="round" role="img" aria-label="Has customer photos"><title>Has customer photos</title>
+  stroke-linejoin="round" role="img" aria-label="${L("Has customer photos")}"><title>${L("Has customer photos")}</title>
   <path d="M1.7 5.2h2.6l1.1-1.7h5.2l1.1 1.7h2.6v7.6H1.7z"/><circle cx="8" cy="8.9" r="2.4"/></svg>`;
 
 function chipHtml(t, cluster, listKey) {
@@ -4054,9 +4691,12 @@ $("res-expand").onclick = () => {
 let resultsBusy = false;   // one background job at a time from this view
 
 function about(seconds) {
-  if (seconds < 90) return `about ${Math.max(10, Math.floor(seconds / 10) * 10)} s`;
-  return `about ${Math.round(seconds / 60)} min`;
+  if (seconds < 90) return L("about {n} s", { n: Math.max(10, Math.floor(seconds / 10) * 10) });
+  return L("about {n} min", { n: Math.round(seconds / 60) });
 }
+
+/* A list's name inside a sentence: the server's title, translated, lower-cased. */
+function listName(title) { return L(title).toLowerCase(); }
 
 function setThemeProgress(pct, label) {
   $("res-prog").hidden = false;
@@ -4084,7 +4724,7 @@ async function startThemes() {
   const est = info.estimate;
   if (!est.to_theme) {
     $("res-err").textContent =
-      `No list has ${est.min_clusters} or more clusters, so there is nothing to group into themes.`;
+      L("No list has {n} or more clusters, so there is nothing to group into themes.", { n: est.min_clusters });
     $("res-err").hidden = false;
     return;
   }
@@ -4094,29 +4734,28 @@ async function startThemes() {
 
   let plan = `<div class="plan">` +
     est.lists.map(l => line(l.clusters,
-      `${esc(l.title.toLowerCase())} <span class="d">&mdash; clusters to group into themes</span>`)).join("") +
+      `${esc(listName(l.title))} <span class="d">&mdash; ${L("clusters to group into themes")}</span>`)).join("") +
     est.skipped.map(l => line(l.clusters,
-      `${esc(l.title.toLowerCase())} <span class="d">&mdash; stays a flat list (fewer than
-       ${est.min_clusters} clusters)</span>`)).join("") +
+      `${esc(listName(l.title))} <span class="d">&mdash; ${
+       L("stays a flat list (fewer than {n} clusters)", { n: est.min_clusters })}</span>`)).join("") +
     (est.cost_known
-      ? line(`$${est.cost_usd.toFixed(3)}`, `estimated <span class="d">&mdash; the real figure is
-          written to themes_log.json</span>`)
-      : line("?", `cost unknown <span class="d">&mdash; no pricing set for
-          ${esc(est.model)} in config.py</span>`, "warn"));
+      ? line(`$${est.cost_usd.toFixed(3)}`, `${L("estimated")} <span class="d">&mdash; ${
+          L("the real figure is written to {file}", { file: "themes_log.json" })}</span>`)
+      : line("?", `${L("cost unknown")} <span class="d">&mdash; ${
+          L("no pricing set for {model} in config.py", { model: esc(est.model) })}</span>`, "warn"));
 
   if (info.already_themed) {
-    plan += `<div class="asins">Themed before &mdash; this replaces
-      <code>themes.json</code> for this parse.</div>`;
+    plan += `<div class="asins">${L("Themed before &mdash; this replaces <code>themes.json</code> for this parse.")}</div>`;
   }
   plan += `</div>`;
 
   const ok = await confirmModal({
-    title: "Group clusters into themes?",
-    confirmLabel: "Group into themes",
-    body: `<p class="sd">One call per list to <b>${esc(est.model)}</b> at
-             <b>${esc(est.reasoning)}</b> reasoning, folding related clusters into themes that
-             each get a title and a one-sentence summary. Every cluster lands in exactly one
-             theme.</p>${plan}`,
+    title: L("Group clusters into themes?"),
+    confirmLabel: L("Group into themes"),
+    body: `<p class="sd">${L("One call per list to <b>{model}</b> at <b>{reasoning}</b> reasoning, " +
+      "folding related clusters into themes that each get a title and a one-sentence summary. " +
+      "Every cluster lands in exactly one theme.",
+      { model: esc(est.model), reasoning: esc(L(est.reasoning)) })}</p>${plan}`,
   });
   if (!ok) return;
 
@@ -4134,8 +4773,8 @@ async function startThemes() {
     return;
   }
 
-  setThemeProgress(0, `Starting — ${plural(job.to_theme, "list", "lists")} to group`);
-  pollResultsJob(job.job_id, slug, runId, parseId, "The theme grouping failed.");
+  setThemeProgress(0, L("Starting — {lists} to group", { lists: plural(job.to_theme, "list", "lists") }));
+  pollResultsJob(job.job_id, slug, runId, parseId, L("The theme grouping failed."));
 }
 
 /* ---------- re-run one failed list ----------
@@ -4163,7 +4802,7 @@ async function startRerun(key) {
   const est = info.estimate;
   const l = est.lists[0];
   if (!l) {
-    $("res-err").textContent = `This parse has no ${name} tags, so there is nothing to re-run.`;
+    $("res-err").textContent = L("This parse has no {list} tags, so there is nothing to re-run.", { list: name });
     $("res-err").hidden = false;
     return;
   }
@@ -4171,32 +4810,33 @@ async function startRerun(key) {
   const line = (n, text, tone) =>
     `<div class="ln ${tone || ""}"><b>${esc(n)}</b><span>${text}</span></div>`;
   const others = resultsState.data.sections
-    .filter(s => s.key !== key).map(s => s.title.toLowerCase());
+    .filter(s => s.key !== key).map(s => listName(s.title));
 
   let plan = `<div class="plan">` +
-    line(l.unique_tags, `${esc(l.title.toLowerCase())} <span class="d">&mdash; from
-      ${plural(l.occurrences, "mention", "mentions")}, ${esc(about(l.seconds))}${callsNote(l)}</span>`) +
+    line(l.unique_tags, `${esc(listName(l.title))} <span class="d">&mdash; ${
+      L("from {mentions}", { mentions: plural(l.occurrences, "mention", "mentions") })}, ${
+      esc(about(l.seconds))}${callsNote(l)}</span>`) +
     (est.cost_known
-      ? line(`$${est.cost_usd.toFixed(3)}`, `estimated <span class="d">&mdash; the real figure is
-          written to cluster_log.json</span>`)
-      : line("?", `cost unknown <span class="d">&mdash; no pricing set for
-          ${esc(est.model)} in config.py</span>`, "warn"));
+      ? line(`$${est.cost_usd.toFixed(3)}`, `${L("estimated")} <span class="d">&mdash; ${
+          L("the real figure is written to {file}", { file: "cluster_log.json" })}</span>`)
+      : line("?", `${L("cost unknown")} <span class="d">&mdash; ${
+          L("no pricing set for {model} in config.py", { model: esc(est.model) })}</span>`, "warn"));
   if (others.length) {
-    plan += `<div class="asins">${esc(others.join(" and "))} &mdash; and their themes &mdash;
-      are kept exactly as they are.</div>`;
+    plan += `<div class="asins">${L("{lists} &mdash; and their themes &mdash; are kept exactly as they are.",
+      { lists: esc(others.join(L(" and "))) })}</div>`;
   }
   if (info.auto_themes) {
-    plan += `<div class="asins">Then the new ${esc(name)} clusters are grouped into themes if
-      there are ${esc(info.theme_min_clusters)} or more.</div>`;
+    plan += `<div class="asins">${L("Then the new {list} clusters are grouped into themes if there are {n} or more.",
+      { list: esc(name), n: esc(info.theme_min_clusters) })}</div>`;
   }
   plan += `</div>`;
 
   const ok = await confirmModal({
-    title: `Re-run ${name} clustering?`,
-    confirmLabel: "Re-run",
-    body: `<p class="sd">One call to <b>${esc(est.model)}</b> at <b>${esc(est.reasoning)}</b>
-             reasoning, sorting every ${esc(name)} tag into exactly one semantic cluster with a
-             title and a one-line description.</p>${plan}`,
+    title: L("Re-run {list} clustering?", { list: name }),
+    confirmLabel: L("Re-run"),
+    body: `<p class="sd">${L("One call to <b>{model}</b> at <b>{reasoning}</b> reasoning, sorting every " +
+      "{list} tag into exactly one semantic cluster with a title and a one-line description.",
+      { model: esc(est.model), reasoning: esc(L(est.reasoning)), list: esc(name) })}</p>${plan}`,
   });
   if (!ok) return;
 
@@ -4211,8 +4851,8 @@ async function startRerun(key) {
     return;
   }
 
-  setThemeProgress(0, `Starting — re-grouping ${name}`);
-  pollResultsJob(job.job_id, slug, runId, parseId, "The re-run failed.");
+  setThemeProgress(0, L("Starting — re-grouping {list}", { list: name }));
+  pollResultsJob(job.job_id, slug, runId, parseId, L("The re-run failed."));
 }
 
 /* Shared by "Group into themes" and the per-list re-run: both write into this
@@ -4236,7 +4876,7 @@ async function pollResultsJob(jobId, slug, runId, parseId, failText) {
     return endResultsJob(slug, runId, parseId, snap.error || failText);
   }
 
-  setThemeProgress(100, "Done");
+  setThemeProgress(100, L("Done"));
   setTimeout(() => endResultsJob(slug, runId, parseId, null), 500);
 }
 
@@ -4288,8 +4928,8 @@ function markedBody(text, m) {
 function thumbHtml(src, cls) {
   return src
     ? `<img class="${cls || ""}" src="${esc(src)}" alt="" loading="lazy"
-         onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'noimg ${cls || ""}',textContent:'no image'}))">`
-    : `<div class="noimg ${cls || ""}">no image</div>`;
+         onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'noimg ${cls || ""}',textContent:'${L("no image")}'}))">`
+    : `<div class="noimg ${cls || ""}">${L("no image")}</div>`;
 }
 
 /* The product's images, main first. A server from before `images` existed still
@@ -4335,7 +4975,7 @@ function photoChecked(img, ok) {
   // Loaded but tiny is Amazon's placeholder; an error may be the photo or the connection.
   if (ok) dropPhoto(url);
   else if (!photoFailed(url)) {
-    img.replaceWith(Object.assign(document.createElement("div"), { className: "noimg", textContent: "no image" }));
+    img.replaceWith(Object.assign(document.createElement("div"), { className: "noimg", textContent: L("no image") }));
   }
   return false;
 }
@@ -4383,9 +5023,9 @@ function dropPhoto(url) {
 }
 
 function sourceLabel(o, b) {
-  if (o.body_type !== "review") return "listing";
+  if (o.body_type !== "review") return L("listing");
   const r = b.review;
-  return "review" + (r && r.rating != null ? ` · ${stars(r.rating)}` : "") +
+  return L("review") + (r && r.rating != null ? ` · ${stars(r.rating)}` : "") +
          (r && r.date ? ` · ${r.date}` : "");
 }
 
@@ -4413,12 +5053,12 @@ function tipHtml(occs, opts) {
     <div class="th">${thumbHtml(p.main_image)}
       <div style="min-width:0">
         <div class="tt">${esc(o.asin)} &middot; ${esc(sourceLabel(o, b))}</div>
-        <div class="tr">${esc(p.title || "(no title)")}</div>
+        <div class="tr">${esc(p.title || L("(no title)"))}</div>
       </div>
     </div>
     <div class="sent">${sentenceHtml(b, m)}</div>
-    ${m.confident ? "" : `<div class="foot">No exact sentence found</div>`}
-    ${occs.length > 1 ? `<div class="foot">1 of ${occs.length} sources</div>` : ""}
+    ${m.confident ? "" : `<div class="foot">${L("No exact sentence found")}</div>`}
+    ${occs.length > 1 ? `<div class="foot">${L("1 of {n} sources", { n: occs.length })}</div>` : ""}
     ${stats ? `<div class="foot">${esc(stats)}</div>` : ""}`;
 }
 
@@ -4603,17 +5243,17 @@ function rvFill() {
   const products = rvProducts(rv);
   const pi = products.findIndex(g => rv.i >= g.start && rv.i < g.start + g.n);
   const link = (href, inner) => href
-    ? `<a href="${esc(href)}" target="_blank" rel="noopener" title="Open on Amazon">${inner}</a>` : inner;
+    ? `<a href="${esc(href)}" target="_blank" rel="noopener" title="${L("Open on Amazon")}">${inner}</a>` : inner;
   const rated = q => productFacts(q).join(" &middot; ");
 
-  $("zttl").innerHTML = link(p.link, esc(p.title || "(no title)"));
+  $("zttl").innerHTML = link(p.link, esc(p.title || L("(no title)")));
   $("zsub").innerHTML = `${link(p.link, esc(it.asin))} &middot; ${rated(p)}`;
   $("zsub").hidden = false;
 
   const meta = r
     ? [r.author && esc(r.author), r.rating != null && esc(stars(r.rating)), r.date && esc(r.date),
-       r.verified_purchase && "Verified purchase"].filter(Boolean).join(" &middot; ")
-    : "Listing";
+       r.verified_purchase && L("Verified purchase")].filter(Boolean).join(" &middot; ")
+    : L("Listing");
   // A review's text opens with its title. It is shown once, as the bold line, unless
   // the marked sentence is the title itself, in which case the text is left whole.
   const marked = !!(m && m.confident);
@@ -4625,17 +5265,17 @@ function rvFill() {
     : esc(body.slice(skip, m.unit[0])) +
       `<span class="hit">${markRange(body, m.unit[0], m.unit[1], m.spans)}</span>` + esc(body.slice(m.unit[1]));
   $("zrv").innerHTML = `
-    <div class="rvmeta">${meta || "Review"}</div>
+    <div class="rvmeta">${meta || L("Review")}</div>
     ${skip ? `<div class="rvttl">${esc(r.title)}</div>` : ""}
     ${tag ? `<div><span class="bub ${rv.tone}">${esc(tag)}</span></div>` : ""}
     <div class="rvtext">${text}</div>
-    ${m && !m.confident ? `<div class="rvnote">No exact sentence found</div>` : ""}
-    ${r && r.url ? `<a class="rvlink" href="${esc(r.url)}" target="_blank" rel="noopener">view on Amazon</a>` : ""}`;
+    ${m && !m.confident ? `<div class="rvnote">${L("No exact sentence found")}</div>` : ""}
+    ${r && r.url ? `<a class="rvlink" href="${esc(r.url)}" target="_blank" rel="noopener">${L("view on Amazon")}</a>` : ""}`;
 
-  const unit = rv.listing ? ["Source", "sources"] : ["Review", "reviews"];
   $("zrvpos").innerHTML =
-    `${unit[0]} <b>${rv.i + 1}</b> of ${rv.items.length} &middot; Product <b>${pi + 1}</b> of ${products.length}` +
-    `<br>&larr; &rarr; ${rv.listing ? "image" : "photo"} &middot; &uarr; &darr; product`;
+    L(rv.listing ? "Source <b>{n}</b> of {total}" : "Review <b>{n}</b> of {total}", { n: rv.i + 1, total: rv.items.length }) +
+    " &middot; " + L("Product <b>{n}</b> of {total}", { n: pi + 1, total: products.length }) +
+    `<br>&larr; &rarr; ${L(rv.listing ? "image" : "photo")} &middot; &uarr; &darr; ${L("product")}`;
 
   $("zplist").innerHTML = products.map((g, at) => {
     const q = rv.product(g.asin);
@@ -4805,10 +5445,10 @@ function listingFill() {
   const p = product(asins[i]);
   // Title and ASIN both open the listing on Amazon, as on the card.
   const a = inner => `<a href="${esc(p.link || p.source_url || `https://www.amazon.com/dp/${p.asin}`)}"
-    target="_blank" rel="noopener" title="Open on Amazon">${inner}</a>`;
-  $("zttl").innerHTML = a(esc(p.title || "(no title returned)"));
-  $("zsub").innerHTML = `Listing <b>${i + 1}</b> of ${asins.length} &middot; &larr; &rarr; to switch<br>` +
-    `${a(esc(p.asin))} &middot; ${esc((p.price && p.price.raw) || "no price")}`;
+    target="_blank" rel="noopener" title="${L("Open on Amazon")}">${inner}</a>`;
+  $("zttl").innerHTML = a(esc(p.title || L("(no title returned)")));
+  $("zsub").innerHTML = `${L("Listing <b>{n}</b> of {total}", { n: i + 1, total: asins.length })} &middot; &larr; &rarr; ${L("to switch")}<br>` +
+    `${a(esc(p.asin))} &middot; ${esc((p.price && p.price.raw) || L("no price"))}`;
   $("zsub").hidden = false;
   $("znote").value = (runState.meta.product_notes || {})[p.asin] || "";
   $("zsaved").textContent = "";
@@ -4819,10 +5459,10 @@ $("znote").addEventListener("input", () => {
   const list = zoomState && zoomState.list;
   if (!list) return;
   const asin = list.asins[list.i];
-  $("zsaved").textContent = "Saving…";
+  $("zsaved").textContent = L("Saving…");
   queueNote(asin, $("znote").value, ok => {
     const now = zoomState && zoomState.list;
-    if (now && now.asins[now.i] === asin) $("zsaved").textContent = ok ? "Saved" : "Not saved";
+    if (now && now.asins[now.i] === asin) $("zsaved").textContent = L(ok ? "Saved" : "Not saved");
   });
 });
 
@@ -4859,11 +5499,11 @@ function zoomShow() {
   const rv = z.rv;
   $("zbox").classList.toggle("rv", !!rv);
   $("zcount").textContent = !rv ? `${z.at + 1} / ${n}`
-    : !n ? "No listing image"
-    : `${rv.listing ? "Listing image" : "Customer photo"} ${z.at + 1} / ${n}`;
+    : !n ? L("No listing image")
+    : `${L(rv.listing ? "Listing image" : "Customer photo")} ${z.at + 1} / ${n}`;
   // A customer photo's thumbnail is also where a broken or placeholder one shows itself.
   $("zthumbs").innerHTML = z.urls.map((u, i) =>
-    `<button class="zth${i === z.at ? " on" : ""}" data-zi="${i}" aria-label="Image ${i + 1}">${
+    `<button class="zth${i === z.at ? " on" : ""}" data-zi="${i}" aria-label="${L("Image {n}", { n: i + 1 })}">${
       cphoto ? `<img src="${esc(photoThumb(u, 320))}" data-url="${esc(u)}" alt="" loading="lazy"
                      onload="photoChecked(this, true)" onerror="photoChecked(this, false)">`
              : thumbHtml(u)}</button>`).join("");
@@ -5015,13 +5655,16 @@ async function openSettings() {
 
   for (const [id, [key, listName]] of Object.entries(SETTING_FIELDS)) {
     // An option is a bare value, or { value, label } where the two differ.
+    // Effort and site names are words and are translated; model names and counts are not.
+    const words = listName === "efforts" || listName === "sites";
     $(id).innerHTML = data.options[listName].map(v => {
       const o = typeof v === "object" ? v : { value: v, label: v };
-      return `<option value="${esc(o.value)}">${esc(o.label)}</option>`;
+      return `<option value="${esc(o.value)}">${esc(words ? L(o.label) : o.label)}</option>`;
     }).join("");
     $(id).value = data.settings[key];
   }
   $("s-auto-themes").checked = data.settings.auto_themes !== false;
+  $("s-lang").value = LANG;
   renderAmazonSites();
   $("s-site").focus();
 }
@@ -5035,11 +5678,11 @@ async function renderAmazonSites(note) {
   try { sites = (await api("/api/amazon/status")).sites; } catch (e) { return; }
   $("s-amazon").innerHTML = sites.map(x => `
     <div class="row">
-      <b>${esc(x.label)}</b>
+      <b>${esc(L(x.label))}</b>
       <span class="st ${x.signed_in ? "ok" : "no"}">${
         note && note.site === x.site ? esc(note.text)
-        : x.signed_in ? `signed in &middot; saved ${esc(x.updated)}` : "not signed in"}</span>
-      <button class="btn ghost" data-signin="${esc(x.site)}">${x.signed_in ? "Sign in again" : "Sign in"}</button>
+        : x.signed_in ? L("signed in &middot; saved {when}", { when: esc(x.updated) }) : L("not signed in")}</span>
+      <button class="btn ghost" data-signin="${esc(x.site)}">${L(x.signed_in ? "Sign in again" : "Sign in")}</button>
     </div>`).join("");
   $("s-amazon").querySelectorAll("[data-signin]").forEach(btn => {
     btn.onclick = () => amazonSignIn(btn.dataset.signin,
@@ -5055,22 +5698,24 @@ let signingIn = false;
 async function amazonSignIn(site, say, done) {
   if (signingIn) return;
   signingIn = true;
-  say("A browser window is opening — sign in to Amazon there…");
+  say(L("A browser window is opening — sign in to Amazon there…"));
   try {
     const job = await api("/api/amazon/login", { method: "POST", body: JSON.stringify({ site }) });
     for (;;) {
       await new Promise(r => setTimeout(r, 1000));
       const snap = await api("/api/jobs/" + encodeURIComponent(job.job_id));
       if (snap.state === "running") continue;
-      if (snap.state === "error") throw new Error(snap.error || "Sign-in didn't complete.");
+      if (snap.state === "error") throw new Error(snap.error || L("Sign-in didn't complete. Try again."));
       break;
     }
     signingIn = false;
     done();
   } catch (e) {
     signingIn = false;
-    // The scraper's own messages are in Chinese; say the same thing plainly.
-    say(/[\u4e00-\u9fff]/.test(e.message) ? "Sign-in didn't complete. Try again." : e.message);
+    // The scraper's own messages are in Chinese whatever the interface language, and
+    // are written for its command line; say the same thing plainly.
+    const own = L("Sign-in didn't complete. Try again.");
+    say(e.message !== own && /[\u4e00-\u9fff]/.test(e.message) ? own : e.message);
   }
 }
 
@@ -5083,6 +5728,14 @@ async function saveSettings() {
   $("ssave").disabled = true;
   try {
     await api("/api/settings", { method: "PUT", body: JSON.stringify(patch) });
+    // The language is this browser's own and never goes to the server. A reload
+    // redraws every view in it; the address keeps the place.
+    const lang = $("s-lang").value === "zh" ? "zh" : "en";
+    if (lang !== LANG) {
+      let kept = true;
+      try { localStorage.setItem("lang", lang); } catch (e) { kept = false; }
+      if (kept) { location.reload(); return; }
+    }
     $("sveil").hidden = true;
     // The parse and group confirm dialogs quote the model, so anything on screen
     // showing the old one has to be redrawn.
@@ -5100,7 +5753,7 @@ function openModal() {
   $("veil").hidden = false;
   $("modalerr").hidden = true;
   $("gname").value = "";
-  $("slugpreview").innerHTML = "Saved to <code>data/</code>";
+  $("slugpreview").innerHTML = L("Saved to <code>data/{slug}</code>", { slug: "" });
   $("gname").focus();
 }
 function closeModal() { $("veil").hidden = true; }
@@ -5134,9 +5787,7 @@ $("refetch").addEventListener("change", refreshPreview);
 
 $("gname").addEventListener("input", () => {
   const s = slugify($("gname").value);
-  $("slugpreview").innerHTML = s
-    ? `Saved to <code>data/${esc(s)}/</code>`
-    : "Saved to <code>data/</code>";
+  $("slugpreview").innerHTML = L("Saved to <code>data/{slug}</code>", { slug: s ? esc(s) + "/" : "" });
 });
 $("gname").addEventListener("keydown", e => { if (e.key === "Enter") createGroup(); });
 

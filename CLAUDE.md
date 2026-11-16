@@ -725,3 +725,35 @@ Amazon login brings on the robot check. A waiting job stays `state: "running"` w
 progress bars needed no change. Parsing, clustering and themes are not in a lane. The line
 lives in memory: restarting the server drops waiting jobs. Which listings to buy is still
 decided when the button is pressed, not when the job's turn comes.
+
+---
+
+## Language: English / 中文 interface (built 2026-11-16)
+
+Settings has a **Language · 语言** choice. It is per browser (`localStorage.lang`, never sent to
+the server), and saving a new one reloads the page on the same view. The whole feature lives
+in `static/index.html`; nothing in `app.py`, `pipeline/`, the prompts or `data/` changed.
+
+- **Only the page's own wording is translated.** Text the server or a model wrote stays as it
+  arrives: progress labels, error messages, listing warnings, run notes, tags, cluster and
+  theme titles, product titles, reviews. The PowerPoint export stays English.
+- **`L(text, vars)`: the English text is the key**, with `{name}` placeholders, looked up in
+  the `ZH` table at the top of the script. A string missing from `ZH` shows in English.
+  `plural(n, one, many)` reads `ZH_COUNT` by its plural noun. Never name a variable `L`.
+- **Static markup opts in** with `data-i18n` (text), `data-i18n="html"` and
+  `data-i18n-attr="title placeholder"`; `applyStatic()` translates it once at load, keyed by
+  the element's own English content.
+- **Sentences are whole templates, not joined fragments**, so the Chinese reads as a sentence.
+  New wording goes through `L()` with the full sentence and gets a `ZH` entry.
+- **Server-sent names are translated by value**: list titles (`grouping.TITLES`, the keyword
+  group titles in `results.py`), reasoning efforts and site names. Renaming one on the server
+  needs its `ZH` key renamed too.
+- **Glossary, one word per idea:** group 竞品组 · run 批次 · extract 抓取 · listing 商品页 ·
+  product 商品 · bullets 五点描述 · review 评论 · parse 分析 · tag 标签 · cluster 类别 ·
+  theme 主题 · mention 提及 · credit 点数.
+- **Chinese typography is CSS under `:lang(zh)`**: system Chinese fonts behind the Latin
+  stacks and no letter-spacing.
+- **Checking a change:** with the page in Chinese, `[...L.miss]` in the browser console lists
+  every string shown that had no Chinese. Verified 2026-11-16 in Chromium at 1280 px and
+  600 px over the groups, group, run and results views, the dialogs and Settings: nothing
+  missing, no page errors, and the English page's rendered output identical to before.
