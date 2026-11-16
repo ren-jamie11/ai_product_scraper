@@ -429,11 +429,8 @@ def run_themes(job, slug: str, run_id: str, parse_id: str,
                                          encoding="utf-8")
 
     # Spend and repairs are this run's; carried sections were paid for last time.
-    usage = {
-        "input_tokens": sum(s["usage"]["input_tokens"] for s in fresh),
-        "output_tokens": sum(s["usage"]["output_tokens"] for s in fresh),
-    }
-    actual = tagging._price(usage["input_tokens"], usage["output_tokens"], choice["model"])
+    usage = tagging.sum_usage(s["usage"] for s in fresh)
+    actual = tagging.price_usage(usage, choice["model"])
     repairs = sum(len(s["repairs"]) for s in fresh)
     failures = [{"list": s["title"], "reason": s["error"]}
                 for s in sections if s["status"] == "failed"]

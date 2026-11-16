@@ -278,11 +278,7 @@ def _call(prompt: str, user_input: str, choice: dict, *,
     except json.JSONDecodeError:
         raise error_cls("OpenAI returned something that wasn't valid JSON.") from None
 
-    usage = getattr(response, "usage", None)
-    return payload.get(result_key) or [], {
-        "input_tokens": getattr(usage, "input_tokens", 0) or 0,
-        "output_tokens": getattr(usage, "output_tokens", 0) or 0,
-    }
+    return payload.get(result_key) or [], tagging.usage_of(response)
 
 
 def call_with_retries(prompt: str, user_input: str, choice: dict, *, what: str = "grouped",
@@ -298,7 +294,7 @@ def call_with_retries(prompt: str, user_input: str, choice: dict, *, what: str =
     """
     attempts = max(1, config.OPENAI_MAX_RETRIES + 1)
     last = "unknown error"
-    usage = {"input_tokens": 0, "output_tokens": 0}
+    usage = tagging.empty_usage()
 
     for attempt in range(attempts):
         try:
@@ -449,8 +445,7 @@ def _group_single(key: str, uniques: list[dict], occurrences: list[dict], produc
 
 
 def _add_usage(total: dict, more: dict) -> None:
-    total["input_tokens"] += more.get("input_tokens", 0) or 0
-    total["output_tokens"] += more.get("output_tokens", 0) or 0
+    total.update(tagging.sum_usage([total, more]))
 
 
 def _group_partitioned(key: str, uniques: list[dict], occurrences: list[dict], product: str,
@@ -465,7 +460,7 @@ def _group_partitioned(key: str, uniques: list[dict], occurrences: list[dict], p
     title = TITLES[key]
     texts = [u["display"] for u in uniques]
     notes: list[str] = []
-    usage = {"input_tokens": 0, "output_tokens": 0}
+    usage = tagging.empty_usage()
 
     try:
         vectors = partition.embed(texts)
@@ -656,6 +651,22 @@ def estimate(tagged: dict, prompt: str | None = None, only: list[str] | None = N
 
     `only` narrows it to the lists a partial re-run would group.
     """
+    sizes = {}
+    for key in which_lists(only):
+        occurrences, uniques = collect(tagged, key)
+        if uniques:
+            sizes[key] = {"unique_tags": len(uniques), "occurrences": len(occurrences),
+                          "tag_tokens": sum(len(u["display"]) + 6 for u in uniques) // 4}
+    return estimate_sizes(sizes, prompt)
+
+
+def estimate_sizes(sizes: dict, prompt: str | None = None) -> dict:
+    """The cost and time of grouping lists of the given sizes.
+
+    `sizes` maps a list key to `{unique_tags, occurrences, tag_tokens}`. Split
+    out of `estimate` so the one-step parse can price clustering from projected
+    tag counts, before any tag exists.
+    """
     if prompt is None:
         prompt, _ = load_prompt()
 
@@ -664,16 +675,16 @@ def estimate(tagged: dict, prompt: str | None = None, only: list[str] | None = N
     merge_prompt_tokens = None
     lists, input_tokens, output_tokens, embed_tokens = [], 0, 0, 0
 
-    for key in which_lists(only):
-        occurrences, uniques = collect(tagged, key)
-        if not uniques:
+    for key in LISTS:
+        size = sizes.get(key)
+        if not size or not size["unique_tags"]:
             continue
-        count = len(uniques)
-        tag_tokens = sum(len(u["display"]) + 6 for u in uniques) // 4
+        count = size["unique_tags"]
+        tag_tokens = size["tag_tokens"]
         entry = {
             "key": key,
             "title": TITLES[key],
-            "occurrences": len(occurrences),
+            "occurrences": size["occurrences"],
             "unique_tags": count,
         }
 
@@ -685,16 +696,16 @@ def estimate(tagged: dict, prompt: str | None = None, only: list[str] | None = N
             # Partitions run in parallel, then one merge call sees every tag again.
             if merge_prompt_tokens is None:
                 merge_prompt_tokens = len(load_merge_prompt()[0]) // 4
-            sizes = [len(p) for p in partition.slices(count, config.GROUP_PARTITION_TARGET)]
-            part_outputs = [expected_output_tokens(s) for s in sizes]
+            parts = [len(p) for p in partition.slices(count, config.GROUP_PARTITION_TARGET)]
+            part_outputs = [expected_output_tokens(s) for s in parts]
             clusters_guess = max(1, count // 8)      # ~1 cluster per 8 tags on disk
             merge_output = (config.GROUP_MERGE_EST_OUTPUT_BASE
                             + config.GROUP_MERGE_EST_OUTPUT_PER_CLUSTER * clusters_guess)
-            list_input = (len(sizes) * (prompt_tokens + 60) + tag_tokens
+            list_input = (len(parts) * (prompt_tokens + 60) + tag_tokens
                           + merge_prompt_tokens + tag_tokens + clusters_guess * 20)
             list_output = sum(part_outputs) + merge_output
             embed_tokens += tag_tokens
-            entry.update(mode="partitioned", partitions=len(sizes),
+            entry.update(mode="partitioned", partitions=len(parts),
                          seconds=expected_seconds(max(part_outputs))
                                  + expected_seconds(merge_output))
 
@@ -840,7 +851,9 @@ def run_grouping(job, slug: str, run_id: str, parse_id: str,
              if biggest["mode"] == "partitioned" else f"{biggest['unique_tags']} tags")
     verb = "Re-grouping" if partial else "Grouping"
     total_units = sum(units.values())
-    job.set_total(total_units)
+    # Themes follow as one more unit; counting it from the start keeps the bar
+    # from reading "finished" while they are still being built.
+    job.set_total(total_units + (1 if settings.resolve("auto_themes") else 0))
     job.step(label=f"{verb} {len(collected)} tag {'list' if len(collected) == 1 else 'lists'} "
                    f"with {choice['model']}… (largest has {shape}, {eta})", count=0)
 
@@ -961,11 +974,8 @@ def run_grouping(job, slug: str, run_id: str, parse_id: str,
 
     # Spend and repairs are this run's; statuses and failures cover the whole
     # document, since that is what the results view will show.
-    usage = {
-        "input_tokens": sum(s["usage"]["input_tokens"] for s in fresh),
-        "output_tokens": sum(s["usage"]["output_tokens"] for s in fresh),
-    }
-    actual = tagging._price(usage["input_tokens"], usage["output_tokens"], choice["model"])
+    usage = tagging.sum_usage(s["usage"] for s in fresh)
+    actual = tagging.price_usage(usage, choice["model"])
     repairs = sum(len(s["repairs"]) for s in fresh)
     failures = [{"list": s["title"], "reason": s["error"]}
                 for s in sections if s["status"] == "failed"]

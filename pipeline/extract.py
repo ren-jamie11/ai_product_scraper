@@ -117,12 +117,34 @@ def run_extraction(job, slug: str, run_id: str, items: list[dict], domain: str,
 
     if to_fetch is None:
         to_fetch = items
-    carried = len(items) - len(to_fetch)
-    n = len(to_fetch)
 
-    job.set_total(2 * n)
     if not to_fetch:
         job.step(label="Everything you pasted is already here…", count=0)
+
+    results, walk = _fetch(job, raw_dir, to_fetch, domain, f"reviews-{run_id}")
+    credits_left = None
+
+    for result in results:
+        if result.get("product"):
+            credits_left = rainforest.credits_remaining(result["product"]) or credits_left
+        result["amazon_reviews"] = walk["by_asin"].get(result["asin"]) or []
+
+    api_calls = sum(r.get("attempts") or 1 for r in results)
+    retries = api_calls - len(results)
+    if retries > 0:
+        job.note(f"Rainforest needed {_plural(retries, 'extra call', 'extra calls')} "
+                 f"to return every listing.")
+
+    return _finish_extraction(job, slug, run_id, items, domain, to_fetch, results, walk,
+                              credits_left, api_calls, retries, started)
+
+
+def _fetch(job, raw_dir, to_fetch: list[dict], domain: str, thread_name: str):
+    """Listings and reviews for `to_fetch`, at the same time: listings in parallel
+    from Rainforest, reviews one ASIN after another from Amazon. Raw payloads are
+    written as they land. Returns (listing results, the review walk)."""
+    n = len(to_fetch)
+    job.set_total(2 * n)
 
     counts = {"listings": 0, "reviews": 0}
     lock = threading.Lock()
@@ -132,8 +154,6 @@ def run_extraction(job, slug: str, run_id: str, items: list[dict], domain: str,
             counts[which] += 1
             label = f"Listings {counts['listings']}/{n} · Reviews {counts['reviews']}/{n}"
         job.step(label=label)
-
-    credits_left = None
 
     def on_result(result: dict) -> None:
         # Keep the raw payload before touching it.
@@ -150,7 +170,7 @@ def run_extraction(job, slug: str, run_id: str, items: list[dict], domain: str,
         walk.update(_walk_reviews(job, raw_dir, [i["asin"] for i in to_fetch], domain,
                                   lambda: progress("reviews")))
 
-    reviewer = threading.Thread(target=review_worker, daemon=True, name=f"reviews-{run_id}")
+    reviewer = threading.Thread(target=review_worker, daemon=True, name=thread_name)
     if to_fetch:
         job.step(label=f"Listings 0/{n} · Reviews 0/{n}", count=0)
         reviewer.start()
@@ -161,17 +181,15 @@ def run_extraction(job, slug: str, run_id: str, items: list[dict], domain: str,
         job.step(label=f"Listings {n}/{n} · Reviews {counts['reviews']}/{n}", count=0)
     if to_fetch:
         reviewer.join()
+    return results, walk
 
-    for result in results:
-        if result.get("product"):
-            credits_left = rainforest.credits_remaining(result["product"]) or credits_left
-        result["amazon_reviews"] = walk["by_asin"].get(result["asin"]) or []
 
-    api_calls = sum(r.get("attempts") or 1 for r in results)
-    retries = api_calls - len(results)
-    if retries > 0:
-        job.note(f"Rainforest needed {_plural(retries, 'extra call', 'extra calls')} "
-                 f"to return every listing.")
+def _finish_extraction(job, slug, run_id, items, domain, to_fetch, results, walk,
+                       credits_left, api_calls, retries, started) -> dict:
+    """Normalize what was fetched, fold in what the group held, write the run."""
+    directory = storage.run_dir(slug, run_id)
+    raw_dir = directory / "raw"
+    carried = len(items) - len(to_fetch)
 
     job.step(label="Organising the results…", count=0)
     fresh = {p["asin"]: p for p in (normalize.normalize_product(r) for r in results)}
@@ -236,9 +254,32 @@ def missing_reviews(slug: str, run_id: str) -> list[str]:
             if p.get("fetch_ok") and not p.get("reviews")]
 
 
-def fetch_missing_reviews(job, slug: str, run_id: str) -> dict:
+def scraped(slug: str, run_id: str, asin: str) -> bool:
+    """Whether this listing's reviews have ever been read from Amazon in this run."""
+    return (storage.run_dir(slug, run_id) / "raw" / f"{asin}.amazon_reviews.json").is_file()
+
+
+def unscraped(slug: str, run_id: str) -> list[str]:
+    """The live, fetched listings whose reviews were never read from Amazon: runs
+    from before November 2026, and listings a stopped fetch didn't reach. These
+    are the ones with no customer photos to show."""
+    run = storage.load_run(slug, run_id)
+    return [p["asin"] for p in run.get("products", [])
+            if p.get("fetch_ok") and not scraped(slug, run_id, p["asin"])]
+
+
+SCOPES = {"missing": missing_reviews, "unscraped": unscraped}
+
+
+def fetch_missing_reviews(job, slug: str, run_id: str, scope: str = "missing") -> dict:
     """
-    Fill in reviews for the listings in an existing run that have none.
+    Read reviews from Amazon for listings in an existing run.
+
+    `scope` picks the listings: "missing" is those with no reviews at all,
+    "unscraped" those never read from Amazon, whatever reviews they hold from
+    Rainforest or from pasting. A review the listing already has — the same id,
+    or the same text — is left as it is and simply gains its photos, since those
+    are looked up from the scrape. Only reviews it doesn't have are added.
 
     Reads them from the site the run was extracted from, spends no Rainforest
     credits, and adds what it finds to extracted.json — it is machine output
@@ -253,7 +294,7 @@ def fetch_missing_reviews(job, slug: str, run_id: str) -> dict:
         raise storage.StorageError("That run has no extracted data yet.")
     domain = extracted.get("amazon_domain") or settings.resolve("amazon_site")
 
-    asins = missing_reviews(slug, run_id)
+    asins = SCOPES[scope](slug, run_id)
     n = len(asins)
     job.set_total(n)
     done = {"n": 0}
@@ -267,7 +308,7 @@ def fetch_missing_reviews(job, slug: str, run_id: str) -> dict:
 
     edits = storage.read_json(directory / "edits.json", {}) or {}
     edits_changed = False
-    added = 0
+    added = matched = 0
     for product in extracted.get("products", []):
         fresh = walk["by_asin"].get(product.get("asin"))
         if not fresh:
@@ -276,9 +317,13 @@ def fetch_missing_reviews(job, slug: str, run_id: str) -> dict:
         target = override["reviews"] if isinstance(override.get("reviews"), list) \
             else product.setdefault("reviews", [])
         ids = {r.get("id") for r in target}
-        bodies = {normalize.body_key(r.get("body")) for r in target}
+        # Keyed by text as well, so a review pasted by hand (its own id, and often
+        # cut off at "Read more") is recognised and not added a second time.
+        bodies = {normalize.body_key(r.get("body")): r.get("id") for r in target}
         new = [r for r in fresh
-               if r["id"] not in ids and normalize.body_key(r["body"]) not in bodies]
+               if r["id"] not in ids
+               and not normalize.find_duplicate(normalize.body_key(r["body"]), bodies)[1]]
+        matched += len(fresh) - len(new)
         target.extend(new)
         added += len(new)
         edits_changed = edits_changed or (target is override.get("reviews") and bool(new))
@@ -294,9 +339,10 @@ def fetch_missing_reviews(job, slug: str, run_id: str) -> dict:
     notes = [x for x in log.get("notes") or [] if not x.startswith(STALE_REVIEW_NOTES)]
     if walk["fetched"]:
         job.note(f"Reviews for {_plural(walk['fetched'], 'listing', 'listings')} were fetched "
-                 f"from {domain} afterwards ({_plural(added, 'review', 'reviews')}).")
+                 f"from {domain} afterwards: {_plural(added, 'new review', 'new reviews')} added"
+                 + (f"; {matched} were already here and now carry any photos they have." if matched else "."))
     log.update({
-        "reviews": {**_review_log(walk), "added": added,
+        "reviews": {**_review_log(walk), "added": added, "matched": matched, "scope": scope,
                     "elapsed_seconds": round(time.perf_counter() - started, 1),
                     "fetched_at": storage.now_iso()},
         "notes": notes + [x for x in job.notes if x not in notes],
@@ -306,5 +352,96 @@ def fetch_missing_reviews(job, slug: str, run_id: str) -> dict:
     storage.write_json(directory / "run_log.json", log)
 
     return {"run_id": run_id, "slug": slug, **summary,
-            "reviews_added": added, "listings_filled": walk["fetched"],
-            "stopped": walk["stopped"]}
+            "reviews_added": added, "reviews_matched": matched,
+            "listings_filled": walk["fetched"], "stopped": walk["stopped"]}
+
+
+# ---------------------------------------------------------------------------
+# Adding listings to a run that already exists
+# ---------------------------------------------------------------------------
+
+def split_new(slug: str, run_id: str, items: list[dict]) -> dict:
+    """Which pasted ASINs are new to this run, already in it, or removed from it."""
+    run = storage.load_run(slug, run_id, include_deleted=True)
+    here = {p["asin"]: bool(p.get("deleted")) for p in run.get("products", [])}
+    return {
+        "new": [i for i in items if i["asin"] not in here],
+        "in_run": [i["asin"] for i in items if here.get(i["asin"]) is False],
+        "removed": [i["asin"] for i in items if here.get(i["asin"]) is True],
+    }
+
+
+def add_to_run(job, slug: str, run_id: str, items: list[dict],
+               to_fetch: list[dict]) -> dict:
+    """
+    Add listings to an existing run: `items` are the new ASINs, `to_fetch` the
+    ones the group doesn't already hold complete.
+
+    The same steps as a new run — listings from Rainforest in parallel, reviews
+    from Amazon one ASIN at a time, then the group's own copies folded in — but
+    appended to this run's files instead of starting new ones. Nothing already in
+    the run is touched, and the run's existing parse stays as it was: the new
+    listings are simply not in its results until it is parsed again.
+    """
+    started = time.perf_counter()
+    directory = storage.run_dir(slug, run_id)
+    raw_dir = directory / "raw"
+    extracted = storage.read_json(directory / "extracted.json")
+    if not extracted:
+        raise storage.StorageError("That run has no extracted data yet.")
+    domain = extracted.get("amazon_domain") or settings.resolve("amazon_site")
+
+    present = {p.get("asin") for p in extracted.get("products", [])}
+    items = [i for i in items if i["asin"] not in present]
+    wanted = {i["asin"] for i in items}
+    to_fetch = [i for i in to_fetch if i["asin"] in wanted]
+
+    results, walk = _fetch(job, raw_dir, to_fetch, domain, f"add-{run_id}")
+    credits_left = None
+    for result in results:
+        if result.get("product"):
+            credits_left = rainforest.credits_remaining(result["product"]) or credits_left
+        result["amazon_reviews"] = walk["by_asin"].get(result["asin"]) or []
+
+    job.step(label="Organising the results…", count=0)
+    fresh = {p["asin"]: p for p in (normalize.normalize_product(r) for r in results)}
+    resolved = compact.resolve(slug, items, fresh, run_id)
+    compact.copy_raw(slug, resolved["raw_from"], raw_dir)
+
+    extracted.setdefault("products", []).extend(resolved["products"])
+    storage.write_json(directory / "extracted.json", extracted)
+    if resolved["edits"]:
+        edits = storage.read_json(directory / "edits.json", {}) or {}
+        edits.update(resolved["edits"])
+        storage.write_json(directory / "edits.json", edits)
+
+    added = [p["asin"] for p in resolved["products"]]
+    carried = len(items) - len(to_fetch)
+    if carried:
+        job.note(f"{_plural(carried, 'listing was', 'listings were')} already complete in this "
+                 f"group and carried across instead of fetched again.")
+    job.note(f"{_plural(len(added), 'listing', 'listings')} added to this run afterwards.")
+
+    summary = normalize.summarize(storage.load_run(slug, run_id).get("products", []))
+    log = storage.read_json(directory / "run_log.json", {}) or {}
+    api_calls = sum(r.get("attempts") or 1 for r in results)
+    log.update({
+        "credits_remaining": credits_left if credits_left is not None else log.get("credits_remaining"),
+        "api_calls": (log.get("api_calls") or 0) + api_calls,
+        "fetched": (log.get("fetched") or 0) + len(to_fetch),
+        "carried": (log.get("carried") or 0) + carried,
+        "outcomes": (log.get("outcomes") or []) + resolved["outcomes"],
+        "inputs": (log.get("inputs") or []) + items,
+        "notes": (log.get("notes") or []) + [x for x in job.notes if x not in (log.get("notes") or [])],
+        "failures": (log.get("failures") or []) + list(job.failures),
+        "additions": (log.get("additions") or []) + [{
+            "at": storage.now_iso(), "asins": added, "api_calls": api_calls,
+            "reviews": _review_log(walk),
+            "elapsed_seconds": round(time.perf_counter() - started, 1),
+        }],
+        **summary,
+    })
+    storage.write_json(directory / "run_log.json", log)
+
+    return {"run_id": run_id, "slug": slug, **summary, "added": added,
+            "credits_remaining": credits_left, "stopped": walk["stopped"]}

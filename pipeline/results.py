@@ -17,7 +17,7 @@ import re
 from collections import Counter
 
 import config
-from pipeline import attribution, storage, themes
+from pipeline import attribution, normalize, storage, themes
 
 PREVIEW = 3
 
@@ -149,7 +149,7 @@ def build(slug: str, run_id: str, parse_id: str) -> dict:
 
     live_products = [p for p in products.values() if not p.get("deleted")]
 
-    _attach_review_media(storage.run_dir(slug, run_id) / "raw", bodies)
+    _attach_review_media(storage.run_dir(slug, run_id) / "raw", bodies, products)
     _photos_first(sections, occurrences, bodies)
 
     return {
@@ -376,12 +376,13 @@ def _photos(urls) -> list[str]:
     return photos
 
 
-def _attach_review_media(raw_dir, bodies: dict) -> None:
+def _attach_review_media(raw_dir, bodies: dict, products: dict) -> None:
     """Give each review body its customer photos and its own page on Amazon.
 
     Read from the raw scrape (raw/<ASIN>.amazon_reviews.json) rather than the run, so
-    a parse made before this existed gets them too. Reviews from Rainforest or pasted
-    by hand have neither, and say so with an empty list and no link.
+    a parse made before this existed gets them too. A review from Rainforest or pasted
+    by hand gets them once its listing has been scraped and the scrape holds the same
+    review; until then it has neither, and says so with an empty list and no link.
     """
     media: dict[str, dict] = {}
     for body_id, body in bodies.items():
@@ -390,7 +391,8 @@ def _attach_review_media(raw_dir, bodies: dict) -> None:
             continue
         asin = body.get("asin")
         if asin not in media:
-            media[asin] = review_media(raw_dir, asin)
+            media[asin] = media_for_reviews(
+                raw_dir, asin, (products.get(asin) or {}).get("reviews") or [])
         found = media[asin].get(body_id.split(":", 2)[-1]) or {}
         review["photos"] = found.get("photos") or []
         review["author"] = found.get("author")
@@ -411,12 +413,35 @@ def review_media(raw_dir, asin: str) -> dict[str, dict]:
         if not review_id:
             continue
         out[review_id] = {
+            "body_key": normalize.body_key(normalize.clean_text(raw.get("review"))),
             "photos": _photos(raw.get("image_urls")),
             "author": raw.get("username") or None,
             # The review's permanent page, not the scraper's link, which carries the
             # listing-page context it was found in.
             "url": f"https://www.{site}/gp/customer-reviews/{review_id}" if site else None,
         }
+    return out
+
+
+def media_for_reviews(raw_dir, asin: str, reviews: list[dict]) -> dict[str, dict]:
+    """`review_media`, keyed by the ids the run's own reviews carry.
+
+    A review scraped from Amazon has Amazon's id and matches on it. One that came
+    from Rainforest usually does too. One pasted by hand has an id of its own, so it
+    is matched on its text instead — the same rule that stops a review being pasted
+    twice, which also sees through a body cut off at "Read more".
+    """
+    scraped = review_media(raw_dir, asin)
+    if not scraped:
+        return {}
+    by_body = {m["body_key"]: m for m in scraped.values() if m["body_key"]}
+    out = {}
+    for review in reviews:
+        found = scraped.get(review.get("id"))
+        if not found:
+            found, _ = normalize.find_duplicate(normalize.body_key(review.get("body")), by_body)
+        if found:
+            out[review.get("id")] = {k: v for k, v in found.items() if k != "body_key"}
     return out
 
 

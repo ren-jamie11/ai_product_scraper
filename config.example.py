@@ -25,23 +25,38 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 # ---------------------------------------------------------------------------
 
 # One call per text body, high volume — a mid tier is the right trade here.
-OPENAI_TAG_MODEL = os.getenv("OPENAI_TAG_MODEL", "gpt-5.6-terra")
+# Moved from gpt-5.6-terra on 2026-11-12: on the same bodies gpt-6.1-terra found
+# the same features (64 vs 69 over 60 reviews) at about a third of the cost.
+# It is a little more reserved on mild complaints (39 vs 46).
+OPENAI_TAG_MODEL = os.getenv("OPENAI_TAG_MODEL", "gpt-6.1-terra")
 
 # One call per tag list, real judgment required — worth the strongest model on the
-# Settings menu. Base `gpt-5.6` is deliberately not offered there, so the default
-# is the top of the luna/terra/sol family.
-OPENAI_GROUP_MODEL = os.getenv("OPENAI_GROUP_MODEL", "gpt-5.6-sol")
+# Settings menu, the top of the luna/terra/sol family. Moved from gpt-5.6-sol on
+# 2026-11-12: gpt-6.1-sol agrees with its clusters about as closely as gpt-5.6-sol
+# agrees with itself (96.9% vs 97.8% of tag pairs) at half the price.
+OPENAI_GROUP_MODEL = os.getenv("OPENAI_GROUP_MODEL", "gpt-6.1-sol")
 
-# USD per 1,000,000 tokens, used only for the cost estimate shown before a parse.
-# VERIFY these against https://openai.com/api/pricing — they are placeholders.
+# USD per 1,000,000 tokens, standard tier, for the cost shown before and after a
+# parse. Checked against https://developers.openai.com/api/docs/pricing on
+# 2026-11-12 — re-check when a model is added or the bill and the logs disagree.
+#
+# `cached_input` is the rate for the part of a prompt OpenAI has seen before; the
+# tagging prompt is identical on every body, so most tagging input bills at it.
+# Writing a prompt into that cache costs 1.25x the input rate (CACHE_WRITE_MULTIPLIER).
+#
+# gpt-5.6-sol is on promotional pricing until 2026-11-30; after that it is
+# $5.00 / $0.50 / $30.00.
 MODEL_PRICING = {
-    "gpt-5.6":       {"input": 1.25, "output": 10.00},
-    "gpt-5.6-sol":   {"input": 1.25, "output": 10.00},
-    "gpt-5.6-terra": {"input": 0.25, "output": 2.00},
-    "gpt-5.6-luna":  {"input": 0.05, "output": 0.40},
+    "gpt-6.1-sol":   {"input": 2.00, "cached_input": 0.10, "output": 10.00},
+    "gpt-6.1-terra": {"input": 1.00, "cached_input": 0.05, "output": 5.00},
+    "gpt-6-luna":    {"input": 0.10, "cached_input": 0.01, "output": 0.50},
+    "gpt-5.6-sol":   {"input": 4.00, "cached_input": 0.40, "output": 20.00},
+    "gpt-5.6-terra": {"input": 2.00, "cached_input": 0.20, "output": 12.00},
+    "gpt-5.6-luna":  {"input": 0.20, "cached_input": 0.02, "output": 1.20},
     # Only used to partition long tag lists before clustering (see GROUP_EMBED_MODEL).
     "text-embedding-3-small": {"input": 0.02, "output": 0.0},
 }
+CACHE_WRITE_MULTIPLIER = 1.25
 
 
 # ---------------------------------------------------------------------------
@@ -108,7 +123,8 @@ TAG_MAX_OUTPUT_TOKENS = int(os.getenv("TAG_MAX_OUTPUT_TOKENS", "4000"))
 # Rough output tokens per body, used only for the pre-parse cost estimate. The
 # real number is written to parse_log.json after every run — check it there and
 # adjust this if the estimate drifts.
-TAG_EST_OUTPUT_TOKENS = int(os.getenv("TAG_EST_OUTPUT_TOKENS", "320"))
+# Measured 2026-11-12: 136 a body on gpt-6.1-terra, ~240 on gpt-5.6-terra.
+TAG_EST_OUTPUT_TOKENS = int(os.getenv("TAG_EST_OUTPUT_TOKENS", "160"))
 
 
 # ---------------------------------------------------------------------------
@@ -116,7 +132,12 @@ TAG_EST_OUTPUT_TOKENS = int(os.getenv("TAG_EST_OUTPUT_TOKENS", "320"))
 # ---------------------------------------------------------------------------
 
 RAINFOREST_WORKERS = int(os.getenv("RAINFOREST_WORKERS", "5"))
-OPENAI_WORKERS = int(os.getenv("OPENAI_WORKERS", "8"))
+# Tagging calls in flight at once. Measured 2026-11-12: each worker sends about
+# 88,000 tokens a minute (a ~3.7 s call carrying ~5,400 input tokens), so 24 is
+# ~2.1M tokens/min — just over half of the account's 4,000,000 TPM limit for the
+# tagging model. Re-derive it if the rate-limit tier or the prompt size changes.
+# Clustering and themes read this too, but are capped by how many lists there are.
+OPENAI_WORKERS = int(os.getenv("OPENAI_WORKERS", "24"))
 OPENAI_MAX_RETRIES = int(os.getenv("OPENAI_MAX_RETRIES", "2"))
 
 # Seconds to wait for one grouping or theme call. The SDK's default is 600, and
@@ -125,6 +146,30 @@ OPENAI_MAX_RETRIES = int(os.getenv("OPENAI_MAX_RETRIES", "2"))
 # then be retried twice — paying three times for nothing. Tagging calls are
 # short and keep the SDK default.
 OPENAI_LONG_CALL_TIMEOUT = int(os.getenv("OPENAI_LONG_CALL_TIMEOUT", "1800"))
+
+
+# ---------------------------------------------------------------------------
+# Parse results — tagging, then clustering and themes, as one job
+# ---------------------------------------------------------------------------
+
+# Clustering starts as soon as tagging ends, unless more than this share of the
+# bodies failed to tag. A few failures are noted and carried; past this the tags
+# are kept, clustering is not started, and the run says why.
+PARSE_MAX_FAILED_SHARE = float(os.getenv("PARSE_MAX_FAILED_SHARE", "0.10"))
+
+# The cost shown before a parse includes clustering, which depends on tag counts
+# that don't exist yet. These project them: distinct tags per tagged body, and
+# clusters per distinct tag (which decides whether a list is long enough for
+# themes). Medians over the 20 parses on disk, 2026-11-12; a category can sit at
+# half or double the features figure, so that part of the estimate is a guess.
+PARSE_EST_UNIQUE_TAGS_PER_BODY = {"features": 1.8, "complaints": 0.5,
+                                  "assembly_maintenance": 0.05}
+PARSE_EST_CLUSTERS_PER_TAG = {"features": 0.12, "complaints": 0.21,
+                              "assembly_maintenance": 0.5}
+
+# Seconds one tagging call takes, for the "about N min" on the confirm dialog.
+# Measured 2026-11-12: 325 bodies in 52 s on 24 workers.
+TAG_SECONDS_PER_CALL = float(os.getenv("TAG_SECONDS_PER_CALL", "3.8"))
 
 
 # ---------------------------------------------------------------------------
@@ -211,7 +256,9 @@ THEME_MIN_CLUSTERS = int(os.getenv("THEME_MIN_CLUSTERS", "13"))
 THEME_MAX_OUTPUT_TOKENS = int(os.getenv("THEME_MAX_OUTPUT_TOKENS", "24000"))
 
 # Rough output tokens per list, for the pre-theming cost estimate.
-THEME_EST_OUTPUT_TOKENS = int(os.getenv("THEME_EST_OUTPUT_TOKENS", "900"))
+# Measured 2026-11-12: ~3,200 a list on gpt-6.1-sol (5,000-6,000 on gpt-5.6-sol);
+# nearly all of it is reasoning at `high`.
+THEME_EST_OUTPUT_TOKENS = int(os.getenv("THEME_EST_OUTPUT_TOKENS", "3500"))
 
 
 # ---------------------------------------------------------------------------

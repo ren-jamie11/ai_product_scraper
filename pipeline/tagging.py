@@ -291,11 +291,48 @@ def _call(prompt: str, user_input: str, choice: dict) -> tuple[dict, dict]:
     except json.JSONDecodeError:
         raise TaggingError("OpenAI returned something that wasn't valid JSON.") from None
 
+    return _clean(tags), usage_of(response)
+
+
+USAGE_KEYS = ("input_tokens", "cached_tokens", "cache_write_tokens", "output_tokens")
+
+
+def usage_of(response) -> dict:
+    """The token counts one response was billed for.
+
+    `input_tokens` is the whole prompt; `cached_tokens` and `cache_write_tokens`
+    are the parts of it billed at the cached rate and the cache-write rate, and
+    without them a cost worked out from the log is wrong in both directions.
+    """
     usage = getattr(response, "usage", None)
-    return _clean(tags), {
+    details = getattr(usage, "input_tokens_details", None)
+    return {
         "input_tokens": getattr(usage, "input_tokens", 0) or 0,
+        "cached_tokens": getattr(details, "cached_tokens", 0) or 0,
+        "cache_write_tokens": getattr(details, "cache_write_tokens", 0) or 0,
         "output_tokens": getattr(usage, "output_tokens", 0) or 0,
     }
+
+
+def empty_usage() -> dict:
+    return {key: 0 for key in USAGE_KEYS}
+
+
+def sum_usage(usages) -> dict:
+    """Add usage records together. Records written before 2026-11-12 carry no
+    cache counts and add as zero."""
+    total = empty_usage()
+    for usage in usages:
+        for key in USAGE_KEYS:
+            total[key] += (usage or {}).get(key, 0) or 0
+    return total
+
+
+def price_usage(usage: dict, model: str | None = None) -> dict:
+    """What a usage record cost."""
+    return _price(usage.get("input_tokens", 0), usage.get("output_tokens", 0), model,
+                  cached_tokens=usage.get("cached_tokens", 0),
+                  cache_write_tokens=usage.get("cache_write_tokens", 0))
 
 
 def _clean(tags) -> dict:
@@ -373,14 +410,14 @@ def tag_body(body: dict, product: dict | None, prompt: str,
             last = str(exc) or exc.__class__.__name__
             if not _retryable(exc) or attempt == attempts - 1:
                 break
-            # Exponential backoff with jitter, so 8 workers that all hit a rate
+            # Exponential backoff with jitter, so workers that all hit a rate
             # limit together don't march back in lockstep.
             time.sleep((2 ** attempt) + random.uniform(0, 0.5))
 
     if _retryable_text(last):
         last = f"Rate limited or unreachable after {attempts} attempts"
     return {**body, "tags": json.loads(json.dumps(EMPTY_TAGS)),
-            "status": "failed", "error": last, "usage": {"input_tokens": 0, "output_tokens": 0}}
+            "status": "failed", "error": last, "usage": empty_usage()}
 
 
 def _retryable_text(message: str) -> bool:
@@ -407,6 +444,12 @@ def estimate(bodies: list[dict], prompt: str | None = None) -> dict:
     input_tokens = sum(prompt_tokens + len(b["text"]) // 4 + 40 for b in taggable)
     output_tokens = len(taggable) * config.TAG_EST_OUTPUT_TOKENS
     model = settings.resolve("tag_model")
+    # The instructions are the same on every body, so OpenAI bills them at the
+    # cached rate once they have been seen — every body except the first wave,
+    # which goes out before any of them has landed. Everything not read from the
+    # cache (that first wave, and each body's own text) is billed as a cache write.
+    cached_tokens = prompt_tokens * max(0, len(taggable) - config.OPENAI_WORKERS)
+    written_tokens = input_tokens - cached_tokens
 
     return {
         "bodies_total": len(bodies),
@@ -417,15 +460,29 @@ def estimate(bodies: list[dict], prompt: str | None = None) -> dict:
         "model": model,
         "input_tokens": input_tokens,
         "output_tokens": output_tokens,
-        **_price(input_tokens, output_tokens, model),
+        "cached_tokens": cached_tokens,
+        **_price(input_tokens, output_tokens, model,
+                 cached_tokens=cached_tokens, cache_write_tokens=written_tokens),
     }
 
 
-def _price(input_tokens: int, output_tokens: int, model: str | None = None) -> dict:
+def _price(input_tokens: int, output_tokens: int, model: str | None = None, *,
+           cached_tokens: int = 0, cache_write_tokens: int = 0) -> dict:
+    """Cost at the model's published rates.
+
+    `cached_tokens` and `cache_write_tokens` are parts of `input_tokens`, billed
+    at the cached rate and at 1.25x the input rate; the rest is plain input.
+    """
     rates = config.MODEL_PRICING.get(model or settings.resolve("tag_model"))
     if not rates:
         return {"cost_usd": None, "cost_known": False}
-    cost = (input_tokens / 1e6) * rates["input"] + (output_tokens / 1e6) * rates["output"]
+    cached = min(cached_tokens, input_tokens)
+    written = min(cache_write_tokens, input_tokens - cached)
+    plain = input_tokens - cached - written
+    cost = (plain * rates["input"]
+            + cached * rates.get("cached_input", rates["input"])
+            + written * rates["input"] * config.CACHE_WRITE_MULTIPLIER
+            + output_tokens * rates["output"]) / 1e6
     return {"cost_usd": round(cost, 4), "cost_known": True}
 
 
@@ -566,11 +623,8 @@ def run_tagging(job, slug: str, run_id: str) -> dict:
     })
 
     counts = _counts(tagged)
-    usage = {
-        "input_tokens": sum(r["usage"]["input_tokens"] for r in results),
-        "output_tokens": sum(r["usage"]["output_tokens"] for r in results),
-    }
-    actual = _price(usage["input_tokens"], usage["output_tokens"], choice["model"])
+    usage = sum_usage(r["usage"] for r in results)
+    actual = price_usage(usage, choice["model"])
 
     if failures:
         job.note(
