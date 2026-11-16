@@ -8,6 +8,7 @@ Then: http://127.0.0.1:5000  (opened automatically)
 from __future__ import annotations
 
 import io
+import socket
 import sys
 import threading
 import webbrowser
@@ -297,6 +298,12 @@ def api_amazon_login():
     site = (request.get_json(silent=True) or {}).get("site")
     if site not in settings.SITES:
         raise storage.StorageError("Choose amazon.ca or amazon.com to sign in to.")
+    # The sign-in window opens on the computer running the app, so only a browser
+    # on that computer can use it. A teammate's click would pop it on someone else's screen.
+    if request.remote_addr not in ("127.0.0.1", "::1"):
+        raise storage.StorageError(
+            "Amazon sign-in has to be done on the computer that runs the app. "
+            "Ask Jamie to sign in there, then press Fetch reviews.")
 
     jobs.prune()
     job = jobs.start(
@@ -794,6 +801,11 @@ def main() -> None:
     print(f"\n  Competitor Feature-Benefit Extractor")
     print(f"  Serving   {url}")
     print(f"  Data dir  {config.DATA_DIR}")
+    shared = config.HOST not in ("127.0.0.1", "localhost", "::1")
+    if shared:
+        # Listening on the office network: this PC opens it at 127.0.0.1, the team by name.
+        url = f"http://127.0.0.1:{config.PORT}"
+        print(f"  Team link http://{socket.gethostname()}:{config.PORT}")
     if not config.RAINFOREST_API_KEY:
         print("  ! RAINFOREST_API_KEY is empty in config.py — extraction will fail.")
     if not config.OPENAI_API_KEY:
@@ -803,7 +815,13 @@ def main() -> None:
     if config.OPEN_BROWSER and "--no-browser" not in sys.argv:
         threading.Timer(1.0, lambda: webbrowser.open(url)).start()
 
-    app.run(host=config.HOST, port=config.PORT, debug=False, threaded=True)
+    try:
+        from waitress import serve
+    except ImportError:
+        # Flask's own server: fine for one person, not meant for a team.
+        app.run(host=config.HOST, port=config.PORT, debug=False, threaded=True)
+    else:
+        serve(app, host=config.HOST, port=config.PORT, threads=16)
 
 
 if __name__ == "__main__":
