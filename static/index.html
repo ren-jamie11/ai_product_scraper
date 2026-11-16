@@ -968,12 +968,14 @@ section[id]{scroll-margin-top:72px}
     <h3 id="stitle" style="margin-bottom:16px">Settings</h3>
 
     <h4>Amazon</h4>
-    <p class="sd">Listings and reviews are both read from this site, for new extractions.
+    <p class="sd">Listing details (title, price, rating) always come from amazon.com.
+       Reviews are read from the site chosen here, for new extractions; a product that
+       isn't on amazon.com takes its details from this site too.
        Reviews come straight from Amazon with your saved sign-in, taken evenly across
        star ratings; every one is tagged, so more reviews means a longer, costlier parse.</p>
     <div class="spair">
       <div class="fld">
-        <label for="s-site">Amazon site</label>
+        <label for="s-site">Reviews from</label>
         <select id="s-site"></select>
       </div>
       <div class="fld">

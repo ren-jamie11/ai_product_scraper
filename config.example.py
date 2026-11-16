@@ -63,7 +63,13 @@ CACHE_WRITE_MULTIPLIER = 1.25
 # Extraction
 # ---------------------------------------------------------------------------
 
+# Where reviews are read from (the "Reviews from" setting overrides this).
 AMAZON_DOMAIN = os.getenv("AMAZON_DOMAIN", "amazon.ca")
+
+# Where Rainforest reads the listing (title, price, rating, bullets): always this
+# site, whatever the reviews' site is. An ASIN it has no listing for is looked up
+# on the reviews' site instead and its card says so.
+LISTING_DOMAIN = os.getenv("LISTING_DOMAIN", "amazon.com")
 
 # Reviews come from Amazon's own review pages (pipeline/amazon_reviews.py), read
 # with the login saved in amazon_cookies.<site>.txt. Rainforest stopped returning

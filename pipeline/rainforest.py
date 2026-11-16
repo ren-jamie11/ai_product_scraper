@@ -87,7 +87,7 @@ def fetch_product(asin: str, domain: str) -> dict:
     return request({"type": "product", "asin": asin}, asin=asin, domain=domain)
 
 
-def fetch_product_persistent(asin: str, domain: str) -> tuple[dict, int]:
+def fetch_product_persistent(asin: str, domain: str, attempts: int | None = None) -> tuple[dict, int]:
     """
     Fetch a listing, asking again only when the call fails or comes back empty.
 
@@ -95,9 +95,10 @@ def fetch_product_persistent(asin: str, domain: str) -> tuple[dict, int]:
     product rather than an error, so it uses every attempt before being reported
     — the price of not mistaking a blip for a dead listing.
 
-    Returns (payload, attempts_used). Raises the last error if every attempt failed.
+    Returns (payload, attempts_used). Raises the last error if every attempt failed;
+    the error carries `.attempts`, the calls it took to get there.
     """
-    attempts = max(1, config.PRODUCT_ATTEMPTS)
+    attempts = max(1, attempts or config.PRODUCT_ATTEMPTS)
     body: dict = {}
     error: RainforestError | None = None
 
@@ -106,8 +107,8 @@ def fetch_product_persistent(asin: str, domain: str) -> tuple[dict, int]:
             body, error = fetch_product(asin, domain), None
         except RainforestError as exc:
             error = exc
-            # A bad key or spent credits won't improve by asking again.
-            if "API key" in str(exc) or "credits" in str(exc):
+            if _hopeless(exc):
+                exc.attempts = attempt
                 raise
         else:
             if (body.get("product") or {}).get("title"):
@@ -116,12 +117,29 @@ def fetch_product_persistent(asin: str, domain: str) -> tuple[dict, int]:
             time.sleep(0.6 * attempt)
 
     if error:
+        error.attempts = attempts
         raise error
     return body, attempts
 
 
-def _fetch_one(item: dict, domain: str) -> dict:
-    """Fetch the listing for a single ASIN. Never raises — failure is data."""
+def _hopeless(exc: Exception) -> bool:
+    """A bad key or spent credits won't improve by asking again, on any site."""
+    return "API key" in str(exc) or "credits" in str(exc)
+
+
+# Calls spent on the listing site before trying the fallback site. An ASIN that
+# isn't sold there answers empty every time, so the full count would be wasted.
+ATTEMPTS_BEFORE_FALLBACK = 2
+
+
+def _fetch_one(item: dict, domain: str, fallback: str | None = None) -> dict:
+    """
+    Fetch the listing for a single ASIN. Never raises — failure is data.
+
+    With `fallback` set to a different site, an ASIN that `domain` has no listing
+    for is fetched from there instead, and the result says so in `fallback_from`
+    (the site that didn't have it) — whether or not the second site had it either.
+    """
     asin = item["asin"]
     started = time.perf_counter()
     result = {
@@ -132,24 +150,47 @@ def _fetch_one(item: dict, domain: str) -> dict:
         "error": None,
         "seconds": 0.0,
     }
+    if fallback == domain:
+        fallback = None
+
+    def attempt_on(site: str, attempts: int | None) -> bool:
+        """One site's worth of trying. True when it produced a listing."""
+        result["error"] = None
+        try:
+            result["product"], used = fetch_product_persistent(asin, site, attempts)
+        except RainforestError as exc:
+            result["product"] = None
+            result["error"] = str(exc)
+            result["attempts"] += getattr(exc, "attempts", 1)
+            return False
+        result["attempts"] += used
+        return bool((result["product"].get("product") or {}).get("title"))
+
     try:
-        result["product"], result["attempts"] = fetch_product_persistent(asin, domain)
-    except RainforestError as exc:
-        result["error"] = str(exc)
-        result["attempts"] = max(1, config.PRODUCT_ATTEMPTS)
+        found = attempt_on(domain, ATTEMPTS_BEFORE_FALLBACK if fallback else None)
+        # Only "this site has no such listing" sends us elsewhere: an empty answer,
+        # or a not-found. A timeout or server problem is reported as what it is,
+        # rather than quietly swapping in another country's price.
+        absent = result["error"] is None or "wasn't found" in result["error"]
+        if not found and fallback and absent:
+            result["fallback_from"] = domain
+            attempt_on(fallback, None)
     except Exception as exc:  # noqa: BLE001 - one bad ASIN must not end the run
         result["error"] = f"Unexpected problem fetching {asin}: {exc}"
 
+    result["attempts"] = max(1, result["attempts"])
     result["seconds"] = round(time.perf_counter() - started, 2)
     return result
 
 
-def fetch_all(items: list[dict], domain: str, on_result=None) -> list[dict]:
+def fetch_all(items: list[dict], domain: str, on_result=None,
+              fallback: str | None = None) -> list[dict]:
     """
     Fetch every ASIN's listing in parallel.
 
     `on_result(result)` fires as each one lands so the UI can count up. Results
-    come back in the same order as `items`.
+    come back in the same order as `items`. `fallback` is a second site to try
+    for ASINs `domain` has no listing for (see `_fetch_one`).
     """
     if not items:
         return []
@@ -158,7 +199,7 @@ def fetch_all(items: list[dict], domain: str, on_result=None) -> list[dict]:
     workers = max(1, min(len(items), config.RAINFOREST_WORKERS))
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = {pool.submit(_fetch_one, item, domain): item for item in items}
+        futures = {pool.submit(_fetch_one, item, domain, fallback): item for item in items}
         for future in as_completed(futures):
             item = futures[future]
             try:

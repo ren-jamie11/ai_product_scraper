@@ -446,13 +446,19 @@ def normalize_product(fetched: dict) -> dict:
     # A dead or mistyped ASIN does not 404. Rainforest answers HTTP 200 with
     # success=true and an empty product object, which would otherwise be
     # counted as a successful fetch that simply had no bullets.
+    # The listing is asked for on amazon.com first; `fallback_from` names that site
+    # when it had nothing and the reviews' site was tried instead.
+    domain = _dig(fetched, "product", "request_parameters", "amazon_domain",
+                  default=config.LISTING_DOMAIN)
+    first = fetched.get("fallback_from")
     if not product.get("title"):
-        domain = _dig(fetched, "product", "request_parameters", "amazon_domain",
-                      default=config.AMAZON_DOMAIN)
+        where = f"{first} or {domain}" if first and first != domain else domain
         return failed(
             f"Rainforest returned no product data for {asin}. Check the ASIN is "
-            f"correct and still listed on {domain}."
+            f"correct and still listed on {where}."
         )
+    if first and first != domain:
+        warnings.append(f"Not listed on {first} — details and price are from {domain}.")
 
     reviews: list[dict] = []
     seen_ids: set[str] = set()

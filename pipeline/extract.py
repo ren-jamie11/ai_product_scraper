@@ -12,6 +12,7 @@ from __future__ import annotations
 import threading
 import time
 
+import config
 from pipeline import amazon_reviews, compact, normalize, rainforest, settings, storage
 
 
@@ -175,7 +176,17 @@ def _fetch(job, raw_dir, to_fetch: list[dict], domain: str, thread_name: str):
         job.step(label=f"Listings 0/{n} · Reviews 0/{n}", count=0)
         reviewer.start()
 
-    results = rainforest.fetch_all(to_fetch, domain, on_result=on_result)
+    # The listing always comes from config.LISTING_DOMAIN (amazon.com); `domain` is
+    # where reviews are read, and where the listing is looked for when .com has none.
+    results = rainforest.fetch_all(to_fetch, config.LISTING_DOMAIN, on_result=on_result,
+                                   fallback=domain)
+    elsewhere = [r["asin"] for r in results
+                 if r.get("fallback_from")
+                 and ((r.get("product") or {}).get("product") or {}).get("title")]
+    if elsewhere:
+        job.note(f"{_plural(len(elsewhere), 'listing isn', 'listings aren')}'t on "
+                 f"{config.LISTING_DOMAIN}, so {'its' if len(elsewhere) == 1 else 'their'} "
+                 f"details and price come from {domain}.")
 
     if reviewer.is_alive():
         job.step(label=f"Listings {n}/{n} · Reviews {counts['reviews']}/{n}", count=0)
@@ -226,7 +237,9 @@ def _finish_extraction(job, slug, run_id, items, domain, to_fetch, results, walk
         "run_id": run_id,
         "started_at": storage.now_iso(),
         "state": "done",
-        "amazon_domain": domain,
+        "amazon_domain": domain,                      # where reviews were read
+        "listing_domain": config.LISTING_DOMAIN,      # where Rainforest read the listings
+        "listing_fallbacks": [r["asin"] for r in results if r.get("fallback_from")],
         "elapsed_seconds": round(time.perf_counter() - started, 1),
         "credits_remaining": credits_left,
         "api_calls": api_calls,

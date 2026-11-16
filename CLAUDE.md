@@ -684,3 +684,36 @@ This supersedes the separate "Parse" and "Group tags" steps described above.
 - **Buttons.** With any grouped parse the black Parse results is hidden and a white
   **Parse again** sits between Reload and View results (same full re-parse). View results
   opens the newest grouped parse.
+
+---
+
+## Listings from amazon.com, reviews from the chosen site (built 2026-11-16)
+
+This supersedes "the Amazon site decides where both the listing and its reviews are read".
+
+- **Rainforest always reads the listing from `config.LISTING_DOMAIN` (amazon.com)**: title,
+  bullets, price (USD), rating, images. The Settings dropdown, now labelled **Reviews from**
+  (`amazon_site`), decides only where reviews are scraped. A run's `amazon_domain` still means
+  the reviews' site, so Fetch reviews, Add listings and the sign-in bar are unchanged;
+  `run_log.json` gains `listing_domain` and `listing_fallbacks`.
+- **Not on amazon.com → the reviews' site.** `rainforest._fetch_one(item, domain, fallback)`
+  tries amazon.com twice (`ATTEMPTS_BEFORE_FALLBACK`), and only an empty answer or a not-found
+  sends it to the fallback site; a timeout or server problem is reported as itself. The card
+  gets an amber "Not listed on amazon.com — details and price are from amazon.ca" warning and
+  the run a note. A bad key or spent credits is never retried on another site.
+- **Carried listings keep their old details.** An ASIN the group already holds complete from
+  an amazon.ca fetch is carried across with its CAD price; tick refetch to replace it.
+- **Verified** with a stubbed Rainforest (seven cases) and one live call with the setting on
+  Canada: the request went to amazon.com and came back priced in USD. A real fallback (an
+  ASIN sold only on amazon.ca) and a full run through the UI have not been exercised live.
+
+---
+
+## Sharing with the team (built 2026-11-16)
+
+One PC hosts the app for the office; teammates open `Product Research.url` from the shared
+drive. `Start server.bat` sets `HOST=0.0.0.0` and the app serves through `waitress`
+(falls back to Flask's server if it isn't installed); `python app.py` alone is still private
+on 127.0.0.1. Amazon sign-in is refused from any address but the host's own, because the
+sign-in window opens on the host. Setup and troubleshooting are in `SHARING.md`. The project
+folder, with its keys and cookies, stays off the shared drive.

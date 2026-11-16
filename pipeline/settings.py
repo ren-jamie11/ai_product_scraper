@@ -34,7 +34,8 @@ MODELS = ("gpt-6-luna", "gpt-6.1-terra", "gpt-6.1-sol", "gpt-5.6-terra", "gpt-5.
 EFFORTS = ("low", "medium", "high")
 
 # The Amazon sites a login can be saved for (amazon_cookies.<site>.txt). The site
-# decides where both the listing and its reviews are read from.
+# decides where reviews are read from. The listing itself always comes from
+# config.LISTING_DOMAIN (amazon.com), and from this site only when .com has none.
 SITES = ("amazon.ca", "amazon.com")
 SITE_NAMES = {"amazon.ca": "Canada (amazon.ca)", "amazon.com": "USA (amazon.com)"}
 
