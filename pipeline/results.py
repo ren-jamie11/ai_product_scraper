@@ -174,6 +174,7 @@ def build(slug: str, run_id: str, parse_id: str) -> dict:
             "eligible": [s["key"] for s in sections if s["eligible"]],
             "themed": [s["key"] for s in sections if s["themes"]],
         },
+        "product_index": _product_index(tagged, live_products or list(products.values())),
         "occurrences": occurrences,
         "bodies": bodies,
         "products": used_products,
@@ -260,12 +261,60 @@ def _keyword_norm(text: str) -> str:
     s = _EDGE_HYPHEN.sub(" ", s)
     s = " ".join(s.split())
     s = _ARTICLE.sub("", s)
-    words = []
-    for word in s.split():
-        if len(word) > 3 and word.endswith("s") and not word.endswith(("ss", "us", "is")):
-            word = word[:-1]
-        words.append(word)
-    return " ".join(words)
+    return " ".join(_fold_plural(word) for word in s.split())
+
+
+def _fold_plural(word: str) -> str:
+    """Drop a trailing plural "s" on words longer than three characters that do not
+    end "ss"/"us"/"is". The browser's product filter folds typed words the same way
+    (`foldWord` in static/index.html), so keep the two in step."""
+    if len(word) > 3 and word.endswith("s") and not word.endswith(("ss", "us", "is")):
+        return word[:-1]
+    return word
+
+
+_WORD_SPLIT = re.compile(r"[^a-z0-9]+")
+
+
+def _product_index(tagged: dict, live_products: list[dict]) -> list[dict]:
+    """Every word each live product's parsed text and details contain, for the filter.
+
+    The text is the parse's own snapshot from tagged.json — every body sent to the
+    tagger, whatever it yielded, plus the bodies skipped as too short — so a review
+    that says "resin" but produced no tag still makes its product match, and a run
+    edited after the parse cannot leak in. Words are lowercased, split on anything
+    that is not a letter or digit (so "poly-resin" gives "poly" and "resin"),
+    plural-folded and deduped: a word set is all whole-word matching needs, and it
+    is a fraction of the size of the reviews themselves.
+    """
+    words: dict[str, set] = {}
+    for body in (tagged.get("bodies") or []) + (tagged.get("skipped") or [])             + (tagged.get("failures") or []):
+        asin = body.get("asin") or str(body.get("body_id") or "").split(":", 1)[0]
+        text = body.get("text")
+        if not asin or not isinstance(text, str):
+            continue
+        bucket = words.setdefault(asin, set())
+        bucket.update(_fold_plural(w) for w in _WORD_SPLIT.split(text.lower()) if w)
+    out = []
+    for p in live_products:
+        bucket = set(words.get(p.get("asin")) or ())
+        bucket.update(_fold_plural(w) for w in _WORD_SPLIT.split(_details_text(p).lower()) if w)
+        out.append({"asin": p.get("asin"), "title": p.get("title") or "",
+                    "words": " ".join(sorted(bucket))})
+    return out
+
+
+def _details_text(p: dict) -> str:
+    """A product's details as one string: specifications, material, colour, model
+    number and brand — where finish and material often live when the title and
+    bullets never say them. The category path and best-sellers rank stay out:
+    their generic words would match almost every product. The run page's filter
+    reads the same fields (`runProductWords` in static/index.html)."""
+    parts = [p.get(k) for k in ("material", "color", "model_number", "brand")]
+    for spec in p.get("specifications") or []:
+        if isinstance(spec, dict):
+            parts += [spec.get("name"), spec.get("value")]
+    return " \n ".join(str(x) for x in parts if x)
 
 
 def _keywords(bodies_ok: list[dict], occurrences: dict, bodies: dict, used_products: dict,

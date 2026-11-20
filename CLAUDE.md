@@ -757,3 +757,56 @@ in `static/index.html`; nothing in `app.py`, `pipeline/`, the prompts or `data/`
   every string shown that had no Chinese. Verified 2026-11-16 in Chromium at 1280 px and
   600 px over the groups, group, run and results views, the dialogs and Settings: nothing
   missing, no page errors, and the English page's rendered output identical to before.
+
+---
+
+## Results filter narrows the run to products (built 2026-11-19)
+
+This supersedes what Phases 8 and 10 say about the sticky search matching theme, cluster and chip
+text.
+
+- **The box filters products, not tags.** Typing `resin` keeps the products whose title, bullets or
+  any review contain the word, and recomputes the page as if the run held only those: mentions,
+  distinct tags, listings and reviews counts, coverage dots (`3/11`), rank numbers, order, gap
+  badges, overview bars and theme membership. Chips keep only matched products' mentions, so a
+  hover or a click (panel and photo view) never reaches another product. Sentence highlighting is
+  unchanged; nothing is marked yellow, and filtering no longer opens themes.
+- **Matching is whole words, every word typed, anywhere in the product's text**, case-insensitive,
+  split on anything but a-z/0-9 (`poly-resin` gives `poly` + `resin`), with the trailing plural `s`
+  folded by `results._fold_plural` / its JS twin `foldWord`. Keep the two in step.
+- **`results.build` returns `product_index`**: one row per live product with its title and the word
+  set of every body in `tagged.json` (bodies of any status, skipped, failures) plus its **details**
+  (`_details_text`: specifications, material, colour, model number, brand — not the category path
+  or best-sellers rank, whose generic words would match everything). The bodies are the parse's own
+  snapshot, so text that produced no tag still matches. About 25 KB on a 17-product run. A page
+  served by an older server falls back to the bodies it has.
+- **The bar while filtering:** Features and Complaints counts, then `PRODUCTS 11 OF 17`, whose hover
+  lists the matched ASINs and titles. Care, Search terms and Usage links hide until the box is
+  cleared. **Keywords are never filtered** by it; their own column boxes work as before.
+- **Code:** `matchProducts`, `scopedCluster` (rebuilds tags, preview, counts and photo flags the way
+  `results.py` does) and `productsTotal` in `static/index.html`. With an empty box `scopedCluster`
+  returns the server's cluster unchanged.
+- **Verified 2026-11-19** on Bronze Bookends (tabletop-decor 2026-11-12_112325), Playwright on port
+  5055. With an empty box, the sections, overview, keywords and bar render identically to the
+  previous commit. With `resin` (11 of 17), on All, Listings and Reviews, every rendered chip ref
+  belongs to a matched product, each list's mentions equal its matched occurrences, ranks run 1..n,
+  and coverage reads `/11`. `environment` doesn't match `iron`, and `resins` = `resin`. The
+  zero-match empty state works. No missing Chinese strings and no horizontal scroll at 1280/600 px.
+
+**On the run page too (built 2026-11-19, same day).** A box above "Extracted listings" filters the
+listing cards and Customer photos by the same rules, over the run as it is now (edits and pasted
+reviews included; `runProductWords`, `detailParts`). Unmatched cards and photo rows hide, and See
+all and the photo view step only through matched products. A matched product keeps all its photos.
+Each card gets a "matched in the title · 2 bullets · details · 3 reviews" line, and the words are
+marked in the title, brand pill and the Bullets / Reviews / Details tabs (`markWords`, token-based,
+so a mark is always a reason it matched; editors read from data, so marks never reach an edit).
+Copy ASINs copies only the matched ones ("Copy 12 ASINs"). Export is always the whole run. The
+summary strip, removed strip and notes stay whole-run. **The query is shared per run** through
+`sessionStorage` (`filter:<slug>/<runId>`, `loadFilter` / `saveFilter`): typing on the run page
+opens its results already filtered, and clearing either clears both. It is per tab, so it never
+outlives the tab. Verified with Playwright on Bronze Bookends: "resin" now matches 12 of 17 (one
+product says resin only in its details). The run page and results agree on the set. With an empty
+box, cards and photos are byte-identical to the previous commit. Clipboard, zero-match state, zh
+and 600 px are clean. **UI test note:** stub customer photos with an image at least
+`PHOTO_MIN_PX` wide (a 400 px SVG works); a 1×1 stub is dropped as Amazon's placeholder and every
+photo row vanishes.

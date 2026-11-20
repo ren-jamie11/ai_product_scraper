@@ -181,6 +181,11 @@ td.nm b{font-family:var(--sans);font-weight:600;font-size:13.5px}
 .pcard .ids a{color:var(--cobalt);text-decoration:none}
 .pcard .ids a:hover{text-decoration:underline}
 .pcard .facts{display:flex;gap:6px;flex-wrap:wrap}
+.pcard .mi{font-family:var(--mono);font-size:10px;letter-spacing:.03em;color:var(--muted);margin-top:8px}
+.pcard .mi b{color:var(--ink);font-weight:600}
+/* the run page's product filter, shared with the results page */
+.rfilter{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:0 0 14px}
+.rfilter .sq{position:relative;flex:1 1 220px;max-width:340px;min-width:160px}
 .pcard .price{font-family:var(--disp);font-weight:700;font-size:16px;letter-spacing:-.01em}
 .pcard .foot{margin-top:auto;border-top:1px solid var(--rule-soft);display:flex;flex-wrap:wrap}
 .tabbtn{flex:1 1 auto;border:0;border-right:1px solid var(--rule-soft);background:none;cursor:pointer;
@@ -328,6 +333,9 @@ mark{background:#F2D06B;color:var(--ink);padding:0 1px;border-radius:2px}
 .jump a:hover{color:var(--cobalt)}
 .jump a b{color:var(--ink);font-weight:600}
 .jump a.none{opacity:.45}
+.jump .pm{color:var(--muted);white-space:nowrap;cursor:help}
+.jump .pm b{color:var(--cobalt);font-weight:600}
+.jump .pm.zero b{color:var(--iron)}
 section[id]{scroll-margin-top:72px}
 /* one mono line in place of the summary tiles */
 .slim{font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.03em;line-height:1.7;
@@ -410,13 +418,13 @@ section[id]{scroll-margin-top:72px}
 .kwcol .oh h2{font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:-.01em;margin:0}
 .kwcol .oh .note{font-family:var(--mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-left:auto;white-space:nowrap}
 .kwcol .sq{position:relative;max-width:none;margin:0 0 10px}
-.kwcol .sq input{width:100%;font-family:var(--sans);font-size:12.5px;padding:6px 26px 6px 9px;border:1px solid var(--rule);
+.kwcol .sq input,.rfilter .sq input{width:100%;font-family:var(--sans);font-size:12.5px;padding:6px 26px 6px 9px;border:1px solid var(--rule);
   border-radius:3px;background:var(--glaze);color:var(--ink)}
-.kwcol .sq input:focus{outline:none;border-color:var(--cobalt)}
-.kwcol .sq input::-webkit-search-cancel-button{-webkit-appearance:none}
-.kwcol .sq .x{position:absolute;right:3px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--muted);
+.kwcol .sq input:focus,.rfilter .sq input:focus{outline:none;border-color:var(--cobalt)}
+.kwcol .sq input::-webkit-search-cancel-button,.rfilter .sq input::-webkit-search-cancel-button{-webkit-appearance:none}
+.kwcol .sq .x,.rfilter .sq .x{position:absolute;right:3px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--muted);
   font-size:16px;line-height:1;cursor:pointer;padding:2px 6px}
-.kwcol .sq .x:hover{color:var(--iron)}
+.kwcol .sq .x:hover,.rfilter .sq .x:hover{color:var(--iron)}
 .kwcol .blank{padding:22px 16px;margin:6px 0 4px}
 .kwcol .blank h3{font-size:15px}
 .kwcol .blank p{font-size:12px;margin-bottom:0}
@@ -787,6 +795,14 @@ section[id]{scroll-margin-top:72px}
       <h2 data-i18n>Extracted listings</h2>
       <span class="note" id="r-note"></span>
     </div>
+    <div class="rfilter">
+      <div class="sq">
+        <input type="search" id="r-q" data-i18n-attr="placeholder aria-label" placeholder="Filter listings&hellip; e.g. resin, cast iron"
+               autocomplete="off" spellcheck="false" aria-label="Filter listings by a word in their title, bullets, details or reviews">
+        <button type="button" class="x" id="r-qx" title="Clear (Esc)" data-i18n-attr="title" hidden>&times;</button>
+      </div>
+      <span class="jump" id="r-qn"></span>
+    </div>
     <textarea class="rnotes" id="r-memo" rows="1" spellcheck="true" data-i18n-attr="placeholder aria-label"
               placeholder="Click to add notes about this run&hellip;" aria-label="Notes about this run"></textarea>
     <div id="r-removed"></div>
@@ -831,8 +847,8 @@ section[id]{scroll-margin-top:72px}
        themes action. -->
   <div class="sbar" id="res-bar" hidden>
     <div class="sq">
-      <input type="search" id="res-q" data-i18n-attr="placeholder aria-label" placeholder="Filter&hellip; e.g. handle, pot, appearance"
-             autocomplete="off" spellcheck="false" aria-label="Filter themes, clusters and tags">
+      <input type="search" id="res-q" data-i18n-attr="placeholder aria-label" placeholder="Filter products&hellip; e.g. resin, cast iron"
+             autocomplete="off" spellcheck="false" aria-label="Filter products by a word in their listing, details or reviews">
       <button type="button" class="x" id="res-qx" title="Clear (Esc)" data-i18n-attr="title" hidden>&times;</button>
     </div>
     <div class="seg" id="res-src" role="group" aria-label="Tag source" data-i18n-attr="aria-label">
@@ -1433,8 +1449,25 @@ const ZH = {
   "It may have been deleted, or the address is wrong.": "可能已经删除，或者地址不对。",
   "Back to the run to group tags": "回到批次去归类标签",
   "Back to the run": "返回批次",
-  "Filter… e.g. handle, pot, appearance": "筛选…（用英文，如 handle, pot）",
-  "Filter themes, clusters and tags": "筛选主题、类别和标签",
+  "Filter products… e.g. resin, cast iron": "筛选商品…（用英文，如 resin, cast iron）",
+  "Filter products by a word in their listing, details or reviews": "按商品页、商品详情或评论里的词筛选商品",
+  "No product mentions &ldquo;{q}&rdquo;": "没有商品提到“{q}”",
+  "No title, bullet, detail or review in this run contains every word you typed.": "这个批次里没有哪个标题、五点描述、商品详情或评论包含你输入的全部词。",
+  "No listing mentions &ldquo;{q}&rdquo;": "没有商品页提到“{q}”",
+  "{n} of {total} listings": "{n} / {total} 个商品页",
+  "{n} of {total} listing": "{n} / {total} 个商品页",
+  "Copy {n} ASINs": "复制 {n} 个 ASIN",
+  "Copy {n} ASIN": "复制 {n} 个 ASIN",
+  "Filter listings… e.g. resin, cast iron": "筛选商品页…（用英文，如 resin, cast iron）",
+  "Filter listings by a word in their title, bullets, details or reviews": "按标题、五点描述、商品详情或评论里的词筛选商品页",
+  "matched in {where}": "匹配于{where}",
+  "the title": "标题",
+  "details": "商品详情",
+  "None of the {n} matching products has {list} mentions.": "{n} 个符合条件的商品都没有{list}提及。",
+  "The matching product has no {list} mentions.": "符合条件的商品没有{list}提及。",
+  "None of the {n} matching products has {list} mentions from {source}.": "{n} 个符合条件的商品都没有来自{source}的{list}提及。",
+  "The matching product has no {list} mentions from {source}.": "符合条件的商品没有来自{source}的{list}提及。",
+  "Products whose title, bullets, details or reviews mention “{q}”:": "标题、五点描述、商品详情或评论提到“{q}”的商品：",
   "Tag source": "标签来源",
   "Lists": "列表",
   "Expand all": "全部展开",
@@ -1482,8 +1515,6 @@ const ZH = {
   "{n} of {total} clusters": "{n} / {total} 个类别",
   "This list could not be grouped.": "这个列表归类失败了。",
   "This list could not be grouped into themes: {error}": "这个列表没能归入主题：{error}",
-  "No {list} theme, cluster or tag contains it.": "没有{list}的主题、类别或标签包含它。",
-  "No {list} theme, cluster or tag from {source} contains it.": "来自{source}的{list}主题、类别或标签里都没有它。",
   "No {list} tags in this list came from {source}.": "这个列表里没有来自{source}的{list}标签。",
   "From listings ({n})": "来自商品页（{n}）",
   "From reviews ({n})": "来自评论（{n}）",
@@ -2281,7 +2312,7 @@ function productCard(p) {
                             : `<span class="pill warn">${L("no bullets")}</span>`);
   facts.push(reviews.length ? `<span class="pill ok">${plural(reviews.length, "review", "reviews")}</span>`
                             : `<span class="pill warn">${L("no reviews")}</span>`);
-  if (p.brand) facts.push(`<span class="pill na">${esc(p.brand)}</span>`);
+  if (p.brand) facts.push(`<span class="pill na">${runMark(p.brand)}</span>`);
   if (edits.length) facts.push(`<span class="pill" style="background:var(--cobalt-wash);color:var(--cobalt)"
     title="${L("Edited: {fields}", { fields: esc(edits.join(", ")) })}">${L("edited")}</span>`);
 
@@ -2304,13 +2335,13 @@ function productCard(p) {
       <button class="x rm" title="${L("Remove this ASIN from the run")}">&times;</button>
       ${thumb}
       <div class="meta">
-        <p class="ttl${wasEdited(p, "title")}" data-f="title">${esc(p.title || L("(no title returned)"))}</p>
+        <p class="ttl${wasEdited(p, "title")}" data-f="title">${p.title ? runMark(p.title) : esc(L("(no title returned)"))}</p>
         <div class="ids">
           ${link ? `<a href="${esc(link)}" target="_blank" rel="noopener">${esc(p.asin)}</a>` : esc(p.asin)}
           &middot; <span class="price${wasEdited(p, "price")}" data-f="price">${
             esc((p.price && p.price.raw) || L("no price"))}</span>
         </div>
-        <div class="facts">${facts.join("")}</div>
+        <div class="facts">${facts.join("")}</div>${runState.matched ? matchedInHtml(p) : ""}
       </div>
     </div>
     ${warnings ? `<div style="padding:0 16px 12px">${warnings}</div>` : ""}
@@ -2330,7 +2361,7 @@ function tabHtml(p, tab) {
     const bullets = p.feature_bullets || [];
     return `<h4>${L("Listing body &mdash; title + {bullets}", { bullets: plural(bullets.length, "bullet", "bullets") })}</h4>
       <p class="ehint">${L("Double-click a bullet to edit it. Ctrl+Enter saves, Escape cancels.")}</p>
-      <ul>${bullets.map((b, i) => `<li data-i="${i}">${esc(b)}
+      <ul>${bullets.map((b, i) => `<li data-i="${i}">${runMark(b)}
         <button class="x" title="${L("Delete this bullet")}">&times;</button></li>`).join("")}</ul>
       <button class="addrow" data-add="bullet">${L("+ add bullet")}</button>`;
   }
@@ -2344,11 +2375,11 @@ function tabHtml(p, tab) {
           <button class="x" title="${L("Delete this review")}">&times;</button>
           <div class="rh">
             <span class="stars" data-f="rating">${esc(stars(r.rating))}</span>
-            <span class="rt" data-f="title">${esc(r.title || L("(untitled)"))}</span>
+            <span class="rt" data-f="title">${r.title ? runMark(r.title) : esc(L("(untitled)"))}</span>
             <span class="rd">${esc(r.date || "")}${r.verified_purchase ? ` &middot; ${L("verified")}` : ""}${
               r.source === "manual" ? ` &middot; ${L("pasted")}` : ""}</span>
           </div>
-          <div class="rb" data-f="body">${esc(r.body)}</div>
+          <div class="rb" data-f="body">${runMark(r.body)}</div>
         </div>`).join("") +
       `<button class="addrow" data-add="reviews">${L("+ add reviews")}</button>
        <div class="paste" hidden>
@@ -2363,11 +2394,13 @@ function tabHtml(p, tab) {
   }
 
   const rows = (p.specifications || []).map(s =>
-    `<tr><td>${esc(s.name)}</td><td>${esc(s.value)}</td></tr>`).join("");
+    `<tr><td>${runMark(s.name)}</td><td>${runMark(s.value)}</td></tr>`).join("");
+  // Category and rank are not searched by the filter (detailParts), so not marked.
   const extra = [
-    ["Material", p.material], ["Colour", p.color], ["Model", p.model_number],
+    ["Material", p.material, 1], ["Colour", p.color, 1], ["Model", p.model_number, 1],
     ["Category", p.categories_flat], ["Best sellers rank", p.bestsellers_rank_flat],
-  ].filter(([, v]) => v).map(([k, v]) => `<tr><td>${esc(L(k))}</td><td>${esc(v)}</td></tr>`).join("");
+  ].filter(([, v]) => v).map(([k, v, searched]) =>
+    `<tr><td>${esc(L(k))}</td><td>${searched ? runMark(v) : esc(v)}</td></tr>`).join("");
   return `<h4>${L("Product details")}</h4><table class="specs">${extra}${rows}</table>`;
 }
 
@@ -2831,11 +2864,93 @@ async function startFetchReviews(scope = "missing") {
   }
 }
 
-function renderRunBody() {
+/* ---------- run page: product filter ----------
+   The same filter as the results page, over the run as it is now (edits and
+   pasted reviews included): a listing shows when its title, bullets, details or
+   reviews hold every word typed. The query is shared with the results pages of
+   this run through loadFilter / saveFilter. */
+function detailParts(p) {
+  const parts = [p.material, p.color, p.model_number, p.brand];
+  for (const s of p.specifications || []) if (s && typeof s === "object") parts.push(s.name, s.value);
+  return parts.filter(Boolean).map(String);
+}
+function runProductWords(p) {
+  const set = new Set();
+  const add = t => wordsOf(t).forEach(w => set.add(w));
+  add(p.title);
+  (p.feature_bullets || []).forEach(add);
+  (p.reviews || []).forEach(r => { add(r.title); add(r.body); });
+  detailParts(p).forEach(add);
+  return set;
+}
+/* Escape, and mark the filter's words while one is set. */
+function runMark(text) {
+  return runState && runState.query ? markWords(text, runState.query) : esc(text ?? "");
+}
+/* "matched in the title · 2 bullets · details · 3 reviews": each field that holds at
+   least one of the typed words. */
+function matchedInHtml(p) {
+  const words = new Set(wordsOf(runState.query));
+  const has = t => wordsOf(t).some(w => words.has(w));
+  const bullets = (p.feature_bullets || []).filter(has).length;
+  const reviews = (p.reviews || []).filter(r => has(r.title) || has(r.body)).length;
+  const parts = [];
+  if (has(p.title)) parts.push(L("the title"));
+  if (bullets) parts.push(plural(bullets, "bullet", "bullets"));
+  if (detailParts(p).some(has)) parts.push(L("details"));
+  if (reviews) parts.push(plural(reviews, "review", "reviews"));
+  return parts.length
+    ? `<div class="mi">${L("matched in {where}", { where: `<b>${parts.join(" &middot; ")}</b>` })}</div>` : "";
+}
+function runShown() {
   const live = runState.products.filter(p => !p.deleted);
+  return runState.matched ? live.filter(p => runState.matched.has(p.asin)) : live;
+}
+function copyLabel() {
+  if (!runState.matched) return L("Copy ASINs");
+  const n = runShown().length;
+  return L(n === 1 ? "Copy {n} ASIN" : "Copy {n} ASINs", { n });
+}
+
+function setRunQuery(q) {
+  if (!runState) return;
+  q = q.trim();
+  if (q === runState.query) return;
+  runState.query = q;
+  saveFilter(runState.slug, runState.runId, q);
+  renderRunBody();
+}
+function clearRunQuery() { $("r-q").value = ""; setRunQuery(""); }
+
+let runQueryTimer = null;
+$("r-q").addEventListener("input", () => {
+  clearTimeout(runQueryTimer);
+  runQueryTimer = setTimeout(() => setRunQuery($("r-q").value), 120);
+});
+$("r-q").addEventListener("keydown", e => {
+  if (e.key === "Escape") { clearRunQuery(); $("r-q").blur(); }
+});
+$("r-qx").onclick = () => { clearRunQuery(); $("r-q").focus(); };
+$("r-cards").addEventListener("click", e => {
+  if (e.target.closest("[data-clearrq]")) clearRunQuery();
+});
+document.addEventListener("keydown", e => {
+  if (e.key !== "/" || !runState || $("view-run").hidden || zoomState || pallState) return;
+  if (e.target.closest("input, textarea, select, [contenteditable]")) return;
+  e.preventDefault();
+  $("r-q").focus();
+});
+
+function renderRunBody() {
+  const all = runState.products.filter(p => !p.deleted);
   const removed = runState.products.filter(p => p.deleted);
   const log = runState.log;
   const s = runState.stats;
+
+  // Rebuilt every render: an edit or a pasted review changes what a product says.
+  runState.words = new Map(all.map(p => [p.asin, runProductWords(p)]));
+  runState.matched = matchWordSets(runState.words, runState.query);
+  const live = runShown();
 
   // The log records what the fetch did and never changes; the strip describes
   // what is on screen now. Say which whenever the two have drifted apart.
@@ -2844,7 +2959,12 @@ function renderRunBody() {
                  s.bullets_total !== (log.bullets_total ?? s.bullets_total);
   const since = edited ? L("after edits") : null;
 
-  $("r-note").textContent = plural(live.length, "listing", "listings");
+  $("r-note").textContent = runState.matched
+    ? L(all.length === 1 ? "{n} of {total} listing" : "{n} of {total} listings", { n: live.length, total: all.length })
+    : plural(all.length, "listing", "listings");
+  $("r-qx").hidden = !runState.query;
+  $("r-qn").innerHTML = runState.matched
+    ? productsMatchedHtml(runState.matched, all.length, a => (product(a) || {}).title, runState.query) : "";
   $("r-sum").innerHTML =
     stat("ASINs", `${s.asins_ok} / ${s.asins_total}`,
          since || (s.asins_failed ? L("{n} failed", { n: s.asins_failed }) : L("all fetched")),
@@ -2891,12 +3011,17 @@ function renderRunBody() {
 
   renderReviewBar();
   renderBehind();
-  $("r-cards").innerHTML = live.map(productCard).join("");
+  $("r-cards").innerHTML = live.length || !runState.matched ? live.map(productCard).join("") : `
+    <div class="blank" style="grid-column:1/-1"><h3>${L("No listing mentions &ldquo;{q}&rdquo;", { q: esc(runState.query) })}</h3>
+      <p>${L("No title, bullet, detail or review in this run contains every word you typed.")}</p>
+      <button class="lnk" data-clearrq>${L("Clear the filter")}</button></div>`;
   $("r-cards").querySelectorAll(".pcard").forEach(card => {
     if (openTabs[card.dataset.asin]) card.dataset.tab = openTabs[card.dataset.asin];
     wireCard(card);
   });
-  $("r-copy").hidden = $("r-export").hidden = !live.length;
+  $("r-copy").hidden = !live.length;
+  $("r-export").hidden = !all.length;
+  if (!$("r-copy").resetTimer) $("r-copy").textContent = copyLabel();
   renderRunPhotos();
 }
 
@@ -2910,7 +3035,8 @@ const PHOTO_PREVIEW = 6;
 
 function runPhotoRows() {
   const media = (runState && runState.media) || {};
-  return runState.products.filter(p => !p.deleted).map(p => {
+  // runShown: under the product filter, only the matched products' photos.
+  return runShown().map(p => {
     const m = media[p.asin] || {};
     const reviews = (p.reviews || [])
       .map((r, at) => ({ r, at, photos: ((m[r.id] || {}).photos || []).filter(u => !badPhotos.has(u)) }))
@@ -2937,7 +3063,7 @@ function photoTileHtml(asin, t) {
 
 function renderRunPhotos() {
   const rows = runPhotoRows();
-  const live = runState.products.filter(p => !p.deleted).length;
+  const live = runShown().length;
   $("r-photos").hidden = !rows.length;
   if (!rows.length) { $("rp-rows").innerHTML = ""; closeAllPhotos(); return; }
   const total = rows.reduce((n, row) => n + row.tiles.length, 0);
@@ -3166,7 +3292,8 @@ $("r-add").onclick = () => startAddListings();
 
 $("r-copy").onclick = async () => {
   const btn = $("r-copy");
-  const asins = runState.products.filter(p => !p.deleted).map(p => p.asin);
+  // While the filter is on, only the listings it shows.
+  const asins = runShown().map(p => p.asin);
   try {
     await navigator.clipboard.writeText(asins.join("\n"));
     btn.textContent = L("Copied {n} ASINs", { n: asins.length });
@@ -3174,7 +3301,7 @@ $("r-copy").onclick = async () => {
     btn.textContent = L("Copy failed");
   }
   clearTimeout(btn.resetTimer);
-  btn.resetTimer = setTimeout(() => { btn.textContent = L("Copy ASINs"); }, 1600);
+  btn.resetTimer = setTimeout(() => { btn.resetTimer = null; btn.textContent = copyLabel(); }, 1600);
 };
 
 async function renderRun(slug, runId) {
@@ -3218,7 +3345,9 @@ async function renderRun(slug, runId) {
   runState = { slug, runId, products: run.products || [], log, stats,
                parses: parses || [], meta: { ...(meta || {}) }, media: media || {},
                pending: pending || null,
-               site: run.amazon_domain || log.amazon_domain || "" };
+               site: run.amazon_domain || log.amazon_domain || "",
+               query: loadFilter(slug, runId).trim(), matched: null };
+  $("r-q").value = runState.query;
   removedOpen = false;
   sortProducts();
 
@@ -3688,7 +3817,7 @@ async function renderResults(slug, runId, parseId) {
   $("res-ov").hidden = true;
   $("res-h2").hidden = true;
   $("res-kw").hidden = true;
-  $("res-q").value = "";
+  $("res-q").value = loadFilter(slug, runId);
   $("res-qx").hidden = true;
   $("kw-st-q").value = "";
   $("kw-us-q").value = "";
@@ -3761,14 +3890,16 @@ async function renderResults(slug, runId, parseId) {
   // ("theme:features:t_01") and is remembered per parse. Which lists are
   // collapsed and which source is shown are session-only: every visit starts
   // with all lists open and every source showing.
-  // `searchClosed` / `ovSearchClosed` hold the themes a search opened and you
-  // then clicked shut; both are session-only and both are emptied by setQuery
-  // the moment the query string changes, so a new query re-opens every hit.
+  // `matched` is the product filter: null when the box is empty, else the set of
+  // ASINs whose parsed text holds every word typed. `productWords` is built once.
   resultsState = { slug, runId, parseId, data, expanded: new Set(expanded),
-                   source: "all", query: "", terms: [], listsClosed: new Set(), views: new Map(),
+                   source: "all", query: "", matched: null, productWords: productWordSets(data),
+                   listsClosed: new Set(), views: new Map(),
                    ovOpen: new Set(), ovAll: new Set(),
-                   searchClosed: new Set(), ovSearchClosed: new Set(),
                    kwQuery: { search_terms: "", usage: "" }, kwAll: new Set() };
+  // The run's shared filter, if one was typed on the run page or another parse.
+  resultsState.query = loadFilter(slug, runId).trim();
+  resultsState.matched = matchProducts(resultsState.query);
   $("res-model").textContent = [data.model, data.reasoning].filter(Boolean).join(" · ");
   renderResultsBody();
   $("res-loading").hidden = true;
@@ -3843,24 +3974,143 @@ function allThemeKeys() {
   return keys;
 }
 
-/* One rule decides whether a theme is open, in the sections and in the overview.
-   A query opens every theme with a hit; clicking one closes it and it stays
-   closed until the query changes, because setQuery empties the closed sets.
-   Only `expanded` is ever persisted — the closed sets die with the session. */
-function openRule(key, openSet, closedSet) {
-  if (openSet.has(key)) return true;
-  return resultsState.terms.length > 0 && !closedSet.has(key);
+/* A theme is open when you opened it, in the sections (`expanded`, persisted) and
+   in the overview (`ovOpen`, session-only). The product filter never opens one:
+   it narrows every theme alike, so opening the survivors would open them all. */
+function themeOpen(key) { return resultsState.expanded.has(key); }
+function ovThemeOpen(key) { return resultsState.ovOpen.has(key); }
+function toggleThemeOpen(key, openSet) {
+  if (openSet.has(key)) openSet.delete(key); else openSet.add(key);
 }
-function themeOpen(key) { return openRule(key, resultsState.expanded, resultsState.searchClosed); }
-function ovThemeOpen(key) { return openRule(key, resultsState.ovOpen, resultsState.ovSearchClosed); }
-function toggleThemeOpen(key, openSet, closedSet) {
-  if (openRule(key, openSet, closedSet)) {
-    openSet.delete(key);
-    if (resultsState.terms.length) closedSet.add(key);
-  } else {
-    openSet.add(key);
-    closedSet.delete(key);
+
+/* ---------- product filter ----------
+   The search box narrows the run to the products whose parsed text — title,
+   bullets and every review, from the server's `product_index` — contains every
+   word typed, as whole words. Words are split on anything but a-z/0-9 and
+   plural-folded exactly as results._word_set does on the server. */
+function foldWord(w) {
+  return w.length > 3 && w.endsWith("s") && !/(?:ss|us|is)$/.test(w) ? w.slice(0, -1) : w;
+}
+function wordsOf(text) {
+  return String(text || "").toLowerCase().split(/[^a-z0-9]+/).filter(Boolean).map(foldWord);
+}
+/* An older server sends no product_index; fall back to the bodies the page has,
+   which only covers text that produced a tag, but still filters sensibly. */
+function productWordSets(d) {
+  const out = new Map();
+  if (Array.isArray(d.product_index)) {
+    for (const p of d.product_index) out.set(p.asin, new Set(String(p.words || "").split(" ").filter(Boolean)));
+    return out;
   }
+  const add = (asin, text) => {
+    if (!out.has(asin)) out.set(asin, new Set());
+    wordsOf(text).forEach(w => out.get(asin).add(w));
+  };
+  for (const p of Object.values(d.products || {})) if (!p.deleted) add(p.asin, p.title);
+  for (const b of Object.values(d.bodies || {})) if (out.has(b.asin)) add(b.asin, b.text);
+  return out;
+}
+/* The ASINs in `wordSets` (Map asin → Set of words) holding every word of `q`;
+   null for an empty query. Both the results page and the run page call this. */
+function matchWordSets(wordSets, q) {
+  if (!q) return null;
+  const words = [...new Set(wordsOf(q))];
+  const hit = new Set();
+  if (!words.length) return hit;
+  for (const [asin, set] of wordSets) {
+    if (words.every(w => set.has(w))) hit.add(asin);
+  }
+  return hit;
+}
+function matchProducts(q) { return matchWordSets(resultsState.productWords, q); }
+
+/* Escape `text` and mark every word that folds to one of the query's words — the
+   same tokens matching used, so a mark is always a reason the product matched. */
+function markWords(text, q) {
+  const s = String(text ?? "");
+  const words = new Set(wordsOf(q));
+  if (!words.size) return esc(s);
+  let out = "", pos = 0;
+  for (const m of s.matchAll(/[a-z0-9]+/gi)) {
+    if (!words.has(foldWord(m[0].toLowerCase()))) continue;
+    out += esc(s.slice(pos, m.index)) + `<mark>${esc(m[0])}</mark>`;
+    pos = m.index + m[0].length;
+  }
+  return out + esc(s.slice(pos));
+}
+
+/* One filter per run, shared by the run page and every parse's results page, for
+   as long as the tab is open. Storage can be missing or throw; the filter then
+   just doesn't carry over. */
+function filterKey(slug, runId) { return `filter:${slug}/${runId}`; }
+function loadFilter(slug, runId) {
+  try { return sessionStorage.getItem(filterKey(slug, runId)) || ""; } catch (e) { return ""; }
+}
+function saveFilter(slug, runId, q) {
+  try {
+    if (q) sessionStorage.setItem(filterKey(slug, runId), q);
+    else sessionStorage.removeItem(filterKey(slug, runId));
+  } catch (e) { /* preference only */ }
+}
+/* The denominator coverage is drawn against: the matched products while filtering. */
+function productsTotal() {
+  const m = resultsState.matched;
+  return m ? m.size : resultsState.data.products_total;
+}
+function productTitle(asin) {
+  const d = resultsState.data;
+  const p = (d.product_index || []).find(x => x.asin === asin) || d.products[asin] || {};
+  return p.title || "";
+}
+
+/* A cluster as if the run held only the matched products: every tag keeps only
+   its mentions from them (in the server's order, so photo mentions still lead),
+   and counts, preview and photo flags are recomputed the way results.py builds
+   them. Tags with nothing left are dropped. Unfiltered, the cluster is returned
+   as is, so an empty box renders byte for byte what it always did. */
+function scopedCluster(c) {
+  const m = resultsState.matched;
+  if (!m) return c;
+  const d = resultsState.data;
+  const keep = ref => { const o = d.occurrences[ref]; return o && m.has(o.asin); };
+  const photoRef = ref => { const o = d.occurrences[ref]; return !!o && bodyPhotos(d.bodies[o.body_id]).length > 0; };
+  const byCount = (a, b) => b.count - a.count || a.display.toLowerCase().localeCompare(b.display.toLowerCase());
+  const photosFirst = (a, b) => (!a.photos - !b.photos) || byCount(a, b);
+  const scope = (tags, review) => {
+    const out = [];
+    for (const t of tags) {
+      const occ_ids = t.occ_ids.filter(keep);
+      if (!occ_ids.length) continue;
+      const nt = Object.assign({}, t, { occ_ids, count: occ_ids.length });
+      if (review) nt.photos = occ_ids.filter(photoRef).length;
+      out.push(nt);
+    }
+    return out.sort(review ? photosFirst : byCount);
+  };
+  const listing_tags = scope(c.listing_tags, false);
+  const review_tags = scope(c.review_tags, true);
+
+  const merged = new Map();
+  for (const t of listing_tags.concat(review_tags)) {
+    const p = merged.get(t.display) || { display: t.display, count: 0, occ_ids: [] };
+    p.count += t.count;
+    p.occ_ids = p.occ_ids.concat(t.occ_ids);
+    merged.set(t.display, p);
+  }
+  const preview = [...merged.values()].sort(byCount).slice(0, 3).map(p => {
+    const lead = p.occ_ids.filter(photoRef);
+    const rest = p.occ_ids.filter(r => !lead.includes(r));
+    return Object.assign(p, { occ_ids: lead.concat(rest), photos: lead.length });
+  }).sort(photosFirst);
+
+  const bodiesOf = tags => new Set([].concat(...tags.map(t => t.occ_ids)).map(r => d.occurrences[r].body_id)).size;
+  return Object.assign({}, c, {
+    listing_tags, review_tags, preview,
+    total_tags: listing_tags.concat(review_tags).reduce((n, t) => n + t.count, 0),
+    distinct_tags: merged.size,
+    unique_listings: bodiesOf(listing_tags),
+    unique_reviews: bodiesOf(review_tags),
+  });
 }
 
 function allThemesOpen() {
@@ -3888,14 +4138,9 @@ function buildViews() {
   const byCurrent = (a, b) => b.mentions[src] - a.mentions[src] || a.index - b.index;
   const present = v => v.mentions[src] > 0;
 
-  // The filter: every term must appear somewhere in the item's own text. A
-  // cluster's text is its title, description and the tags showing in this
-  // source; a theme's is its title and summary. A theme that matches on its own
-  // text keeps all its clusters; otherwise it keeps only the matching ones.
-  const terms = resultsState.query.toLowerCase().split(/\s+/).filter(Boolean);
-  resultsState.terms = terms;
-  const hit = text => terms.every(t => text.includes(t));
-  const visible = v => present(v) && v.match;
+  // The product filter is applied first, by scopedCluster: everything below —
+  // mentions, products, ranks, gap badges, themes — then runs on what is left,
+  // exactly as it would on a run that held only the matched products.
   const rankAll = items => {
     for (const k of SOURCES) {
       const ranked = items.filter(v => v.mentions[k] > 0)
@@ -3907,7 +4152,12 @@ function buildViews() {
   const sections = new Map();
   for (const s of d.sections) {
     const clusters = new Map();
-    s.clusters.forEach((c, index) => {
+    s.clusters.forEach((full, index) => {
+      const c = scopedCluster(full);
+      // Whether the cluster has anything in this source before the filter, for
+      // the "4 of 35 clusters" lines.
+      const fullPresent = (src === "all" ? full.total_tags
+        : (src === "listing" ? full.listing_tags : full.review_tags).length) > 0;
       const mentions = { all: c.total_tags, listing: 0, review: 0 };
       const asins = { all: new Set(), listing: new Set(), review: new Set() };
       for (const [type, tags] of [["listing", c.listing_tags], ["review", c.review_tags]]) {
@@ -3922,24 +4172,11 @@ function buildViews() {
       const tags = { listing: src === "review" ? [] : c.listing_tags,
                      review: src === "listing" ? [] : c.review_tags };
       const own = src === "listing" ? c.listing_tags : c.review_tags;
-      let preview = src === "all" ? c.preview : own.slice(0, 3);
-      let match = true;
-      if (terms.length) {
-        const pool = src === "all" ? tags.listing.concat(tags.review) : own;
-        match = hit([c.title, c.description, ...pool.map(t => t.display)].join(" ").toLowerCase());
-        if (match) {
-          // Matching chips first, so a collapsed card shows why it is here.
-          const seen = new Set();
-          const uniq = t => !seen.has(t.display) && seen.add(t.display);
-          const hits = (src === "all" ? c.preview.concat(pool) : own)
-            .filter(t => hit(t.display.toLowerCase())).filter(uniq);
-          preview = hits.concat(preview.filter(uniq)).slice(0, 3);
-        }
-      }
+      const preview = src === "all" ? c.preview : own.slice(0, 3);
       clusters.set(c.cluster_id, {
-        c, key: `${s.key}:${c.cluster_id}`, index, mentions, asins,
+        c, key: `${s.key}:${c.cluster_id}`, index, mentions, asins, fullPresent,
         rank: { all: null, listing: null, review: null },
-        tags, match, preview,
+        tags, preview,
         distinct: src === "all" ? c.distinct_tags : own.length,
       });
     });
@@ -3970,20 +4207,19 @@ function buildViews() {
           m.asins[k].forEach(a => asins[k].add(a));
         }
       }
-      const self = terms.length > 0 && hit(`${t.title} ${t.summary || ""}`.toLowerCase());
       themes.set(t.theme_id, {
-        t, key: themeKey(s, t), index, members, mentions, asins, self,
+        t, key: themeKey(s, t), index, members, mentions, asins,
         rank: { all: null, listing: null, review: null },
-        order: members.filter(m => present(m) && (self || m.match)).sort(byCurrent),
+        order: members.filter(present).sort(byCurrent),
       });
     });
     rankAll([...themes.values()]);
 
-    // The number is the rank in the unfiltered list, so a cluster that shows
-    // only because its theme matched still reads as, say, 17 of 35.
+    // The number is the rank among what the matched products say, so 01 is
+    // always the top of what you are looking at.
     for (const v of clusters.values()) v.number = v.rank[src];
     for (const v of themes.values()) v.number = v.rank[src];
-    const order = [...clusters.values()].filter(visible).sort(byCurrent);
+    const order = [...clusters.values()].filter(present).sort(byCurrent);
     const themeOrder = [...themes.values()].filter(v => present(v) && v.order.length).sort(byCurrent);
 
     const themed = themes.size > 0;
@@ -3991,7 +4227,7 @@ function buildViews() {
     sections.set(s.key, {
       s, clusters, themes, order, themeOrder, themed,
       count: shown.length,
-      total: [...clusters.values()].filter(present).length,
+      total: [...clusters.values()].filter(v => v.fullPresent).length,
       mentions: shown.reduce((n, v) => n + v.mentions[src], 0),
     });
   }
@@ -4014,8 +4250,9 @@ function buildKeywordViews() {
   if (!d.keywords) return null;
   const occ = d.occurrences;
   const src = resultsState.source;
-  const sticky = resultsState.terms;
 
+  // The product filter does not reach the keywords: they always cover the whole
+  // run, and only each column's own box narrows them.
   const local = key => resultsState.kwQuery[key].toLowerCase().split(/\s+/).filter(Boolean);
   const itemView = (item, index, terms) => {
     const mentions = { all: 0, listing: 0, review: 0 };
@@ -4046,9 +4283,9 @@ function buildKeywordViews() {
     mentions: lists.reduce((n, l) => n + l.order.reduce((m, v) => m + v.mentions[src], 0), 0),
   });
 
-  const stTerms = sticky.concat(local("search_terms"));
+  const stTerms = local("search_terms");
   const st = listView(d.keywords.search_terms.items, stTerms);
-  const usTerms = sticky.concat(local("usage"));
+  const usTerms = local("usage");
   const groups = d.keywords.usage.groups.map(g =>
     Object.assign({ g, key: `usage:${g.key}` }, listView(g.items, usTerms)));
 
@@ -4065,10 +4302,8 @@ function setQuery(q) {
   q = q.trim();
   if (q === resultsState.query) return;
   resultsState.query = q;
-  // A different query is a fresh start: themes you closed under the old one are
-  // forgotten, so every theme with a hit on the new one opens.
-  resultsState.searchClosed.clear();
-  resultsState.ovSearchClosed.clear();
+  resultsState.matched = matchProducts(q);
+  saveFilter(resultsState.slug, resultsState.runId, q);
   renderResultsBody();
 }
 function clearQuery() { $("res-q").value = ""; setQuery(""); }
@@ -4103,6 +4338,18 @@ $("res-jump").addEventListener("click", e => {
 
 function sectionView(s) { return resultsState.views.get(s.key); }
 
+/* "Products 5 of 14" on the sticky bar; its native tooltip lists each match. */
+function productsMatchedHtml(matched, total, titleOf, q) {
+  const lines = [...matched].map(asin => {
+    const title = titleOf(asin) || "";
+    return `${asin} — ${title.length > 90 ? title.slice(0, 89) + "…" : title}`;
+  });
+  const tip = [L("Products whose title, bullets, details or reviews mention “{q}”:", { q })]
+    .concat(lines).join("\n");
+  return `<span class="pm${matched.size ? "" : " zero"}" title="${esc(tip)}">${esc(L("Products"))} <b>${
+    L("{n} of {total}", { n: matched.size, total })}</b></span>`;
+}
+
 function renderResultsBody() {
   const d = resultsState.data;
   const pct = d.mentions ? Math.round(100 * d.attributed / d.mentions) : 0;
@@ -4123,22 +4370,26 @@ function renderResultsBody() {
       L("<b>{n}</b> usage keywords", { n: d.keywords.usage.groups.reduce((n, g) => n + g.items.length, 0) }),
     ] : []).join(" &nbsp;&middot;&nbsp; ");
 
-  // Jump links follow the current source and, while filtering, read "4 of 35".
+  // Jump links follow the current source. While the product filter is on, only
+  // Features and Complaints keep theirs (with the filtered count) and the last
+  // item says how many products matched; hovering it lists them.
   const kw = resultsState.views.keywords;
+  const matched = resultsState.matched;
   const jumpCount = (count, total, filtering) =>
     filtering ? L("{n} of {total}", { n: count, total }) : String(count);
-  $("res-jump").innerHTML = d.sections.map(s => {
+  const jumpSections = matched ? d.sections.filter(s => OVERVIEW_LISTS.includes(s.key)) : d.sections;
+  $("res-jump").innerHTML = jumpSections.map(s => {
     const sv = sectionView(s);
     const label = JUMP_NAME[s.key] || L(s.title);
-    const n = s.status === "failed" ? "&mdash;" :
-      jumpCount(sv.count, sv.total, resultsState.terms.length > 0);
+    const n = s.status === "failed" ? "&mdash;" : String(sv.count);
     return `<a href="#" data-sec="${esc(s.key)}" class="${sv.count ? "" : "none"}">${esc(label)} <b>${n}</b></a>`;
-  }).concat(kw ? [["search_terms", L("Search terms"), kw.search_terms],
+  }).concat(kw && !matched ? [["search_terms", L("Search terms"), kw.search_terms],
                   ["usage", L("Usage"), kw.usage]].map(([key, label, kv]) =>
     // data-sec matches the section ids in the static shell, so the existing
     // scroll handler finds #sec-search_terms / #sec-usage with no change.
     `<a href="#" data-sec="${esc(key)}" class="${kv.count ? "" : "none"}">${esc(label)} <b>${
-      jumpCount(kv.count, kv.total, !!(resultsState.query || resultsState.kwQuery[key]))}</b></a>`) : [])
+      jumpCount(kv.count, kv.total, !!resultsState.kwQuery[key])}</b></a>`) : [])
+    .concat(matched ? [productsMatchedHtml(matched, d.products_total, productTitle, resultsState.query)] : [])
     .join("");
   $("res-qx").hidden = !resultsState.query;
 
@@ -4207,9 +4458,8 @@ function overviewHtml(key) {
   }
 
   const top = sv.themed ? sv.themeOrder : sv.order;
-  const terms = resultsState.terms;
   const max = Math.max(1, ...top.map(v => v.mentions[src]));
-  const total = d.products_total;
+  const total = productsTotal();
 
   const bar = v => {
     const seg = (n, cls) => n > 0 ? `<i class="${cls}" style="width:${(100 * n / max).toFixed(2)}%"></i>` : "";
@@ -4227,24 +4477,22 @@ function overviewHtml(key) {
     <div class="ovrow${opts.kid ? " kid" : ""}" data-list="${esc(key)}" data-k="${esc(v.key)}"${
       opts.parent ? ` data-parent="${esc(opts.parent)}"` : ""} title="${esc(tip(v))}">
       <span class="car${opts.caret ? " tg" : ""}">${opts.caret ? (opts.open ? "&#9662;" : "&#9656;") : ""}</span>
-      <span class="lb">${hilite(label, terms)}${v.gap === "under"
+      <span class="lb">${esc(label)}${v.gap === "under"
         ? `<i class="gapdot" title="${esc(GAP_TEXT.under[1])}"></i>` : ""}</span>${bar(v)}<span class="val">${v.mentions[src]}</span>
     </div>`;
 
   let rows = "";
   if (sv.themed) {
     for (const tv of sv.themeOrder) {
-      // Same openRule as the sections below, on the overview's own two sets:
-      // filtering unfolds a theme with a match, a caret click folds it back.
       const open = ovThemeOpen(tv.key);
       rows += row(tv, tv.t.title, { caret: true, open });
       if (open) for (const v of tv.order) rows += row(v, v.c.title, { kid: true, parent: tv.key });
     }
   } else {
-    const all = terms.length > 0 || resultsState.ovAll.has(key);
+    const all = resultsState.ovAll.has(key);
     const shown = all ? sv.order : sv.order.slice(0, OVERVIEW_TOP);
     for (const v of shown) rows += row(v, v.c.title, {});
-    if (!terms.length && sv.order.length > OVERVIEW_TOP) {
+    if (sv.order.length > OVERVIEW_TOP) {
       rows += `<button class="lnk more" data-all="${esc(key)}">${
         all ? L("Show top {n}", { n: OVERVIEW_TOP }) : L("Show all {n}", { n: sv.order.length })}</button>`;
     }
@@ -4286,11 +4534,11 @@ function kwAttrs(v) {
 /* The empty state for a keyword column, mirroring nothingHtml's three cases. */
 function kwBlank(kv, title, none) {
   const src = resultsState.source;
-  const q = resultsState.kwQuery[kv.key], sticky = resultsState.query;
-  if ((q || sticky) && kv.total) {
-    return `<div class="blank"><h3>${L("Nothing matches &ldquo;{q}&rdquo;", { q: esc(q || sticky) })}</h3>
+  const q = resultsState.kwQuery[kv.key];
+  if (q && kv.total) {
+    return `<div class="blank"><h3>${L("Nothing matches &ldquo;{q}&rdquo;", { q: esc(q) })}</h3>
       <p>${L("No {what} contains it.", { what: esc(title) })}</p>
-      <button class="lnk" ${q ? `data-kwclear="${esc(kv.key)}"` : "data-clearq"}>${L("Clear the filter")}</button></div>`;
+      <button class="lnk" data-kwclear="${esc(kv.key)}">${L("Clear the filter")}</button></div>`;
   }
   if (kv.total === 0 && src !== "all") {
     return `<div class="blank"><h3>${L("Nothing from {source}", { source: esc(SOURCE_NAME[src]) })}</h3>
@@ -4300,7 +4548,7 @@ function kwBlank(kv, title, none) {
 }
 
 function kwNote(kv, one, many) {
-  const filtering = resultsState.kwQuery[kv.key] || resultsState.query;
+  const filtering = resultsState.kwQuery[kv.key];
   if (filtering) return L("{n} of {total}", { n: kv.count, total: plural(kv.total, one, many) });
   return `${plural(kv.total, one, many)} &middot; ${plural(kv.mentions, "mention", "mentions")}`;
 }
@@ -4432,7 +4680,7 @@ $("res-ov").addEventListener("click", e => {
   const rowEl = e.target.closest(".ovrow");
   if (!rowEl) return;
   if (e.target.closest(".car.tg")) {
-    toggleThemeOpen(rowEl.dataset.k, resultsState.ovOpen, resultsState.ovSearchClosed);
+    toggleThemeOpen(rowEl.dataset.k, resultsState.ovOpen);
     renderResultsBody();
     return;
   }
@@ -4445,7 +4693,7 @@ function sectionHtml(s) {
   const sv = sectionView(s);
   const shown = sv.order;
   const themed = sv.themed;
-  const q = resultsState.query;
+  const q = resultsState.matched;
   const open = `<section id="sec-${esc(s.key)}">`;
 
   const note = s.status === "failed" ? L("failed") :
@@ -4484,12 +4732,20 @@ function sectionHtml(s) {
 /* The empty state for a list under the current source and filter. */
 function nothingHtml(s, sv) {
   const src = resultsState.source;
-  const q = resultsState.query;
-  if (q && sv.total) {
-    return `<div class="blank"><h3>${L("Nothing matches &ldquo;{q}&rdquo;", { q: esc(q) })}</h3>
-      <p>${L(src === "all" ? "No {list} theme, cluster or tag contains it."
-                           : "No {list} theme, cluster or tag from {source} contains it.",
-             { list: esc(listName(s.title)), source: esc(SOURCE_NAME[src]) })}</p>
+  const m = resultsState.matched;
+  if (m && !m.size) {
+    return `<div class="blank"><h3>${L("No product mentions &ldquo;{q}&rdquo;", { q: esc(resultsState.query) })}</h3>
+      <p>${L("No title, bullet, detail or review in this run contains every word you typed.")}</p>
+      <button class="lnk" data-clearq>${L("Clear the filter")}</button></div>`;
+  }
+  if (m && sv.total) {
+    const one = m.size === 1;
+    const text = src === "all"
+      ? (one ? "The matching product has no {list} mentions." : "None of the {n} matching products has {list} mentions.")
+      : (one ? "The matching product has no {list} mentions from {source}."
+             : "None of the {n} matching products has {list} mentions from {source}.");
+    return `<div class="blank"><h3>${L("Nothing here")}</h3>
+      <p>${L(text, { n: m.size, list: esc(listName(s.title)), source: esc(SOURCE_NAME[src]) })}</p>
       <button class="lnk" data-clearq>${L("Clear the filter")}</button></div>`;
   }
   return `<div class="blank"><h3>${L("Nothing from {source}", { source: esc(SOURCE_NAME[src]) })}</h3>
@@ -4508,27 +4764,26 @@ function themeHtml(s, tv) {
   if (!shown.length) return "";
 
   const src = resultsState.source;
-  const terms = resultsState.terms;
-  // Open or closed is openRule's call: filtering opens a theme with matches,
-  // but a click on the header still closes it and it stays that way.
   const open = themeOpen(tv.key);
-  const total = resultsState.data.products_total;
+  const total = productsTotal();
   const asins = tv.asins[src].size;
+  const full = tv.members.filter(m => m.fullPresent).length;
 
   const counts =
-    `<b>${terms.length ? L("{n} of {total} clusters", { n: shown.length, total: tv.members.filter(m => m.mentions[src] > 0).length })
-                       : plural(shown.length, "cluster", "clusters")}</b> &middot; ` +
+    `<b>${resultsState.matched && shown.length < full
+           ? L("{n} of {total} clusters", { n: shown.length, total: full })
+           : plural(shown.length, "cluster", "clusters")}</b> &middot; ` +
     `${plural(tv.mentions[src], "mention", "mentions")} &middot; ` +
     covHtml(asins, total);
-  const mem = shown.map(v => hilite(v.c.title, terms)).join(" &middot; ");
+  const mem = shown.map(v => esc(v.c.title)).join(" &middot; ");
 
   return `
   <div class="thm" data-k="${esc(tv.key)}">
     <div class="hd" role="button" aria-expanded="${open}">
       <span class="num">${num(tv.number)}</span>
       <div style="min-width:0;flex:1 1 auto">
-        <h3>${hilite(t.title, terms)}</h3>
-        ${t.summary ? `<p class="sum">${hilite(t.summary, terms)}</p>` : ""}
+        <h3>${esc(t.title)}</h3>
+        ${t.summary ? `<p class="sum">${esc(t.summary)}</p>` : ""}
         <div class="cnt">${counts}</div>
         ${rankHtml(tv.rank)}
         ${open ? "" : `<div class="mem">${mem}</div>`}
@@ -4545,7 +4800,7 @@ function themeHtml(s, tv) {
 function clusterHtml(s, v) {
   const c = v.c;
   const open = resultsState.expanded.has(v.key);
-  const total = resultsState.data.products_total;
+  const total = productsTotal();
   const src = resultsState.source;
 
   const parts = [
@@ -4577,8 +4832,8 @@ function clusterHtml(s, v) {
     <div class="ch" role="button" aria-expanded="${open}">
       <span class="num">${num(v.number)}</span>
       <div style="min-width:0;flex:1 1 auto">
-        <h3>${hilite(c.title, resultsState.terms)}${gapPill(v)}</h3>
-        ${c.description ? `<p class="desc">${hilite(c.description, resultsState.terms)}</p>` : ""}
+        <h3>${esc(c.title)}${gapPill(v)}</h3>
+        ${c.description ? `<p class="desc">${esc(c.description)}</p>` : ""}
         <div class="cnt">${counts}</div>
         ${rankHtml(v.rank)}
       </div>
@@ -4605,7 +4860,7 @@ function chipHtml(t, cluster, listKey) {
   return `<button class="bub${tone}${soft ? " soft" : ""}" data-occs="${esc(t.occ_ids.join(" "))}"
             data-sec="${esc(listKey)}" data-cid="${esc(cluster.cluster_id)}"
             data-cluster="${esc(cluster.title)}"><span class="lbl">${
-            hilite(t.display, resultsState.terms)}</span>${t.photos ? CAMERA : ""}${
+            esc(t.display)}</span>${t.photos ? CAMERA : ""}${
             t.count > 1 ? `<i>&times;${t.count}</i>` : ""}</button>`;
 }
 
@@ -4616,16 +4871,9 @@ function persistExpanded() {
   } catch (e) { /* preference only */ }
 }
 
-/* Theme keys go through openRule, so a click during a search closes the theme
-   the search opened. Cluster keys are a plain toggle: nothing ever opens them
-   on your behalf, so there is no search state to remember. */
+/* Themes and clusters share one persisted set of open keys. */
 function toggleKey(key) {
-  if (key.startsWith("theme:")) {
-    toggleThemeOpen(key, resultsState.expanded, resultsState.searchClosed);
-  } else {
-    const set = resultsState.expanded;
-    if (set.has(key)) set.delete(key); else set.add(key);
-  }
+  toggleThemeOpen(key, resultsState.expanded);
   persistExpanded();
   renderResultsBody();
 }
@@ -4660,23 +4908,14 @@ $("res-src").addEventListener("click", e => {
 
 /* Expand all opens every theme and any list that was collapsed, so the effect is
    visible; Collapse all closes the themes and leaves the lists alone. Cluster
-   cards are never touched either way. Mid-search, collapsing has to say so in
-   the closed sets, or openRule would re-open everything on the next render. */
+   cards are never touched either way. */
 $("res-expand").onclick = () => {
   if (!resultsState) return;
   const keys = allThemeKeys();
-  const searching = resultsState.terms.length > 0;
   if (allThemesOpen()) {
-    keys.forEach(k => {
-      resultsState.expanded.delete(k);
-      resultsState.ovOpen.delete(k);
-      if (searching) { resultsState.searchClosed.add(k); resultsState.ovSearchClosed.add(k); }
-    });
+    keys.forEach(k => { resultsState.expanded.delete(k); resultsState.ovOpen.delete(k); });
   } else {
-    keys.forEach(k => {
-      resultsState.expanded.add(k); resultsState.ovOpen.add(k);
-      resultsState.searchClosed.delete(k); resultsState.ovSearchClosed.delete(k);
-    });
+    keys.forEach(k => { resultsState.expanded.add(k); resultsState.ovOpen.add(k); });
     resultsState.listsClosed.clear();
   }
   persistExpanded();
@@ -5156,7 +5395,11 @@ function buildPhotoScope(el) {
     }
     return out;
   };
-  const hasPhotos = o => o.body_type === "review" && bodyPhotos(d.bodies[o.body_id]).length > 0;
+  // Under the product filter the rest of the cluster's photos come only from
+  // matched products, like everything else on the page.
+  const m = resultsState.matched;
+  const hasPhotos = o => o.body_type === "review" && (!m || m.has(o.asin)) &&
+    bodyPhotos(d.bodies[o.body_id]).length > 0;
 
   let listing = false;
   let items = collect(clicked, hasPhotos);
